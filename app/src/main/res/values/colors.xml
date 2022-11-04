@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="purple_100">#b97aff</color>
+    <color name="purple_200">#9a61f9</color>
+    <color name="purple_500">#7a48f2</color>
+    <color name="purple_700">#5929d0</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="blue_500">#FF0099f5</color>
+    <color name="blue_400">#FF1982c4</color>
+    <color name="blue_900">#BBDDFF</color>
+    <color name="blue_200">#FF0066FF</color>
+    <color name="green_500">#51b364</color>
+    <color name="yellow_700">#f0bd27</color>
+    <color name="red_500">#e03531</color>
+    <color name="gray_500">#FF888888</color>
+    <color name="gray_600">#FFaaaaaa</color>
+    <color name="gray_700">#FFBBBBBB</color>
+    <color name="gray_900">#FFEEEEEE</color>
+    <color name="gray_800">#FFCCCCCC</color>
+    <color name="gray_400">#FF666666</color>
+    <color name="gray_300">#FF444444</color>
+    <color name="gray_200">#FF222222</color>
+    <color name="gray_100">#FF191919</color>
+    <color name="gray_300_transparent">#66888888</color>
+
+
+    <color name="palette_purple_100">#5929d0</color>
+    <color name="palette_purple_200">#6D48D8</color>
+    <color name="palette_purple_300">#c472ff</color>
+    <color name="palette_purple_400">#E96EFF</color>
+    <attr name="shimmingColor">#00000000</attr>
+    <attr name="MaskingColor">#00000000</attr>
+    <color name="light_blue_50">#FFE1F5FE</color>
+    <color name="light_blue_200">#FF81D4FA</color>
+    <color name="light_blue_600">#FF039BE5</color>
+    <color name="light_blue_900">#FF01579B</color>
+</resources>

@@ -1,0 +1,34 @@
+<resources>
+    <declare-styleable name="AppWidgetAttrs">
+        <attr name="appWidgetPadding" format="dimension" />
+        <attr name="appWidgetInnerRadius" format="dimension" />
+        <attr name="appWidgetRadius" format="dimension" />
+        <attr name="apptintIconCOlor" format="color" />
+        <attr name="backgroundDialog" format="color" />
+        <attr name="backgroundBorder" format="color" />
+        <attr name="subTextColor" format="color" />
+
+        <attr name="daysInToolbar" format="color" />
+        <attr name="daysWeekend" format="color" />
+        <attr name="daysTextHighlight" format="color" />
+        <attr name="daysHighlight" format="color" />
+        <attr name="hourText" format="color" />
+        <attr name="iconHint" format="color" />
+        <attr name="backgroundHint" format="color" />
+    </declare-styleable>
+
+    <declare-styleable name="WeekView">
+        <attr name="android:clipToPadding" />
+        <attr name="weekPaddingBottom" format="dimension" />
+        <attr name="textSize" format="dimension" />
+        <attr name="textEventSize" format="dimension" />
+        <attr name="backgroundColor" format="color" />
+        <attr name="gridColor" format="color" />
+        <attr name="textColor" format="color" />
+        <attr name="textHourColor" format="color" />
+        <attr name="textDayColor" format="color" />
+        <attr name="textDayWeekendColor" format="color" />
+        <attr name="highLightColor" format="color" />
+        <attr name="textHighLightColor" format="color" />
+    </declare-styleable>
+</resources>

@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/dialog_bg"
+    android:backgroundTint="?backgroundDialog"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/awaiting"
+        android:textSize="25sp"
+        android:textAlignment="center"
+        android:layout_marginTop="5dp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/name_string"
+        android:textStyle="bold"
+        android:textSize="16sp" />
+
+    <EditText
+        android:id="@+id/title_task"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:hint="@string/awaiting"
+        android:padding="6dp"
+        android:maxLines="1"
+        android:singleLine="true"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:background="@drawable/textinput_background"
+
+        />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/description_string"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <EditText
+        android:id="@+id/description_task"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:layout_marginTop="10dp"
+        android:maxLines="3"
+        android:padding="6dp"
+        android:minLines="3"
+        android:gravity="top"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:hint="@string/description_string"
+        android:elegantTextHeight="true"
+        android:background="@drawable/textinput_background" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/subjects_fragment_menu"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/choose_subject"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/select_subject"
+        android:background="@drawable/textinput_background"
+        android:textColor="?subTextColor"
+        android:paddingVertical="8dp"
+        android:paddingHorizontal="16dp"
+        android:layout_marginTop="10dp"
+        android:textAllCaps="true" />
+
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/Date_string"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:layout_marginTop="16dp" />
+
+    <TextView
+        android:layout_marginTop="10dp"
+        android:id="@+id/datepicker"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/Date_string"
+        android:textSize="16sp"
+        android:background="@drawable/textinput_background"
+        android:padding="8dp"
+        android:textColor="?subTextColor"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp" />
+
+    <LinearLayout
+
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="16dp">
+
+        <android.widget.Button
+            android:id="@+id/cancel_awaiting"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/button_border"
+            android:text="@string/Cancel_M"
+            android:textColor="?backgroundBorder"
+            android:layout_marginEnd="4dp" />
+
+        <android.widget.Button
+            android:id="@+id/accept_awaiting"
+            android:elevation="0dp"
+            android:shadowRadius="0"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/button"
+            android:layout_marginStart="4dp"
+            android:text="@string/Accept_M"
+            android:textColor="?backgroundDialog" />
+    </LinearLayout>
+</LinearLayout>

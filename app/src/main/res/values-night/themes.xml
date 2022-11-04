@@ -1,0 +1,114 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Theme.AppWork" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/purple_500</item>
+        <item name="colorPrimaryVariant">@color/purple_700</item>
+        <item name="colorOnPrimary">@color/black</item>
+        <!-- Secondary brand color. -->
+        <item name="colorSecondary">@color/purple_700</item>
+        <item name="colorSecondaryVariant">@color/purple_700</item>
+        <item name="colorOnSecondary">@color/black</item>
+        <item name="android:textColor">@color/white</item>
+        <!-- Status bar color. -->
+        <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
+        <!-- Customize your theme here. -->
+        <item name="shimmerColor">@color/gray_500</item>
+        <item name="maskColor">@color/gray_400</item>
+        <item name="backgroundDialog">@color/gray_100</item>
+        <item name="backgroundBorder">@color/white</item>
+        <item name="subTextColor">@color/gray_800</item>
+        <item name="iconHint">#D6BDFF</item>
+        <item name="backgroundHint">#191520</item>
+
+        //calendar
+        <item name="gridColor">@color/gray_200</item>
+        <item name="textDayColor">@color/gray_700</item>
+        <item name="textDayWeekendColor">@color/gray_500</item>
+        <item name="highLightColor">@color/palette_purple_200</item>
+        <item name="textHighLightColor">@color/white</item>
+        <item name="textHourColor">@color/gray_500</item>
+
+    </style>
+
+    <style name="DialogAnimation">
+        <item name="android:windowEnterAnimation">@anim/slide_in_bottom</item>
+        <item name="android:windowExitAnimation">@anim/slide_out_bottom</item>
+    </style>
+
+    <style name="floatinButton">
+        <item name="backgroundTint">@color/purple_500</item>
+    </style>
+
+    <style name="task_home_item" parent="CardView">
+        <item name="cardBackgroundColor">@color/gray_100</item>
+        <item name="cardCornerRadius">5dp</item>
+        <item name="cardElevation">1dp</item>
+    </style>
+
+    <style name="subIcon">
+        <item name="android:tint">@color/gray_800</item>
+    </style>
+
+    <style name="iconMain">
+        <item name="android:tint">@color/purple_200</item>
+        <item name="android:textColor">@color/purple_200</item>
+    </style>
+
+    <style name="iconHnT">
+        <item name="android:tint">#D6BDFF</item>
+        <item name="android:textColor">#D6BDFF</item>
+    </style>
+
+    <style name="buttonAction">
+        <item name="android:tint">@color/white</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="cardBackgroundColor">@color/purple_500</item>
+    </style>
+
+    <style name="drawabe">
+        <item name="tint">@color/white</item>
+        <item name="android:iconTint">@color/white</item>
+    </style>
+
+    <style name="subtext">
+        <item name="android:textColor">@color/gray_800</item>
+    </style>
+
+    <style name="splash">
+        <item name="background">@color/white</item>
+        <item name="tint">@color/purple_500</item>
+    </style>
+
+    <style name="splashscreen" parent="Theme.AppWork">
+        <item name="android:windowBackground">@drawable/splashscreen</item>
+    </style>
+
+    <style name="disable">
+        <item name="android:textColor">@color/gray_400</item>
+    </style>
+
+    <style name="alarmColorBg">
+        <item name="android:background">@drawable/alarm_bg_night</item>
+    </style>
+
+    <style name="alarmColorCardViewBg">
+        <item name="cardBackgroundColor">@color/purple_200</item>
+    </style>
+
+    <style name="IconColor">
+        <item name="android:tint">@color/palette_purple_200</item>
+        <item name="android:textColor">@color/white</item>
+    </style>
+
+    <style name="Theme.AppWork.AppWidgetContainer" parent="Theme.AppWork.AppWidgetContainerParent">
+        <item name="android:colorBackground">#b000</item>
+        <item name="appWidgetRadius">25dp</item>
+        <item name="appWidgetPadding">5dp</item>
+        <item name="appWidgetInnerRadius">25dp</item>
+    </style>
+
+    <style name="mainColors">
+        <item name="android:backgroundTint">@color/gray_100</item>
+    </style>
+</resources>
