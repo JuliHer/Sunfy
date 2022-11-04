@@ -40,10 +40,9 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/button"
-
+        android:background="@drawable/button_border"
         android:layout_margin="10dp"
-        android:backgroundTint="?backgroundDialog">
+        android:foregroundTint="?subTextColor">
 
         <TextView
             android:layout_width="wrap_content"
@@ -56,10 +55,11 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/button"
+        android:background="@drawable/button_border"
         android:layout_margin="10dp"
-        android:backgroundTint="?backgroundDialog"
-        android:orientation="vertical">
+        android:foregroundTint="?subTextColor"
+        android:orientation="vertical"
+        android:padding="8dp">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/times_recycler"
@@ -69,8 +69,8 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginVertical="4dp"
-            android:paddingVertical="8dp">
+            android:layout_marginVertical="2dp"
+            android:paddingVertical="4dp">
 
             <ImageView
                 android:layout_width="24dp"
