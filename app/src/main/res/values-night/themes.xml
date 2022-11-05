@@ -19,7 +19,7 @@
         <item name="backgroundBorder">@color/white</item>
         <item name="subTextColor">@color/gray_800</item>
         <item name="iconHint">#D6BDFF</item>
-        <item name="backgroundHint">#191520</item>
+        <item name="backgroundHint">#30283E</item>
 
         //calendar
         <item name="gridColor">@color/gray_200</item>

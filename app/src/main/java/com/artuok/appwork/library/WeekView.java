@@ -12,6 +12,7 @@ import android.text.StaticLayout;
 import android.text.TextPaint;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -57,8 +58,11 @@ public class WeekView extends View {
     private int txtHighLightColor;
     private int backgroundColor;
     private List<Pos> mData;
+    private List<EventsTasks> dataTemp;
     private Dictionary<Pos, EventsTasks> mEvents = new Hashtable<>();
     private ValueAnimator animator = ValueAnimator.ofFloat(0, 1);
+
+    private boolean isRegister = false;
 
     private int sX = 0;
     private int sY = 0;
@@ -211,8 +215,7 @@ public class WeekView extends View {
             } else {
                 if (isSelected && isInSelected((int) e.getX(), (int) e.getY())) {
                     if (onSelectListener != null) {
-                        long duration = 60 * 60;
-                        onSelectListener.onClick(sX, sY, duration);
+                        onSelectListener.onClick(getAt(sX, sY));
                     }
                 } else {
                     isSelected = !isSelected;
@@ -254,6 +257,19 @@ public class WeekView extends View {
         postInvalidate();
     }
 
+    public EventsTasks getAt(int x, int y) {
+
+        long hour = y * 1800L;
+
+        long duration = 3600;
+        if (y == 47) {
+            duration = 1800;
+        }
+        EventsTasks a = new EventsTasks("", x, hour, duration, 0);
+        Log.d("Event", hour + "");
+        return a;
+    }
+
     public boolean isInSelected(int x, int y) {
         if (x < mSpacingOfEachLineX) {
             return false;
@@ -280,10 +296,14 @@ public class WeekView extends View {
         RectF rectM = new RectF();
 
         float heightOfHour = (spacingOfHour) / 2;
+
         float x = mSpacingOfEachLineX + (spacingOfDays * d);
         float y = barDayHeight + (heightOfHour * h) - fy;
         float width = x + spacingOfDays;
         float height = y + (heightOfHour * 2);
+        if (h == 47) {
+            height = y + heightOfHour;
+        }
 
         rectF.set(x, y, width, height);
         int paddingDp = convertToDpToPx(3);
@@ -302,7 +322,6 @@ public class WeekView extends View {
         path.addRoundRect(rectM, 15, 15, Path.Direction.CCW);
         canvas.clipOutPath(path);
         canvas.drawRoundRect(rectF, 20, 20, highLightColorPaint);
-
 
         canvas.restore();
 
@@ -366,6 +385,7 @@ public class WeekView extends View {
         }
         /*EventsTasks e = new EventsTasks("Homewor asdsad asd asd asda sdas d asd ask", 1, 46800, 3600, Color.GRAY);
         drawEvents(canvas, e, offsetY);*/
+        OnViewRegister();
         drawEvents(canvas, mData);
         updateHour(canvas);
         if (isSelected) {
@@ -442,11 +462,12 @@ public class WeekView extends View {
         EventsTasks a = mEvents.get(p);
 
         int left = p.getX();
-        float top = p.getY();
+        float top = p.getY() - y;
         int right = p.getWidth();
-        float bottom = p.getHeight();
+        float bottom = p.getHeight() - y;
         event.set(left, top, right, bottom);
 
+        Log.d("EventY", p.getX() + "!");
         float heightE = bottom - top;
 
         int padding = convertToDpToPx(3);
@@ -480,15 +501,17 @@ public class WeekView extends View {
 
     public Pos getPositionAt(int d, long h, long dur) {
 
+        int padding = convertToDpToPx(4);
+
         float height = (spacingOfHour * 24);
         float day = 86400;
         float hour = h;
         float duration = dur;
 
-        int left = (spacingOfDays * d) + mSpacingOfEachLineX + 1;
-        float top = barDayHeight + (height / day * hour) + 1;
-        int right = left + spacingOfDays;
-        float bottom = top + (height / day * duration);
+        int left = ((spacingOfDays * d) + mSpacingOfEachLineX);
+        float top = (barDayHeight + (height / day * hour) + 1);
+        int right = (left + spacingOfDays) - padding;
+        float bottom = (top + (height / day * duration)) - padding;
 
         Pos p = new Pos(left, (int) top, right, (int) bottom);
 
@@ -640,15 +663,39 @@ public class WeekView extends View {
     }
 
     public void setEvents(List<EventsTasks> es) {
+        dataTemp = es;
+        if (mSpacingOfEachLineX != 0) {
+            OnViewRegister();
+        }
+    }
+
+    public void register() {
         List<Pos> p = new ArrayList<>();
         mEvents = new Hashtable<>();
-        for (EventsTasks e : es) {
-            p.add(getPositionAt(e.getDay(), e.getHour(), e.getDuration()));
-
-            mEvents.put(p.get(p.size() - 1), e);
+        for (EventsTasks e : dataTemp) {
+            Pos a = getPositionAt(e.getDay(), e.getHour(), e.getDuration());
+            p.add(a);
+            Log.d("pos", e.getDay() + "");
+            mEvents.put(a, e);
         }
 
         this.mData = p;
+    }
+
+    private void OnViewRegister() {
+        if (!isRegister) {
+            List<Pos> p = new ArrayList<>();
+            mEvents = new Hashtable<>();
+            for (EventsTasks e : dataTemp) {
+                Pos a = getPositionAt(e.getDay(), e.getHour(), e.getDuration());
+                p.add(a);
+                Log.d("pos", e.getDay() + "");
+                mEvents.put(a, e);
+            }
+
+            this.mData = p;
+            isRegister = !isRegister;
+        }
     }
 
     public void addEvents(List<EventsTasks> es) {
@@ -683,7 +730,7 @@ public class WeekView extends View {
     }
 
     public interface OnSelectListener {
-        void onClick(int d, long h, long duration);
+        void onClick(EventsTasks e);
     }
 
     private void updateHour(Canvas canvas) {

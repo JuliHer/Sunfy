@@ -9,18 +9,18 @@
         android:layout_height="wrap_content"
         app:cardElevation="0dp"
         android:elevation="0dp"
-        android:background="?backgroundDialog"
+        android:background="@drawable/transparent_background"
+        app:cardBackgroundColor="@android:color/transparent"
         app:cardCornerRadius="15dp"
         android:layout_margin="2dp"
-
-        >
+        android:animateLayoutChanges="true">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:padding="15dp">
+            android:paddingVertical="8dp">
 
             <LinearLayout
                 android:layout_width="wrap_content"
@@ -29,17 +29,27 @@
                 android:orientation="vertical">
 
                 <TextView
+                    android:id="@+id/day_date"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/sunday"
                     android:textAllCaps="true" />
 
                 <TextView
+                    android:id="@+id/time_date"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="6:00 PM -> 8:00 PM"
                     android:textColor="?subTextColor" />
             </LinearLayout>
+
+            <ImageView
+                android:id="@+id/remove_action"
+                android:layout_width="25dp"
+                android:layout_height="25dp"
+                android:layout_marginHorizontal="16dp"
+                android:src="@drawable/ic_trash"
+                app:tint="@color/red_500" />
 
             <ImageView
                 android:layout_width="30dp"

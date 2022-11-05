@@ -18,9 +18,10 @@
         <item name="apptintIconCOlor">@color/blue_500</item>
         <item name="backgroundDialog">@color/white</item>
         <item name="backgroundBorder">@color/black</item>
-        <item name="subTextColor">@color/gray_300</item>
+        <item name="subTextColor">@color/gray_400</item>
         <item name="iconHint">#092B42</item>
         <item name="backgroundHint">#DBECF3</item>
+
 
         //calendar
         <item name="gridColor">@color/gray_900</item>

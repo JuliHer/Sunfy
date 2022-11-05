@@ -34,7 +34,7 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
             return new AwaitingViewHolder(view);
         } else if (viewType == 1) {
-            View view = mInflater.inflate(R.layout.text_count, parent, false);
+            View view = mInflater.inflate(R.layout.recurrence_layout, parent, false);
             return new StatisticViewHolder(view);
         }
         return null;

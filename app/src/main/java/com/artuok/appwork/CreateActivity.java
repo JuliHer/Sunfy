@@ -1,14 +1,378 @@
 package com.artuok.appwork;
 
+import android.app.Dialog;
+import android.app.TimePickerDialog;
+import android.content.ContentValues;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.view.Gravity;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.artuok.appwork.adapters.ScheduleAdapter;
+import com.artuok.appwork.adapters.SubjectAdapter;
+import com.artuok.appwork.db.DbHelper;
+import com.artuok.appwork.fragmets.homeFragment;
+import com.artuok.appwork.library.WeekView;
+import com.artuok.appwork.objects.ItemSubjectElement;
+import com.artuok.appwork.objects.SubjectElement;
+import com.thekhaeng.pushdownanim.PushDownAnim;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class CreateActivity extends AppCompatActivity {
+
+
+    private RecyclerView recyclerView;
+    private List<WeekView.EventsTasks> elements;
+    private ScheduleAdapter adapter;
+    private ScheduleAdapter.OnClickListener listener;
+    private ScheduleAdapter.OnClickListener removeListener;
+
+
+    int posModify = 0;
+    int dayModify = 0;
+    long startModify = 0;
+    long endModify = 0;
+
+    TextView textDay, subject;
+    String subject_txt = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create);
+
+        elements = new ArrayList<>();
+        setListeners();
+        adapter = new ScheduleAdapter(this, elements, listener, removeListener);
+        LinearLayoutManager manager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+        recyclerView = findViewById(R.id.times_recycler);
+        subject = findViewById(R.id.subject_text);
+
+
+        recyclerView.setHasFixedSize(false);
+        recyclerView.setLayoutManager(manager);
+
+        ImageView backStack = findViewById(R.id.create_back);
+
+        backStack.setOnClickListener(view -> finish());
+
+        LinearLayout add = findViewById(R.id.add_recurrence);
+        PushDownAnim.setPushDownAnimTo(add)
+                .setDurationPush(100)
+                .setScale(PushDownAnim.MODE_SCALE, 0.98f)
+                .setOnClickListener(view -> addElement());
+
+        LinearLayout subjectb = findViewById(R.id.subject_button);
+
+        PushDownAnim.setPushDownAnimTo(subjectb)
+                .setDurationPush(100)
+                .setScale(PushDownAnim.MODE_SCALE, 0.99f)
+                .setOnClickListener(view -> setSelectSubject(subject));
+
+        TextView act = findViewById(R.id.addevent);
+
+
+        PushDownAnim.setPushDownAnimTo(act)
+                .setDurationPush(100)
+                .setScale(PushDownAnim.MODE_SCALE, 0.98f)
+                .setOnClickListener(view -> setEvents());
+
+        setElements();
+    }
+
+    private void setEvents() {
+        DbHelper dbHelper = new DbHelper(this);
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+
+        for (WeekView.EventsTasks e : elements) {
+            ContentValues values = new ContentValues();
+            values.put("title", subject_txt);
+            values.put("day_of_week", e.getDay());
+            values.put("time", e.getHour());
+            values.put("duration", e.getDuration());
+            values.put("type", 0);
+
+            db.insert(DbHelper.t_event, null, values);
+        }
+    }
+
+    private void setListeners() {
+        listener = (view, pos) -> {
+            posModify = pos;
+            showDialog(elements.get(pos));
+        };
+
+        removeListener = (view, pos) -> {
+            elements.remove(pos);
+            adapter.notifyItemRemoved(pos);
+        };
+    }
+
+    private void setElements() {
+        if (getIntent().getExtras() != null) {
+            Bundle extras = getIntent().getExtras();
+            WeekView.EventsTasks e = new WeekView.EventsTasks("",
+                    extras.getInt("day", 0),
+                    extras.getLong("hour", 0),
+                    extras.getLong("duration", 0),
+                    0);
+
+            elements.add(e);
+        }
+
+        recyclerView.setAdapter(adapter);
+    }
+
+    private void addElement() {
+        if (elements.size() < 7) {
+            int day = (elements.get(elements.size() - 1).getDay() + 1) % 7;
+            long hour = elements.get(elements.size() - 1).getHour();
+            long duration = elements.get(elements.size() - 1).getDuration();
+
+            WeekView.EventsTasks e = new WeekView.EventsTasks("", day, hour, duration, 1);
+            elements.add(e);
+            elements.get(0).setColor(0);
+            adapter.notifyDataSetChanged();
+        }
+    }
+
+    void showDialog(WeekView.EventsTasks e) {
+        Dialog edit = new Dialog(this);
+        edit.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        edit.setContentView(R.layout.bottom_recurrence_layout);
+        edit.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        edit.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        edit.getWindow().getAttributes().windowAnimations = R.style.DialogAnimation;
+        edit.getWindow().setGravity(Gravity.BOTTOM);
+
+        startModify = elements.get(posModify).getHour();
+        endModify = elements.get(posModify).getDuration() + elements.get(posModify).getHour();
+        dayModify = elements.get(posModify).getDay();
+
+        LinearLayout edi = edit.findViewById(R.id.edit_create);
+        edi.setVisibility(View.VISIBLE);
+
+        textDay = edit.findViewById(R.id.day_of_recurrence);
+        TextView start = edit.findViewById(R.id.start_hour);
+        TextView end = edit.findViewById(R.id.end_hour);
+
+        LinearLayout days = edit.findViewById(R.id.day_of_frecuency);
+
+        PushDownAnim.setPushDownAnimTo(days)
+                .setDurationPush(100)
+                .setScale(PushDownAnim.MODE_SCALE, 0.98f)
+                .setOnClickListener(view -> showDaySelector());
+        start.setOnClickListener(view -> {
+            TimePickerDialog timePickerDialog = new TimePickerDialog(this, (timePicker, i, i1) -> {
+                startModify = (i * 60L * 60L) + (i1 * 60L);
+                if (startModify > 85500) {
+                    startModify = 85500;
+                }
+                if ((endModify - startModify) < 900) {
+                    endModify = startModify + 900;
+                    if ((startModify + 900) >= 86400) {
+                        endModify = 0;
+                    }
+                    String mod = convertMillisInTime(endModify);
+                    end.setText(mod);
+                }
+                String desc = convertMillisInTime(startModify);
+                start.setText(desc);
+            }, 0, 0, false);
+            timePickerDialog.show();
+        });
+
+        end.setOnClickListener(view -> {
+            TimePickerDialog timePickerDialog = new TimePickerDialog(this, (timePicker, i, i1) -> {
+                endModify = (i * 60L * 60L) + (i1 * 60L);
+                if (endModify < 900) {
+                    endModify = 900;
+                }
+                if ((endModify - startModify) < 900) {
+                    startModify = endModify - 900;
+                    String mod = convertMillisInTime(startModify);
+                    start.setText(mod);
+                }
+                String desc = convertMillisInTime(endModify);
+                end.setText(desc);
+            }, 0, 0, false);
+            timePickerDialog.show();
+        });
+
+        String dayDate = homeFragment.getDayOfWeek(this, e.getDay() + 1);
+        textDay.setText(dayDate);
+
+        String desc = convertMillisInTime(e.getHour());
+
+
+        start.setText(desc);
+
+        long hourEndMillis = e.getDuration() + e.getHour();
+        desc = convertMillisInTime(hourEndMillis);
+
+        end.setText(desc);
+
+        Button accept = edit.findViewById(R.id.accept);
+        PushDownAnim
+                .setPushDownAnimTo(accept)
+                .setDurationPush(100)
+                .setScale(PushDownAnim.MODE_SCALE, 0.98f)
+                .setOnClickListener(view -> {
+                    elements.get(posModify).setDay(dayModify);
+                    elements.get(posModify).setHour(startModify);
+                    elements.get(posModify).setDuration(endModify - startModify);
+                    adapter.notifyItemChanged(posModify);
+                    edit.dismiss();
+                });
+
+        edit.show();
+    }
+
+    String convertMillisInTime(long timeInMillis) {
+        int hour = (int) (timeInMillis / 3600);
+        int minute = (int) (timeInMillis / 60) % 60;
+        hour = hour % 24;
+        String tm = hour > 11 ? "PM" : "AM";
+        hour = hour > 12 ? hour - 12 : hour;
+        if (hour == 0) {
+            hour = 12;
+        }
+        String min = minute < 10 ? "0" + minute : minute + "";
+
+        return hour + ":" + min + " " + tm;
+    }
+
+    void showDaySelector() {
+        Dialog daySelector = new Dialog(this);
+        daySelector.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        daySelector.setContentView(R.layout.bottom_recurrence_layout);
+        daySelector.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        daySelector.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        daySelector.getWindow().getAttributes().windowAnimations = R.style.DialogAnimation;
+        daySelector.getWindow().setGravity(Gravity.BOTTOM);
+
+        LinearLayout edi = daySelector.findViewById(R.id.days);
+        edi.setVisibility(View.VISIBLE);
+
+        TextView sunday = daySelector.findViewById(R.id.sunday);
+        sunday.setOnClickListener(view -> {
+            dayModify = 0;
+            if (textDay != null) {
+                textDay.setText(homeFragment.getDayOfWeek(this, dayModify + 1));
+            }
+            daySelector.dismiss();
+        });
+        TextView monday = daySelector.findViewById(R.id.monday);
+        monday.setOnClickListener(view -> {
+            dayModify = 1;
+            if (textDay != null) {
+                textDay.setText(homeFragment.getDayOfWeek(this, dayModify + 1));
+            }
+            daySelector.dismiss();
+        });
+        TextView tuesday = daySelector.findViewById(R.id.tuesday);
+        tuesday.setOnClickListener(view -> {
+            dayModify = 2;
+            if (textDay != null) {
+                textDay.setText(homeFragment.getDayOfWeek(this, dayModify + 1));
+            }
+            daySelector.dismiss();
+        });
+        TextView wednesday = daySelector.findViewById(R.id.wednesday);
+        wednesday.setOnClickListener(view -> {
+            dayModify = 3;
+            if (textDay != null) {
+                textDay.setText(homeFragment.getDayOfWeek(this, dayModify + 1));
+            }
+            daySelector.dismiss();
+        });
+        TextView thursday = daySelector.findViewById(R.id.thursday);
+        thursday.setOnClickListener(view -> {
+            dayModify = 4;
+            if (textDay != null) {
+                textDay.setText(homeFragment.getDayOfWeek(this, dayModify + 1));
+            }
+            daySelector.dismiss();
+        });
+        TextView friday = daySelector.findViewById(R.id.friday);
+        friday.setOnClickListener(view -> {
+            dayModify = 5;
+            if (textDay != null) {
+                textDay.setText(homeFragment.getDayOfWeek(this, dayModify + 1));
+            }
+            daySelector.dismiss();
+        });
+        TextView saturday = daySelector.findViewById(R.id.saturday);
+        saturday.setOnClickListener(view -> {
+            dayModify = 6;
+            if (textDay != null) {
+                textDay.setText(homeFragment.getDayOfWeek(this, dayModify + 1));
+            }
+            daySelector.dismiss();
+
+        });
+
+
+        daySelector.show();
+    }
+
+    private void setSelectSubject(TextView a) {
+        Dialog subjectDialog = new Dialog(this);
+        subjectDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        subjectDialog.setContentView(R.layout.bottom_sheet_layout);
+        subjectDialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        subjectDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        subjectDialog.getWindow().getAttributes().windowAnimations = R.style.DialogAnimation;
+        subjectDialog.getWindow().setGravity(Gravity.BOTTOM);
+
+        RecyclerView recyclerView = subjectDialog.findViewById(R.id.subjects_recycler);
+        LinearLayoutManager manager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+        final List<ItemSubjectElement> elements = getSubjects();
+        SubjectAdapter adapter = new SubjectAdapter(this, elements, (view, position) -> {
+            subject_txt = ((SubjectElement) elements.get(position).getObject()).getName();
+            subjectDialog.dismiss();
+            a.setText(subject_txt);
+        });
+
+        LinearLayout add = subjectDialog.findViewById(R.id.add_subject);
+        add.setVisibility(View.GONE);
+
+        recyclerView.setHasFixedSize(true);
+        recyclerView.setLayoutManager(manager);
+        recyclerView.setAdapter(adapter);
+        subjectDialog.show();
+    }
+
+    private List<ItemSubjectElement> getSubjects() {
+        DbHelper dbHelper = new DbHelper(this);
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+
+        List<ItemSubjectElement> elements = new ArrayList<>();
+
+        Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.t_subjects + " ORDER BY name DESC", null);
+        if (cursor.moveToFirst()) {
+            do {
+                elements.add(new ItemSubjectElement(new SubjectElement(cursor.getString(1)), 2));
+            } while (cursor.moveToNext());
+        }
+
+        cursor.close();
+
+        return elements;
     }
 }

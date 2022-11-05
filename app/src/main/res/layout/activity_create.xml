@@ -11,9 +11,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:paddingVertical="4dp">
 
         <ImageView
+            android:id="@+id/create_back"
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:layout_margin="10dp"
@@ -22,10 +24,11 @@
 
         <View
             android:layout_weight="1"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="0dp" />
 
         <TextView
+            android:id="@+id/addevent"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Add"
@@ -38,18 +41,20 @@
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/subject_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/button_border"
-        android:layout_margin="10dp"
-        android:foregroundTint="?subTextColor">
+        android:layout_margin="10dp">
 
         <TextView
+            android:id="@+id/subject_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/subject"
             android:textColor="?subTextColor"
-            android:padding="15dp" />
+            android:padding="15dp"
+            android:textAllCaps="true" />
     </LinearLayout>
 
     <LinearLayout
@@ -57,9 +62,9 @@
         android:layout_height="wrap_content"
         android:background="@drawable/button_border"
         android:layout_margin="10dp"
-        android:foregroundTint="?subTextColor"
         android:orientation="vertical"
-        android:padding="8dp">
+        android:padding="8dp"
+        android:animateLayoutChanges="true">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/times_recycler"
@@ -67,6 +72,7 @@
             android:layout_height="wrap_content" />
 
         <LinearLayout
+            android:id="@+id/add_recurrence"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginVertical="2dp"
