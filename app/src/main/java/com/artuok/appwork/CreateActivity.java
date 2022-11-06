@@ -3,7 +3,6 @@ package com.artuok.appwork;
 import android.app.Dialog;
 import android.app.TimePickerDialog;
 import android.content.ContentValues;
-import android.content.res.TypedArray;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
@@ -26,7 +25,7 @@ import com.artuok.appwork.adapters.ScheduleAdapter;
 import com.artuok.appwork.adapters.SubjectAdapter;
 import com.artuok.appwork.db.DbHelper;
 import com.artuok.appwork.fragmets.homeFragment;
-import com.artuok.appwork.library.WeekView;
+import com.artuok.appwork.library.CalendarWeekView;
 import com.artuok.appwork.objects.ItemSubjectElement;
 import com.artuok.appwork.objects.SubjectElement;
 import com.thekhaeng.pushdownanim.PushDownAnim;
@@ -39,7 +38,7 @@ public class CreateActivity extends AppCompatActivity {
 
 
     private RecyclerView recyclerView;
-    private List<WeekView.EventsTasks> elements;
+    private List<CalendarWeekView.EventsTask> elements;
     private ScheduleAdapter adapter;
     private ScheduleAdapter.OnClickListener listener;
     private ScheduleAdapter.OnClickListener removeListener;
@@ -67,12 +66,12 @@ public class CreateActivity extends AppCompatActivity {
         LinearLayoutManager manager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
         recyclerView = findViewById(R.id.times_recycler);
         subject = findViewById(R.id.subject_text);
-        colorD = findViewById(R.id.color_select);
 
         recyclerView.setHasFixedSize(false);
         recyclerView.setLayoutManager(manager);
 
         ImageView backStack = findViewById(R.id.create_back);
+
 
         backStack.setOnClickListener(view -> finish());
 
@@ -97,13 +96,6 @@ public class CreateActivity extends AppCompatActivity {
                 .setScale(PushDownAnim.MODE_SCALE, 0.98f)
                 .setOnClickListener(view -> setEvents());
 
-        LinearLayout colorpicker = findViewById(R.id.color_selector);
-        PushDownAnim.setPushDownAnimTo(colorpicker)
-                .setDurationPush(100)
-                .setScale(PushDownAnim.MODE_SCALE, 0.98f)
-                .setOnClickListener(view -> {
-                    showColorPicker();
-                });
 
         setElements();
     }
@@ -113,7 +105,7 @@ public class CreateActivity extends AppCompatActivity {
             DbHelper dbHelper = new DbHelper(this);
             SQLiteDatabase dbw = dbHelper.getWritableDatabase();
             SQLiteDatabase dbr = dbHelper.getReadableDatabase();
-            for (WeekView.EventsTasks e : elements) {
+            for (CalendarWeekView.EventsTask e : elements) {
                 ContentValues values = new ContentValues();
                 values.put("title", subject_txt);
                 values.put("day_of_week", e.getDay());
@@ -128,6 +120,12 @@ public class CreateActivity extends AppCompatActivity {
                 }
                 values.put("subject", idSubject);
                 dbw.insert(DbHelper.t_event, null, values);
+                c.close();
+
+                MainActivity a = MainActivity.getInstance();
+                if (a != null) {
+                    a.notifyCalendar();
+                }
                 finish();
             }
         }
@@ -148,11 +146,13 @@ public class CreateActivity extends AppCompatActivity {
     private void setElements() {
         if (getIntent().getExtras() != null) {
             Bundle extras = getIntent().getExtras();
-            WeekView.EventsTasks e = new WeekView.EventsTasks(0, "",
+            CalendarWeekView.EventsTask e = new CalendarWeekView.EventsTask(
                     extras.getInt("day", 0),
                     extras.getLong("hour", 0),
                     extras.getLong("duration", 0),
-                    0);
+                    0,
+                    ""
+            );
 
             elements.add(e);
         }
@@ -166,14 +166,14 @@ public class CreateActivity extends AppCompatActivity {
             long hour = elements.get(elements.size() - 1).getHour();
             long duration = elements.get(elements.size() - 1).getDuration();
 
-            WeekView.EventsTasks e = new WeekView.EventsTasks(0, "", day, hour, duration, 1);
+            CalendarWeekView.EventsTask e = new CalendarWeekView.EventsTask(day, hour, duration, 1, "");
             elements.add(e);
             elements.get(0).setColor(0);
             adapter.notifyDataSetChanged();
         }
     }
 
-    void showDialog(WeekView.EventsTasks e) {
+    void showDialog(CalendarWeekView.EventsTask e) {
         Dialog edit = new Dialog(this);
         edit.requestWindowFeature(Window.FEATURE_NO_TITLE);
         edit.setContentView(R.layout.bottom_recurrence_layout);
@@ -367,6 +367,7 @@ public class CreateActivity extends AppCompatActivity {
         final List<ItemSubjectElement> elements = getSubjects();
         SubjectAdapter adapter = new SubjectAdapter(this, elements, (view, position) -> {
             subject_txt = ((SubjectElement) elements.get(position).getObject()).getName();
+            color = ((SubjectElement) elements.get(position).getObject()).getColor();
             subjectDialog.dismiss();
             a.setText(subject_txt);
         });
@@ -389,7 +390,7 @@ public class CreateActivity extends AppCompatActivity {
         Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.t_subjects + " ORDER BY name DESC", null);
         if (cursor.moveToFirst()) {
             do {
-                elements.add(new ItemSubjectElement(new SubjectElement(cursor.getString(1)), 2));
+                elements.add(new ItemSubjectElement(new SubjectElement(cursor.getString(1), cursor.getInt(2)), 2));
             } while (cursor.moveToNext());
         }
 
@@ -398,72 +399,5 @@ public class CreateActivity extends AppCompatActivity {
         return elements;
     }
 
-    private void showColorPicker() {
-        Dialog colorSelector = new Dialog(this);
-        colorSelector.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        colorSelector.setContentView(R.layout.bottom_recurrence_layout);
-        colorSelector.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        colorSelector.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        colorSelector.getWindow().getAttributes().windowAnimations = R.style.DialogAnimation;
-        colorSelector.getWindow().setGravity(Gravity.BOTTOM);
 
-        LinearLayout edi = colorSelector.findViewById(R.id.color_selecting);
-        edi.setVisibility(View.VISIBLE);
-
-
-        TypedArray ta = getTheme().obtainStyledAttributes(R.styleable.AppWidgetAttrs);
-
-
-        LinearLayout blue = colorSelector.findViewById(R.id.color_blue);
-        PushDownAnim.setPushDownAnimTo(blue)
-                .setDurationPush(100)
-                .setScale(0.98f)
-                .setOnClickListener(view -> {
-                    color = ta.getColor(R.styleable.AppWidgetAttrs_palette_blue, 0);
-                    colorD.setColorFilter(color);
-                    colorSelector.dismiss();
-                });
-
-        LinearLayout green = colorSelector.findViewById(R.id.color_green);
-        PushDownAnim.setPushDownAnimTo(green)
-                .setDurationPush(100)
-                .setScale(0.98f)
-                .setOnClickListener(view -> {
-                    color = ta.getColor(R.styleable.AppWidgetAttrs_palette_green, 0);
-                    colorD.setColorFilter(color);
-                    colorSelector.dismiss();
-                });
-
-        LinearLayout yellow = colorSelector.findViewById(R.id.color_yellow);
-        PushDownAnim.setPushDownAnimTo(yellow)
-                .setDurationPush(100)
-                .setScale(0.98f)
-                .setOnClickListener(view -> {
-                    color = ta.getColor(R.styleable.AppWidgetAttrs_palette_yellow, 0);
-                    colorD.setColorFilter(color);
-                    colorSelector.dismiss();
-                });
-
-        LinearLayout red = colorSelector.findViewById(R.id.color_red);
-        PushDownAnim.setPushDownAnimTo(red)
-                .setDurationPush(100)
-                .setScale(0.98f)
-                .setOnClickListener(view -> {
-                    color = ta.getColor(R.styleable.AppWidgetAttrs_palette_red, 0);
-                    colorD.setColorFilter(color);
-                    colorSelector.dismiss();
-                });
-
-        LinearLayout purple = colorSelector.findViewById(R.id.color_purple);
-        PushDownAnim.setPushDownAnimTo(purple)
-                .setDurationPush(100)
-                .setScale(0.98f)
-                .setOnClickListener(view -> {
-                    color = ta.getColor(R.styleable.AppWidgetAttrs_palette_purple, 0);
-                    colorD.setColorFilter(color);
-                    colorSelector.dismiss();
-                });
-
-        colorSelector.show();
-    }
 }

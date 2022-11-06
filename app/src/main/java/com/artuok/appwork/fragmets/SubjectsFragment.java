@@ -2,6 +2,7 @@ package com.artuok.appwork.fragmets;
 
 import android.app.Dialog;
 import android.content.ContentValues;
+import android.content.res.TypedArray;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
@@ -13,6 +14,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -27,6 +30,7 @@ import com.artuok.appwork.adapters.SubjectAdapter;
 import com.artuok.appwork.db.DbHelper;
 import com.artuok.appwork.objects.ItemSubjectElement;
 import com.artuok.appwork.objects.SubjectElement;
+import com.thekhaeng.pushdownanim.PushDownAnim;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,6 +43,9 @@ public class SubjectsFragment extends Fragment {
     private LinearLayoutManager manager;
     private List<ItemSubjectElement> elements;
     private SubjectAdapter.SubjectClickListener listener;
+
+    ImageView colorD;
+    int color = 0;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
@@ -67,6 +74,16 @@ public class SubjectsFragment extends Fragment {
         final TextView title = dialog.findViewById(R.id.title_subject);
         Button cancel = dialog.findViewById(R.id.cancel_subject);
         Button accept = dialog.findViewById(R.id.accept_subject);
+        colorD = dialog.findViewById(R.id.color_select);
+        TypedArray ta = requireActivity().getTheme().obtainStyledAttributes(R.styleable.AppWidgetAttrs);
+        color = ta.getColor(R.styleable.AppWidgetAttrs_palette_yellow, 0);
+        colorD.setColorFilter(color);
+        ta.recycle();
+        LinearLayout color = dialog.findViewById(R.id.color_picker);
+
+        color.setOnClickListener(view -> {
+            showColorPicker();
+        });
 
         cancel.setOnClickListener(view -> {
             dialog.dismiss();
@@ -93,6 +110,7 @@ public class SubjectsFragment extends Fragment {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put("name", name);
+        values.put("color", color);
 
         db.insert(DbHelper.t_subjects, null, values);
         loadSubjects(false);
@@ -108,7 +126,7 @@ public class SubjectsFragment extends Fragment {
         Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.t_subjects + " ORDER BY name DESC", null);
         if (cursor.moveToFirst()) {
             do {
-                elements.add(new ItemSubjectElement(new SubjectElement(cursor.getString(1)), 0));
+                elements.add(new ItemSubjectElement(new SubjectElement(cursor.getString(1), cursor.getInt(2)), 0));
             } while (cursor.moveToNext());
         }
 
@@ -117,6 +135,80 @@ public class SubjectsFragment extends Fragment {
         } else {
             adapter.notifyDataSetChanged();
         }
+    }
+
+    private void showColorPicker() {
+        Dialog colorSelector = new Dialog(requireActivity());
+        colorSelector.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        colorSelector.setContentView(R.layout.bottom_recurrence_layout);
+        colorSelector.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        colorSelector.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        colorSelector.getWindow().getAttributes().windowAnimations = R.style.DialogAnimation;
+        colorSelector.getWindow().setGravity(Gravity.BOTTOM);
+
+        LinearLayout edi = colorSelector.findViewById(R.id.color_selecting);
+        edi.setVisibility(View.VISIBLE);
+
+
+        TypedArray ta = requireActivity().getTheme().obtainStyledAttributes(R.styleable.AppWidgetAttrs);
+
+
+        LinearLayout blue = colorSelector.findViewById(R.id.color_blue);
+        PushDownAnim.setPushDownAnimTo(blue)
+                .setDurationPush(100)
+                .setScale(0.98f)
+                .setOnClickListener(view -> {
+                    color = ta.getColor(R.styleable.AppWidgetAttrs_palette_blue, 0);
+                    colorD.setColorFilter(color);
+                    ta.recycle();
+                    colorSelector.dismiss();
+                });
+
+        LinearLayout green = colorSelector.findViewById(R.id.color_green);
+        PushDownAnim.setPushDownAnimTo(green)
+                .setDurationPush(100)
+                .setScale(0.98f)
+                .setOnClickListener(view -> {
+                    color = ta.getColor(R.styleable.AppWidgetAttrs_palette_green, 0);
+                    colorD.setColorFilter(color);
+                    ta.recycle();
+                    colorSelector.dismiss();
+                });
+
+        LinearLayout yellow = colorSelector.findViewById(R.id.color_yellow);
+        PushDownAnim.setPushDownAnimTo(yellow)
+                .setDurationPush(100)
+                .setScale(0.98f)
+                .setOnClickListener(view -> {
+                    color = ta.getColor(R.styleable.AppWidgetAttrs_palette_yellow, 0);
+                    colorD.setColorFilter(color);
+                    ta.recycle();
+                    colorSelector.dismiss();
+                });
+
+        LinearLayout red = colorSelector.findViewById(R.id.color_red);
+        PushDownAnim.setPushDownAnimTo(red)
+                .setDurationPush(100)
+                .setScale(0.98f)
+                .setOnClickListener(view -> {
+                    color = ta.getColor(R.styleable.AppWidgetAttrs_palette_red, 0);
+                    colorD.setColorFilter(color);
+                    ta.recycle();
+                    colorSelector.dismiss();
+                });
+
+        LinearLayout purple = colorSelector.findViewById(R.id.color_purple);
+        PushDownAnim.setPushDownAnimTo(purple)
+                .setDurationPush(100)
+                .setScale(0.98f)
+                .setOnClickListener(view -> {
+                    color = ta.getColor(R.styleable.AppWidgetAttrs_palette_purple, 0);
+                    colorD.setColorFilter(color);
+                    ta.recycle();
+                    colorSelector.dismiss();
+                });
+
+        colorSelector.show();
     }
 
 }

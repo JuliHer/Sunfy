@@ -13,14 +13,16 @@ import androidx.fragment.app.Fragment;
 import com.artuok.appwork.CreateActivity;
 import com.artuok.appwork.R;
 import com.artuok.appwork.db.DbHelper;
-import com.artuok.appwork.library.WeekView;
+import com.artuok.appwork.library.CalendarWeekView;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 public class CalendarFragment extends Fragment {
 
-    private List<WeekView.EventsTasks> elements;
+    private List<CalendarWeekView.EventsTask> elements;
+    CalendarWeekView weekView;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -29,17 +31,25 @@ public class CalendarFragment extends Fragment {
 
         elements = new ArrayList<>();
 
-        /*WeekView weekView = root.findViewById(R.id.weekly);
-
+        weekView = root.findViewById(R.id.weekly);
 
         setEvents();
-        weekView.setEvents(elements);
-        weekView.setSelectListener((d) -> startCreateActivity(d));*/
+
+        Calendar c = Calendar.getInstance();
+        long time = (c.get(Calendar.HOUR_OF_DAY) * 60 * 60) + (c.get(Calendar.MINUTE) * 60);
+        weekView.setViewRegisterListener(() -> {
+            weekView.scrollAt(time);
+        });
+
+        weekView.setDateListener(eventsTask -> {
+
+        });
+        weekView.setSelectListener((d) -> startCreateActivity(d));
 
         return root;
     }
 
-    public void startCreateActivity(WeekView.EventsTasks e) {
+    public void startCreateActivity(CalendarWeekView.EventsTask e) {
         Intent intent = new Intent(requireActivity(), CreateActivity.class);
         if (e != null) {
             intent.putExtra("day", e.getDay());
@@ -51,7 +61,8 @@ public class CalendarFragment extends Fragment {
     }
 
     public void NotifyChanged() {
-
+        elements = new ArrayList<>();
+        setEvents();
     }
 
     public void setEvents() {
@@ -67,9 +78,12 @@ public class CalendarFragment extends Fragment {
                 long duration = cursor.getLong(4);
                 int type = cursor.getInt(5);
                 int subject = cursor.getInt(6);
-                elements.add(new WeekView.EventsTasks(subject, title, day, time, duration, type));
+
+                elements.add(new CalendarWeekView.EventsTask(day, time, duration, type, title));
             } while (cursor.moveToNext());
         }
+
+        weekView.setEvents(elements);
         cursor.close();
     }
 }

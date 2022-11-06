@@ -101,6 +101,8 @@ public class MainActivity extends AppCompatActivity {
     EditText title, description;
     Calendar alarmset;
 
+    private static MainActivity instance;
+
     private final ActivityResultLauncher<String> requestPermissionsLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
         if (isGranted) {
 
@@ -121,6 +123,8 @@ public class MainActivity extends AppCompatActivity {
         toolbar.setTitle("");
         setSupportActionBar(toolbar);
         startFragment(homefragment);
+
+        instance = this;
 
         setDialog();
         actionButton = findViewById(R.id.floating_button);
@@ -214,7 +218,7 @@ public class MainActivity extends AppCompatActivity {
         Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.t_subjects + " ORDER BY name DESC", null);
         if (cursor.moveToFirst()) {
             do {
-                elements.add(new ItemSubjectElement(new SubjectElement(cursor.getString(1)), 2));
+                elements.add(new ItemSubjectElement(new SubjectElement(cursor.getString(1), cursor.getInt(2)), 2));
             } while (cursor.moveToNext());
         }
 
@@ -551,5 +555,13 @@ public class MainActivity extends AppCompatActivity {
 
     public void notifyChangedInHome(String d) {
         //homefragment.notifyInData(d);
+    }
+
+    public static MainActivity getInstance() {
+        return instance;
+    }
+
+    public void notifyCalendar() {
+        calendarFragment.NotifyChanged();
     }
 }

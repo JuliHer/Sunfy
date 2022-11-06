@@ -24,7 +24,7 @@
         <attr name="palette_purple" format="color" />
     </declare-styleable>
 
-    <declare-styleable name="WeekView">
+    <declare-styleable name="CalendarWeekView">
         <attr name="android:clipToPadding" />
         <attr name="weekPaddingBottom" format="dimension" />
         <attr name="textSize" format="dimension" />

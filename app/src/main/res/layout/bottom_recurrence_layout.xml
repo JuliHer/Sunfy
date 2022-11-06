@@ -194,94 +194,99 @@
             android:layout_marginVertical="4dp" />
     </LinearLayout>
 
-    <LinearLayout
-        android:id="@+id/color_selecting"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:visibility="gone">
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Choose Color"
-            android:textSize="26sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="4dp" />
+        android:layout_height="wrap_content">
 
         <LinearLayout
-            android:id="@+id/color_blue"
+            android:id="@+id/color_selecting"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginVertical="4dp">
+            android:orientation="vertical"
+            android:visibility="gone">
 
-            <View
-                android:layout_weight="1"
-                android:layout_width="0dp"
-                android:layout_height="100dp"
-                android:background="@drawable/button"
-                android:backgroundTint="?palette_blue"
-                android:elevation="3dp" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Choose Color"
+                android:textSize="26sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="4dp" />
+
+            <LinearLayout
+                android:id="@+id/color_blue"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="4dp">
+
+                <View
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:background="@drawable/button"
+                    android:backgroundTint="?palette_blue"
+                    android:elevation="3dp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/color_green"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="4dp">
+
+                <View
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:background="@drawable/button"
+                    android:backgroundTint="?palette_green"
+                    android:elevation="3dp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/color_yellow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="4dp">
+
+                <View
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:background="@drawable/button"
+                    android:backgroundTint="?palette_yellow"
+                    android:elevation="3dp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/color_red"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="4dp">
+
+                <View
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:background="@drawable/button"
+                    android:backgroundTint="?palette_red"
+                    android:elevation="3dp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/color_purple"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="4dp">
+
+                <View
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:background="@drawable/button"
+                    android:backgroundTint="?palette_purple"
+                    android:elevation="3dp" />
+            </LinearLayout>
         </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/color_green"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginVertical="4dp">
-
-            <View
-                android:layout_weight="1"
-                android:layout_width="0dp"
-                android:layout_height="100dp"
-                android:background="@drawable/button"
-                android:backgroundTint="?palette_green"
-                android:elevation="3dp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/color_yellow"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginVertical="4dp">
-
-            <View
-                android:layout_weight="1"
-                android:layout_width="0dp"
-                android:layout_height="100dp"
-                android:background="@drawable/button"
-                android:backgroundTint="?palette_yellow"
-                android:elevation="3dp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/color_red"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginVertical="4dp">
-
-            <View
-                android:layout_weight="1"
-                android:layout_width="0dp"
-                android:layout_height="100dp"
-                android:background="@drawable/button"
-                android:backgroundTint="?palette_red"
-                android:elevation="3dp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/color_purple"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginVertical="4dp">
-
-            <View
-                android:layout_weight="1"
-                android:layout_width="0dp"
-                android:layout_height="100dp"
-                android:background="@drawable/button"
-                android:backgroundTint="?palette_purple"
-                android:elevation="3dp" />
-        </LinearLayout>
-    </LinearLayout>
+    </ScrollView>
 </LinearLayout>

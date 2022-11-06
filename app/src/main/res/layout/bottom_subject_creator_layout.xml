@@ -2,6 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:background="@drawable/dialog_bg"
     android:backgroundTint="?backgroundDialog">
@@ -33,6 +34,41 @@
         android:padding="8dp"
         android:paddingStart="16dp"
         android:paddingEnd="16dp" />
+
+    <LinearLayout
+        android:id="@+id/color_picker"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@drawable/textinput_background"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="8dp">
+
+        <TextView
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Color"
+            android:padding="15dp" />
+
+        <ImageView
+            android:id="@+id/color_select"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:src="@drawable/ic_baseline_circle_24"
+            android:layout_marginHorizontal="4dp"
+            android:layout_marginVertical="16dp"
+            app:tint="@color/yellow_700" />
+
+        <ImageView
+
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:src="@drawable/chevron_right"
+            android:layout_marginEnd="8dp"
+            android:layout_marginVertical="16dp" />
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"

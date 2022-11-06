@@ -6,34 +6,12 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 import androidx.annotation.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class DbHelper extends SQLiteOpenHelper {
-
-    public enum TasksEnum {
-        id,
-        date,
-        title,
-        deadline,
-        subject,
-        description,
-        status
-    }
-
-    private static final int DatabaseVersion = 7;
+    private static final int DatabaseVersion = 8;
     private static final String DatabaseName = "Calendar";
     public static final String t_subjects = "subjects";
     public static final String t_task = "task";
     public static final String t_event = "event";
-
-    List<Integer> id = new ArrayList<>();
-    List<String> date = new ArrayList<>();
-    List<String> title = new ArrayList<>();
-    List<String> deadline = new ArrayList<>();
-    List<String> subject = new ArrayList<>();
-    List<String> description = new ArrayList<>();
-    List<Integer> status = new ArrayList<>();
 
     public DbHelper(@Nullable Context context) {
         super(context, DatabaseName, null, DatabaseVersion);
@@ -43,7 +21,8 @@ public class DbHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
         sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS " + t_subjects + "(" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                "name TEXT NOT NULL)");
+                "name TEXT NOT NULL," +
+                "color INTEGER NOT NULL)");
         sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS " + t_task + "(" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "date DATETIME NOT NULL," +
@@ -65,6 +44,8 @@ public class DbHelper extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
         sqLiteDatabase.execSQL("DROP TABLE " + t_event);
+        sqLiteDatabase.execSQL("DROP TABLE " + t_task);
+        sqLiteDatabase.execSQL("DROP TABLE " + t_subjects);
 
         onCreate(sqLiteDatabase);
     }
