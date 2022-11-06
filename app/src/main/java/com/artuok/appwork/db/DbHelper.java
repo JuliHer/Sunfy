@@ -21,7 +21,7 @@ public class DbHelper extends SQLiteOpenHelper {
         status
     }
 
-    private static final int DatabaseVersion = 4;
+    private static final int DatabaseVersion = 7;
     private static final String DatabaseName = "Calendar";
     public static final String t_subjects = "subjects";
     public static final String t_task = "task";
@@ -52,17 +52,19 @@ public class DbHelper extends SQLiteOpenHelper {
                 "subject INTEGER NOT NULL," +
                 "description VARCHAR(500)," +
                 "status INTEGER(1) NOT NULL)");
-    }
-
-    @Override
-    public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
         sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS " + t_event + "(" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "title TEXT NOT NULL," +
                 "day_of_week INTEGER NOT NULL," +
                 "time LONG NOT NULL," +
                 "duration LONG NOT NULL," +
-                "type INTEGER NOT NULL)");
+                "type INTEGER NOT NULL," +
+                "subject INTEGER NOT NULL)");
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
+        sqLiteDatabase.execSQL("DROP TABLE " + t_event);
 
         onCreate(sqLiteDatabase);
     }

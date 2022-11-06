@@ -29,12 +29,12 @@ public class CalendarFragment extends Fragment {
 
         elements = new ArrayList<>();
 
-        WeekView weekView = root.findViewById(R.id.weekly);
+        /*WeekView weekView = root.findViewById(R.id.weekly);
 
 
         setEvents();
         weekView.setEvents(elements);
-        weekView.setSelectListener((d) -> startCreateActivity(d));
+        weekView.setSelectListener((d) -> startCreateActivity(d));*/
 
         return root;
     }
@@ -66,7 +66,8 @@ public class CalendarFragment extends Fragment {
                 long time = cursor.getLong(3);
                 long duration = cursor.getLong(4);
                 int type = cursor.getInt(5);
-                elements.add(new WeekView.EventsTasks(title, day, time, duration, type));
+                int subject = cursor.getInt(6);
+                elements.add(new WeekView.EventsTasks(subject, title, day, time, duration, type));
             } while (cursor.moveToNext());
         }
         cursor.close();

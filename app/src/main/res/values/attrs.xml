@@ -15,6 +15,13 @@
         <attr name="hourText" format="color" />
         <attr name="iconHint" format="color" />
         <attr name="backgroundHint" format="color" />
+
+
+        <attr name="palette_blue" format="color" />
+        <attr name="palette_green" format="color" />
+        <attr name="palette_yellow" format="color" />
+        <attr name="palette_red" format="color" />
+        <attr name="palette_purple" format="color" />
     </declare-styleable>
 
     <declare-styleable name="WeekView">

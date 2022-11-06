@@ -3,6 +3,7 @@ package com.artuok.appwork;
 import android.app.Dialog;
 import android.app.TimePickerDialog;
 import android.content.ContentValues;
+import android.content.res.TypedArray;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
@@ -32,6 +33,7 @@ import com.thekhaeng.pushdownanim.PushDownAnim;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class CreateActivity extends AppCompatActivity {
 
@@ -48,8 +50,11 @@ public class CreateActivity extends AppCompatActivity {
     long startModify = 0;
     long endModify = 0;
 
+    int color = 0;
+
     TextView textDay, subject;
     String subject_txt = "";
+    ImageView colorD;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,7 +67,7 @@ public class CreateActivity extends AppCompatActivity {
         LinearLayoutManager manager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
         recyclerView = findViewById(R.id.times_recycler);
         subject = findViewById(R.id.subject_text);
-
+        colorD = findViewById(R.id.color_select);
 
         recyclerView.setHasFixedSize(false);
         recyclerView.setLayoutManager(manager);
@@ -92,22 +97,39 @@ public class CreateActivity extends AppCompatActivity {
                 .setScale(PushDownAnim.MODE_SCALE, 0.98f)
                 .setOnClickListener(view -> setEvents());
 
+        LinearLayout colorpicker = findViewById(R.id.color_selector);
+        PushDownAnim.setPushDownAnimTo(colorpicker)
+                .setDurationPush(100)
+                .setScale(PushDownAnim.MODE_SCALE, 0.98f)
+                .setOnClickListener(view -> {
+                    showColorPicker();
+                });
+
         setElements();
     }
 
     private void setEvents() {
-        DbHelper dbHelper = new DbHelper(this);
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        if (!Objects.equals(subject_txt, "")) {
+            DbHelper dbHelper = new DbHelper(this);
+            SQLiteDatabase dbw = dbHelper.getWritableDatabase();
+            SQLiteDatabase dbr = dbHelper.getReadableDatabase();
+            for (WeekView.EventsTasks e : elements) {
+                ContentValues values = new ContentValues();
+                values.put("title", subject_txt);
+                values.put("day_of_week", e.getDay());
+                values.put("time", e.getHour());
+                values.put("duration", e.getDuration());
+                values.put("type", color);
 
-        for (WeekView.EventsTasks e : elements) {
-            ContentValues values = new ContentValues();
-            values.put("title", subject_txt);
-            values.put("day_of_week", e.getDay());
-            values.put("time", e.getHour());
-            values.put("duration", e.getDuration());
-            values.put("type", 0);
-
-            db.insert(DbHelper.t_event, null, values);
+                Cursor c = dbr.rawQuery("SELECT id FROM " + DbHelper.t_subjects + " WHERE name = '" + subject_txt + "'", null);
+                int idSubject = -1;
+                if (c.moveToFirst()) {
+                    idSubject = c.getInt(0);
+                }
+                values.put("subject", idSubject);
+                dbw.insert(DbHelper.t_event, null, values);
+                finish();
+            }
         }
     }
 
@@ -126,7 +148,7 @@ public class CreateActivity extends AppCompatActivity {
     private void setElements() {
         if (getIntent().getExtras() != null) {
             Bundle extras = getIntent().getExtras();
-            WeekView.EventsTasks e = new WeekView.EventsTasks("",
+            WeekView.EventsTasks e = new WeekView.EventsTasks(0, "",
                     extras.getInt("day", 0),
                     extras.getLong("hour", 0),
                     extras.getLong("duration", 0),
@@ -144,7 +166,7 @@ public class CreateActivity extends AppCompatActivity {
             long hour = elements.get(elements.size() - 1).getHour();
             long duration = elements.get(elements.size() - 1).getDuration();
 
-            WeekView.EventsTasks e = new WeekView.EventsTasks("", day, hour, duration, 1);
+            WeekView.EventsTasks e = new WeekView.EventsTasks(0, "", day, hour, duration, 1);
             elements.add(e);
             elements.get(0).setColor(0);
             adapter.notifyDataSetChanged();
@@ -374,5 +396,74 @@ public class CreateActivity extends AppCompatActivity {
         cursor.close();
 
         return elements;
+    }
+
+    private void showColorPicker() {
+        Dialog colorSelector = new Dialog(this);
+        colorSelector.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        colorSelector.setContentView(R.layout.bottom_recurrence_layout);
+        colorSelector.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        colorSelector.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        colorSelector.getWindow().getAttributes().windowAnimations = R.style.DialogAnimation;
+        colorSelector.getWindow().setGravity(Gravity.BOTTOM);
+
+        LinearLayout edi = colorSelector.findViewById(R.id.color_selecting);
+        edi.setVisibility(View.VISIBLE);
+
+
+        TypedArray ta = getTheme().obtainStyledAttributes(R.styleable.AppWidgetAttrs);
+
+
+        LinearLayout blue = colorSelector.findViewById(R.id.color_blue);
+        PushDownAnim.setPushDownAnimTo(blue)
+                .setDurationPush(100)
+                .setScale(0.98f)
+                .setOnClickListener(view -> {
+                    color = ta.getColor(R.styleable.AppWidgetAttrs_palette_blue, 0);
+                    colorD.setColorFilter(color);
+                    colorSelector.dismiss();
+                });
+
+        LinearLayout green = colorSelector.findViewById(R.id.color_green);
+        PushDownAnim.setPushDownAnimTo(green)
+                .setDurationPush(100)
+                .setScale(0.98f)
+                .setOnClickListener(view -> {
+                    color = ta.getColor(R.styleable.AppWidgetAttrs_palette_green, 0);
+                    colorD.setColorFilter(color);
+                    colorSelector.dismiss();
+                });
+
+        LinearLayout yellow = colorSelector.findViewById(R.id.color_yellow);
+        PushDownAnim.setPushDownAnimTo(yellow)
+                .setDurationPush(100)
+                .setScale(0.98f)
+                .setOnClickListener(view -> {
+                    color = ta.getColor(R.styleable.AppWidgetAttrs_palette_yellow, 0);
+                    colorD.setColorFilter(color);
+                    colorSelector.dismiss();
+                });
+
+        LinearLayout red = colorSelector.findViewById(R.id.color_red);
+        PushDownAnim.setPushDownAnimTo(red)
+                .setDurationPush(100)
+                .setScale(0.98f)
+                .setOnClickListener(view -> {
+                    color = ta.getColor(R.styleable.AppWidgetAttrs_palette_red, 0);
+                    colorD.setColorFilter(color);
+                    colorSelector.dismiss();
+                });
+
+        LinearLayout purple = colorSelector.findViewById(R.id.color_purple);
+        PushDownAnim.setPushDownAnimTo(purple)
+                .setDurationPush(100)
+                .setScale(0.98f)
+                .setOnClickListener(view -> {
+                    color = ta.getColor(R.styleable.AppWidgetAttrs_palette_purple, 0);
+                    colorD.setColorFilter(color);
+                    colorSelector.dismiss();
+                });
+
+        colorSelector.show();
     }
 }

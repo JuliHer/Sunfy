@@ -23,7 +23,7 @@
         <item name="backgroundHint">#DBECF3</item>
 
 
-        //calendar
+        <!--calendar-->
         <item name="gridColor">@color/gray_900</item>
         <item name="textDayColor">@color/gray_400</item>
         <item name="textDayWeekendColor">@color/gray_500</item>
@@ -31,6 +31,12 @@
         <item name="textHighLightColor">@color/white</item>
         <item name="textHourColor">@color/gray_500</item>
 
+        <!--colorful-->
+        <item name="palette_blue">@color/palette_blue_n_700</item>
+        <item name="palette_green">@color/palette_green_n_700</item>
+        <item name="palette_yellow">@color/palette_yellow_n_700</item>
+        <item name="palette_red">@color/palette_red_n_700</item>
+        <item name="palette_purple">@color/palette_purple_n_700</item>
     </style>
 
     <style name="DropdownMenu" parent="Widget.MaterialComponents.TextInputLayout.FilledBox.ExposedDropdownMenu">
