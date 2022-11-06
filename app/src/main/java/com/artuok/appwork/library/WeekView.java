@@ -25,6 +25,7 @@ import com.artuok.appwork.R;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
@@ -59,6 +60,8 @@ public class WeekView extends View {
     private int backgroundColor;
     private List<Pos> mData;
     private List<EventsTasks> dataTemp;
+    private List<Intersects> mIntersects;
+    private List<Intersects> mIntersectsDrawed;
     private Dictionary<Pos, EventsTasks> mEvents = new Hashtable<>();
     private ValueAnimator animator = ValueAnimator.ofFloat(0, 1);
 
@@ -102,6 +105,7 @@ public class WeekView extends View {
         timer.scheduleAtFixedRate(new UpdateViewTask(), 0, 2000);
 
         mData = new ArrayList<>();
+
         mPaintLines = new Paint(Paint.ANTI_ALIAS_FLAG);
 
         mPaintText = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -120,16 +124,13 @@ public class WeekView extends View {
         highLightColorPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
 
-        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator valueAnimator) {
-                if (!mScroller.isFinished()) {
-                    mScroller.computeScrollOffset();
-                    scrollTo(0, mScroller.getCurrY());
-                    postInvalidate();
-                } else {
-                    animator.cancel();
-                }
+        animator.addUpdateListener(valueAnimator -> {
+            if (!mScroller.isFinished()) {
+                mScroller.computeScrollOffset();
+                scrollTo(0, mScroller.getCurrY());
+                postInvalidate();
+            } else {
+                animator.cancel();
             }
         });
 
@@ -190,7 +191,7 @@ public class WeekView extends View {
         public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
 
             mScroller.fling(offsetX, offsetY,
-                    -(int) velocityX, -(int) velocityY, 0, 0, 0 - getHeight(), mMaxHeight);
+                    -(int) velocityX, -(int) velocityY, 0, 0, -getHeight(), mMaxHeight);
 
             animator.setDuration(mScroller.getDuration());
             animator.start();
@@ -207,7 +208,7 @@ public class WeekView extends View {
 
         @Override
         public boolean onSingleTapConfirmed(MotionEvent e) {
-            EventsTasks a = getEventAt((int) e.getX(), (int) e.getY());
+            EventsTasks a = getEventAt((int) e.getX(), (int) e.getY() + offsetY);
             if (a != null) {
                 if (dateListener != null) {
                     dateListener.onClick(a);
@@ -265,8 +266,7 @@ public class WeekView extends View {
         if (y == 47) {
             duration = 1800;
         }
-        EventsTasks a = new EventsTasks("", x, hour, duration, 0);
-        Log.d("Event", hour + "");
+        EventsTasks a = new EventsTasks(0, "", x, hour, duration, 0);
         return a;
     }
 
@@ -451,8 +451,47 @@ public class WeekView extends View {
     }
 
     private void drawEvents(Canvas canvas, List<Pos> data) {
+        mIntersectsDrawed = new ArrayList<>();
+        for (Intersects a : mIntersects) {
+            drawIntersects(canvas, a, offsetY);
+        }
         for (Pos e : data) {
-            drawEvent(canvas, e, offsetY);
+            if (intersect(e) > 0) {
+                EventsTasks a = mEvents.get(e);
+                for (Intersects b : mIntersects) {
+                    if (b.enterInIntersect(a)) {
+                        if (!mIntersectsDrawed.contains(b)) {
+                            drawIntersects(canvas, b, offsetY);
+                            mIntersectsDrawed.add(b);
+                            Log.d("Intersects", "I");
+                        }
+                    }
+                }
+            } else {
+                drawEvent(canvas, e, offsetY);
+            }
+        }
+    }
+
+    private void drawIntersects(Canvas canvas, Intersects i, int y) {
+        int count = i.getCount();
+        for (int j = 0; j < count; j++) {
+            RectF event = new RectF();
+            EventsTasks a = i.getEvent(j);
+
+            Pos c = getPositionAt(a.getId(), a.getDay(), a.getHour(), a.getDuration());
+
+            Log.d("Intersect", a.getDay() + "");
+            int left = c.getX() + ((spacingOfDays / i.getCount()) * j);
+            int top = c.getY() - y;
+            int right = left + (spacingOfDays / i.getCount()) - convertToDpToPx(2);
+            int bottom = c.getHeight() - y;
+            event.set(left, top, right, bottom);
+
+            highLightColorPaint.setColor(a.getColor());
+
+            canvas.drawRoundRect(event, 15, 15, highLightColorPaint);
+            highLightColorPaint.setColor(highLightColor);
         }
     }
 
@@ -467,13 +506,14 @@ public class WeekView extends View {
         float bottom = p.getHeight() - y;
         event.set(left, top, right, bottom);
 
-        Log.d("EventY", p.getX() + "!");
         float heightE = bottom - top;
 
         int padding = convertToDpToPx(3);
 
         int cy = (int) (top + padding);
+        highLightColorPaint.setColor(a.getColor());
         canvas.drawRoundRect(event, 15, 15, highLightColorPaint);
+        highLightColorPaint.setColor(highLightColor);
         canvas.save();
         canvas.clipRect(event);
         //canvas.drawText(task.getTitle(), left + padding, cy + (padding*2), mPaintTxt);
@@ -499,7 +539,7 @@ public class WeekView extends View {
         canvas.restore();
     }
 
-    public Pos getPositionAt(int d, long h, long dur) {
+    public Pos getPositionAt(int id, int d, long h, long dur) {
 
         int padding = convertToDpToPx(4);
 
@@ -513,7 +553,7 @@ public class WeekView extends View {
         int right = (left + spacingOfDays) - padding;
         float bottom = (top + (height / day * duration)) - padding;
 
-        Pos p = new Pos(left, (int) top, right, (int) bottom);
+        Pos p = new Pos(id, left, (int) top, right, (int) bottom);
 
         return p;
     }
@@ -522,32 +562,176 @@ public class WeekView extends View {
         EventsTasks r = null;
         for (int i = 0; i < mData.size(); i++) {
             Pos e = mData.get(i);
-
-            if (x > e.getX() && x < e.getHeight()) {
-                if (y > e.getY() && y < e.height) {
+            if (x > e.getX() && x < e.getWidth()) {
+                if (y > e.getY() && y < e.getHeight()) {
                     r = mEvents.get(e);
                     break;
                 }
             }
         }
-
         return r;
     }
 
+    int intersect(Pos a) {
+        int count = 0;
+        for (Pos b : mData) {
+            if ((b.getY() + 1 >= a.getY() && b.getY() - 1 <= a.getHeight()) || (b.getHeight() + 1 >= a.getY() && b.getHeight() - 1 <= a.getHeight())) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+
+    public void show() {
+        postInvalidate();
+    }
+
+    private class UpdateViewTask extends TimerTask {
+
+        @Override
+        public void run() {
+            calendar = Calendar.getInstance();
+            if (seconds != calendar.get(Calendar.MINUTE)) {
+                postInvalidate();
+                seconds = calendar.get(Calendar.MINUTE);
+            }
+        }
+    }
+
+    public void setEvents(List<EventsTasks> es) {
+        dataTemp = es;
+        if (mSpacingOfEachLineX != 0) {
+            OnViewRegister();
+        }
+    }
+
+    public void register() {
+        List<Pos> p = new ArrayList<>();
+        mEvents = new Hashtable<>();
+        for (EventsTasks e : dataTemp) {
+            Pos a = getPositionAt(e.getId(), e.getDay(), e.getHour(), e.getDuration());
+            p.add(a);
+            mEvents.put(a, e);
+        }
+
+        this.mData = p;
+    }
+
+    private void OnViewRegister() {
+        if (!isRegister) {
+            List<Pos> p = new ArrayList<>();
+            mEvents = new Hashtable<>();
+            for (EventsTasks e : dataTemp) {
+                Pos a = getPositionAt(e.getId(), e.getDay(), e.getHour(), e.getDuration());
+
+                p.add(a);
+                mEvents.put(a, e);
+            }
+
+            this.mData = p;
+            getIntersects();
+            isRegister = !isRegister;
+        }
+    }
+
+    private void getIntersects() {
+        mIntersects = new ArrayList<>();
+        for (Pos a : mData) {
+            if (intersect(a) > 0) {
+
+                EventsTasks z = mEvents.get(a);
+                if (mIntersects.size() == 0) {
+                    Intersects b = new Intersects();
+                    b.addEvent(z);
+                    mIntersects.add(b);
+                } else {
+                    for (Intersects m : mIntersects) {
+                        if (m.enterInIntersect(z)) {
+                            m.addEvent(z);
+                        } else {
+                            Intersects b = new Intersects();
+                            b.addEvent(z);
+                            mIntersects.add(b);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public void addEvents(List<EventsTasks> es) {
+        List<Pos> p = new ArrayList<>();
+
+        for (EventsTasks e : es) {
+            p.add(getPositionAt(e.getId(), e.getDay(), e.getHour(), e.getDuration()));
+
+            mEvents.put(p.get(p.size() - 1), e);
+        }
+
+        this.mData.addAll(p);
+    }
+
+    public void addEvent(EventsTasks e) {
+        Pos p = getPositionAt(e.getId(), e.getDay(), e.getHour(), e.getDuration());
+        this.mData.add(p);
+
+        mEvents.put(p, e);
+    }
+
+    public void setDateListener(OnDateListener dateListener) {
+        this.dateListener = dateListener;
+    }
+
+    public void setSelectListener(OnSelectListener onSelectListener) {
+        this.onSelectListener = onSelectListener;
+    }
+
+    public interface OnDateListener {
+        void onClick(EventsTasks e);
+    }
+
+    public interface OnSelectListener {
+        void onClick(EventsTasks e);
+    }
+
+    private void updateHour(Canvas canvas) {
+        int h = calendar.get(Calendar.HOUR_OF_DAY);
+        int m = calendar.get(Calendar.MINUTE);
+        int d = calendar.get(Calendar.DAY_OF_WEEK) - 1;
+        int spacing = mSpacingOfEachLineX + (spacingOfDays * d);
+
+        float y = barDayHeight + ((h * spacingOfHour) + ((1f / 60f * m) * spacingOfHour)) - offsetY;
+
+        float x = mSpacingOfEachLineX;
+
+        canvas.drawRect(x, y - 1, getWidth(), y + 1, highLightColorPaint);
+        canvas.drawCircle(spacing, y, convertToDpToPx(5), highLightColorPaint);
+    }
 
     static public class EventsTasks {
+        private int id;
         private int day;
         private long hour;
         private long duration;
         private int color;
         private String title;
 
-        public EventsTasks(String title, int day, long hour, long duration, int color) {
+        public EventsTasks(int id, String title, int day, long hour, long duration, int color) {
+            this.id = id;
             this.title = title;
             this.day = day;
             this.hour = hour;
             this.duration = duration;
             this.color = color;
+        }
+
+        public int getId() {
+            return id;
+        }
+
+        public void setId(int id) {
+            this.id = id;
         }
 
         public int getDay() {
@@ -592,16 +776,26 @@ public class WeekView extends View {
     }
 
     public class Pos {
+        int id;
         int x;
         int y;
         int width;
         int height;
 
-        public Pos(int x, int y, int width, int height) {
+        public Pos(int id, int x, int y, int width, int height) {
+            this.id = id;
             this.x = x;
             this.y = y;
             this.width = width;
             this.height = height;
+        }
+
+        public int getId() {
+            return id;
+        }
+
+        public void setId(int id) {
+            this.id = id;
         }
 
         public int getX() {
@@ -646,104 +840,66 @@ public class WeekView extends View {
         }
     }
 
-    public void show() {
-        postInvalidate();
-    }
+    private class Intersects {
+        long min = 0;
+        long max = 0;
+        int count = 0;
+        List<EventsTasks> events;
+        List<Long> startHour;
+        List<Long> endHour;
 
-    private class UpdateViewTask extends TimerTask {
-
-        @Override
-        public void run() {
-            calendar = Calendar.getInstance();
-            if (seconds != calendar.get(Calendar.MINUTE)) {
-                postInvalidate();
-                seconds = calendar.get(Calendar.MINUTE);
-            }
-        }
-    }
-
-    public void setEvents(List<EventsTasks> es) {
-        dataTemp = es;
-        if (mSpacingOfEachLineX != 0) {
-            OnViewRegister();
-        }
-    }
-
-    public void register() {
-        List<Pos> p = new ArrayList<>();
-        mEvents = new Hashtable<>();
-        for (EventsTasks e : dataTemp) {
-            Pos a = getPositionAt(e.getDay(), e.getHour(), e.getDuration());
-            p.add(a);
-            Log.d("pos", e.getDay() + "");
-            mEvents.put(a, e);
+        public Intersects(List<EventsTasks> events) {
+            this.events = events;
+            reorganization();
         }
 
-        this.mData = p;
-    }
+        public Intersects() {
+            this.min = 0;
+            this.max = 0;
+            this.count = 0;
+            this.events = new ArrayList<>();
+            this.startHour = new ArrayList<>();
+            this.endHour = new ArrayList<>();
+        }
 
-    private void OnViewRegister() {
-        if (!isRegister) {
-            List<Pos> p = new ArrayList<>();
-            mEvents = new Hashtable<>();
-            for (EventsTasks e : dataTemp) {
-                Pos a = getPositionAt(e.getDay(), e.getHour(), e.getDuration());
-                p.add(a);
-                Log.d("pos", e.getDay() + "");
-                mEvents.put(a, e);
+        public void addEvent(EventsTasks event) {
+            this.events.add(event);
+            reorganization();
+        }
+
+        private void reorganization() {
+            for (EventsTasks e : events) {
+                startHour.add(e.getHour());
+                endHour.add(e.getHour() + e.getDuration());
             }
 
-            this.mData = p;
-            isRegister = !isRegister;
+            count = events.size();
+
+            startHour.sort(Long::compareTo);
+            endHour.sort(Long::compareTo);
+
+            events.sort((eventsTasks, t1) -> (int) (eventsTasks.getHour() - t1.getHour()));
+
+            Collections.reverse(endHour);
+
+            min = startHour.get(0);
+            max = endHour.get(0);
         }
-    }
 
-    public void addEvents(List<EventsTasks> es) {
-        List<Pos> p = new ArrayList<>();
-
-        for (EventsTasks e : es) {
-            p.add(getPositionAt(e.getDay(), e.getHour(), e.getDuration()));
-
-            mEvents.put(p.get(p.size() - 1), e);
+        public boolean enterInIntersect(EventsTasks event) {
+            long duration = event.getHour() + event.getDuration();
+            if ((event.getHour() >= min && event.getHour() <= max) || (duration >= min && duration <= max)) {
+                return true;
+            }
+            return false;
         }
 
-        this.mData.addAll(p);
-    }
+        public int getCount() {
+            return count;
+        }
 
-    public void addEvent(EventsTasks e) {
-        Pos p = getPositionAt(e.getDay(), e.getHour(), e.getDuration());
-        this.mData.add(p);
-
-        mEvents.put(p, e);
-    }
-
-    public void setDateListener(OnDateListener dateListener) {
-        this.dateListener = dateListener;
-    }
-
-    public void setSelectListener(OnSelectListener onSelectListener) {
-        this.onSelectListener = onSelectListener;
-    }
-
-    public interface OnDateListener {
-        void onClick(EventsTasks e);
-    }
-
-    public interface OnSelectListener {
-        void onClick(EventsTasks e);
-    }
-
-    private void updateHour(Canvas canvas) {
-        int h = calendar.get(Calendar.HOUR_OF_DAY);
-        int m = calendar.get(Calendar.MINUTE);
-        int d = calendar.get(Calendar.DAY_OF_WEEK) - 1;
-        int spacing = mSpacingOfEachLineX + (spacingOfDays * d);
-
-        float y = barDayHeight + ((h * spacingOfHour) + ((1f / 60f * m) * spacingOfHour)) - offsetY;
-
-        float x = mSpacingOfEachLineX;
-
-        canvas.drawRect(x, y - 1, getWidth(), y + 1, highLightColorPaint);
-        canvas.drawCircle(spacing, y, convertToDpToPx(5), highLightColorPaint);
+        public EventsTasks getEvent(int i) {
+            return events.get(i);
+        }
     }
 }
