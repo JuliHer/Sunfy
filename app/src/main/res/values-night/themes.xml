@@ -20,6 +20,7 @@
         <item name="subTextColor">@color/gray_800</item>
         <item name="iconHint">#D6BDFF</item>
         <item name="backgroundHint">#30283E</item>
+        <item name="iMainColor">@color/purple_200</item>
 
         <!--calendar-->
         <item name="gridColor">@color/gray_200</item>
@@ -28,6 +29,8 @@
         <item name="highLightColor">@color/palette_purple_200</item>
         <item name="textHighLightColor">@color/white</item>
         <item name="textHourColor">@color/gray_500</item>
+
+        <item name="android:dateTextAppearance">@color/gray_500</item>
 
         <!--colorful-->
         <item name="palette_blue">@color/palette_blue_b_700</item>
@@ -116,5 +119,17 @@
 
     <style name="mainColors">
         <item name="android:backgroundTint">@color/gray_100</item>
+    </style>
+
+    <style name="Calendar">
+        <item name="ColorDays">@color/gray_600</item>
+        <item name="ColorDaysInGrid">@color/white</item>
+        <item name="ColorWeekendDays">@color/gray_500</item>
+        <item name="ColorWeekendDaysInGrid">@color/gray_700</item>
+        <item name="ColorToday">@color/palette_purple_200</item>
+        <item name="ColorTextHighlight">@color/white</item>
+        <item name="ColorHighlight">@color/palette_purple_200</item>
+        <item name="ColorMonth">@color/white</item>
+        <item name="ColorOutMonth">@color/gray_500</item>
     </style>
 </resources>

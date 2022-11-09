@@ -62,31 +62,10 @@ public class AverageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         public AverageViewHolder(@NonNull View itemView) {
             super(itemView);
 
-            title = itemView.findViewById(R.id.subject_average);
-            status = itemView.findViewById(R.id.progress_txt);
-            progressBar = itemView.findViewById(R.id.progress_bar);
+
         }
 
         void onBindData(AverageElement element) {
-            title.setText(element.getSubject());
-            status.setText(element.getStatus());
-
-            progressBar.setProgress(0, true);
-            progressBar.setMax(element.getMax());
-            progressBar.setProgress(element.getProgress(), true);
-
-
-            int p = 0;
-            if (element.getMax() != 0) {
-                p = 100 / element.getMax() * element.getProgress();
-            }
-            if (p < 60) {
-                progressBar.setProgressDrawable(mInflater.getContext().getDrawable(R.drawable.circle_progress_red));
-            } else if (p < 85) {
-                progressBar.setProgressDrawable(mInflater.getContext().getDrawable(R.drawable.circle_progress_yellow));
-            } else {
-                progressBar.setProgressDrawable(mInflater.getContext().getDrawable(R.drawable.circle_progress_green));
-            }
 
         }
     }

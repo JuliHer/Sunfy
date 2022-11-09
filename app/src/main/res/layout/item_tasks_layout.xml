@@ -66,7 +66,7 @@
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:src="@drawable/ic_book"
-                            style="@style/iconMain" />
+                            app:tint="?iMainColor" />
 
                         <TextView
                             android:layout_weight="1"
@@ -75,7 +75,7 @@
                             android:text="Tareas Pendientes"
                             android:layout_marginStart="4dp"
                             android:textStyle="bold"
-                            style="@style/iconMain" />
+                            android:textColor="?iMainColor" />
                     </LinearLayout>
 
                     <LinearLayout
@@ -117,7 +117,7 @@
                             android:layout_width="15dp"
                             android:layout_height="15dp"
                             android:src="@drawable/ic_corner_down_right"
-                            style="@style/subIcon" />
+                            app:tint="?subTextColor" />
 
                         <TextView
                             android:layout_width="match_parent"
@@ -125,7 +125,7 @@
                             android:text="@string/see_more"
                             android:textSize="16sp"
                             android:textStyle="bold|italic"
-                            style="@style/subtext"
+                            android:textColor="?subTextColor"
                             android:padding="4dp" />
                     </LinearLayout>
 

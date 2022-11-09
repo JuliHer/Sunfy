@@ -135,6 +135,7 @@ public class SubjectsFragment extends Fragment {
         } else {
             adapter.notifyDataSetChanged();
         }
+        cursor.close();
     }
 
     private void showColorPicker() {

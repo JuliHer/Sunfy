@@ -15,7 +15,7 @@
         <attr name="hourText" format="color" />
         <attr name="iconHint" format="color" />
         <attr name="backgroundHint" format="color" />
-
+        <attr name="iMainColor" format="color" />
 
         <attr name="palette_blue" format="color" />
         <attr name="palette_green" format="color" />
@@ -37,5 +37,17 @@
         <attr name="textDayWeekendColor" format="color" />
         <attr name="highLightColor" format="color" />
         <attr name="textHighLightColor" format="color" />
+    </declare-styleable>
+
+    <declare-styleable name="Calendar">
+        <attr name="ColorDays" format="color" />
+        <attr name="ColorDaysInGrid" format="color" />
+        <attr name="ColorWeekendDays" format="color" />
+        <attr name="ColorWeekendDaysInGrid" format="color" />
+        <attr name="ColorToday" format="color" />
+        <attr name="ColorTextHighlight" format="color" />
+        <attr name="ColorHighlight" format="color" />
+        <attr name="ColorMonth" format="color" />
+        <attr name="ColorOutMonth" format="color" />
     </declare-styleable>
 </resources>

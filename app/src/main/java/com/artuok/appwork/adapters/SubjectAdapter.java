@@ -7,6 +7,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.artuok.appwork.R;
@@ -78,14 +79,19 @@ public class SubjectAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     class SubjectViewHolder extends RecyclerView.ViewHolder {
 
         TextView title;
+        CardView backgroud;
 
         public SubjectViewHolder(@NonNull View itemView) {
             super(itemView);
             title = itemView.findViewById(R.id.subject_name);
+            backgroud = itemView.findViewById(R.id.background);
         }
 
         void onBindData(SubjectElement element) {
             title.setText(element.getName());
+            if (backgroud != null) {
+                backgroud.setCardBackgroundColor(element.getColor());
+            }
         }
     }
 
@@ -116,10 +122,12 @@ public class SubjectAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
         TextView title;
 
+
         public SubjectSelectViewHolder(@NonNull View itemView) {
             super(itemView);
 
             title = itemView.findViewById(R.id.title_subject);
+
             PushDownAnim.setPushDownAnimTo(itemView)
                     .setScale(PushDownAnim.MODE_SCALE, 0.98f)
                     .setDurationPush(100)
@@ -128,6 +136,8 @@ public class SubjectAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
         void onBindData(SubjectElement element) {
             title.setText(element.getName());
+
+
         }
 
 

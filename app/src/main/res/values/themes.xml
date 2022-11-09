@@ -21,7 +21,7 @@
         <item name="subTextColor">@color/gray_400</item>
         <item name="iconHint">#092B42</item>
         <item name="backgroundHint">#DBECF3</item>
-
+        <item name="iMainColor">@color/blue_400</item>
 
         <!--calendar-->
         <item name="gridColor">@color/gray_900</item>
@@ -31,12 +31,15 @@
         <item name="textHighLightColor">@color/white</item>
         <item name="textHourColor">@color/gray_500</item>
 
+        <item name="android:dateTextAppearance">@color/gray_500</item>
+
         <!--colorful-->
         <item name="palette_blue">@color/palette_blue_n_700</item>
         <item name="palette_green">@color/palette_green_n_700</item>
         <item name="palette_yellow">@color/palette_yellow_n_700</item>
         <item name="palette_red">@color/palette_red_n_700</item>
         <item name="palette_purple">@color/palette_purple_n_700</item>
+
     </style>
 
     <style name="DropdownMenu" parent="Widget.MaterialComponents.TextInputLayout.FilledBox.ExposedDropdownMenu">
@@ -71,6 +74,7 @@
     <style name="subtext">
         <item name="android:textColor">@color/gray_300</item>
     </style>
+
 
     <style name="iconMain">
         <item name="android:tint">@color/blue_400</item>
@@ -128,5 +132,17 @@
         <item name="appWidgetRadius">25dp</item>
         <item name="appWidgetPadding">5dp</item>
         <item name="appWidgetInnerRadius">25dp</item>
+    </style>
+
+    <style name="Calendar">
+        <item name="ColorDays">@color/gray_400</item>
+        <item name="ColorDaysInGrid">@color/black</item>
+        <item name="ColorWeekendDays">@color/gray_500</item>
+        <item name="ColorWeekendDaysInGrid">@color/gray_300</item>
+        <item name="ColorToday">@color/blue_500</item>
+        <item name="ColorTextHighlight">@color/white</item>
+        <item name="ColorHighlight">@color/blue_500</item>
+        <item name="ColorMonth">@color/black</item>
+        <item name="ColorOutMonth">@color/gray_500</item>
     </style>
 </resources>
