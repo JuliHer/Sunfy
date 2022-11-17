@@ -302,7 +302,7 @@ public class CalendarWeekView extends View {
     private void drawEvent(@NonNull Canvas canvas, @NonNull Intersects i, int y) {
         int count = i.getCount();
         int width = i.getWidth();
-        int spacingOfEvent = mSpacingOfDays / width;
+        int spacingOfEvent = mSpacingOfDays / count;
         float height = (mSpacingOfHours * 24);
         float day = 86400;
 
@@ -314,7 +314,7 @@ public class CalendarWeekView extends View {
 
             int b = i.intersects(e) - width;
 
-            int left = mHalfSpacingOfDays + (mSpacingOfDays * e.getDay()) + (spacingOfEvent * b);
+            int left = mHalfSpacingOfDays + (mSpacingOfDays * e.getDay()) + (spacingOfEvent * j);
             float top = (int) (mSpacingOfTopBar + (height / day * start) + 1) - y;
             int right = left + spacingOfEvent - convertToDpToPx(2 / width);
             float bottom = (int) (top + (height / day * end) - convertToDpToPx(2));
@@ -399,9 +399,8 @@ public class CalendarWeekView extends View {
         public boolean onSingleTapConfirmed(@NonNull MotionEvent e) {
             Cell a = getPositionAt((int) (e.getX() - mSpacingOfHalfHours), (int) (e.getY() - mSpacingOfTopBar) + offsetY);
             if (a != null) {
-                EventsTask b = getEventAt((int) e.getX(), (int) e.getY());
-                if (dateListener != null && b != null) {
-                    dateListener.onClick(b);
+                if (dateListener != null) {
+                    dateListener.onClick();
                 }
             } else {
                 if (isSelect && isInSelect((int) (e.getX() - mSpacingOfHalfHours), (int) (e.getY() - mSpacingOfTopBar) + offsetY)) {
@@ -865,7 +864,7 @@ public class CalendarWeekView extends View {
     }
 
     public interface OnDateListener {
-        void onClick(EventsTask eventsTask);
+        void onClick();
     }
 
     public interface OnViewRegister {

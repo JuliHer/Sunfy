@@ -78,6 +78,7 @@
                 <action android:name="HOMEWORK" />
                 <action android:name="POSTPONE" />
                 <action android:name="DISMISS" />
+                <action android:name="EVENT" />
             </intent-filter>
         </receiver>
 

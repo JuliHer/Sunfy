@@ -1,13 +1,18 @@
 package com.artuok.appwork;
 
+import android.app.AlarmManager;
 import android.app.Dialog;
+import android.app.PendingIntent;
 import android.app.TimePickerDialog;
 import android.content.ContentValues;
+import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,9 +33,11 @@ import com.artuok.appwork.fragmets.homeFragment;
 import com.artuok.appwork.library.CalendarWeekView;
 import com.artuok.appwork.objects.ItemSubjectElement;
 import com.artuok.appwork.objects.SubjectElement;
+import com.artuok.appwork.services.AlarmWorkManager;
 import com.thekhaeng.pushdownanim.PushDownAnim;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Objects;
 
@@ -119,13 +126,9 @@ public class CreateActivity extends AppCompatActivity {
                     idSubject = c.getInt(0);
                 }
                 values.put("subject", idSubject);
+                setAlarmSchedule();
                 dbw.insert(DbHelper.t_event, null, values);
                 c.close();
-
-                MainActivity a = MainActivity.getInstance();
-                if (a != null) {
-                    a.notifyCalendar();
-                }
                 finish();
             }
         }
@@ -399,5 +402,79 @@ public class CreateActivity extends AppCompatActivity {
         return elements;
     }
 
+    void setAlarmSchedule() {
+        DbHelper dbHelper = new DbHelper(this);
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Cursor v = db.rawQuery("SELECT * FROM " + DbHelper.t_event + " ORDER BY day_of_week ASC, time ASC", null);
+        Calendar c = Calendar.getInstance();
+        long time = 0;
+        long duration = 0;
+        int day = -1;
+        String name = "";
+        long hour = (60 * 60 * c.get(Calendar.HOUR_OF_DAY)) + (60 * c.get(Calendar.MINUTE));
+        int dow = c.get(Calendar.DAY_OF_WEEK) - 1;
+        if (v.moveToFirst()) {
+            do {
+                if (v.getLong(3) > (hour + (60 * 60)) && dow == v.getInt(2)) {
+                    time = v.getLong(3) * 1000;
+                    day = v.getInt(2);
+                    time = time - (hour * 1000);
+                    duration = v.getLong(4) * 1000;
+                    name = v.getString(1);
+                    break;
+                } else if (dow < v.getInt(2)) {
+                    time = v.getLong(3) * 1000;
+                    day = v.getInt(2);
+                    int r = (day + 1) - (dow + 1);
+                    time = (r * 86400000L) + (time) - (hour * 1000);
+                    duration = v.getLong(4) * 1000;
+                    name = v.getString(1);
+                    break;
+                }
+            } while (v.moveToNext());
+            if (!(!name.equals("") && time != 0 && duration != 0)) {
+                v.moveToFirst();
+                do {
+                    time = v.getLong(3) * 1000;
+                    day = v.getInt(2);
+                    int r = (day + 1) - (dow + 1);
+                    time = (r * 86400000L) + (time) - (hour * 1000);
+                    duration = v.getLong(4) * 1000;
+                    name = v.getString(1);
+                    if (duration != 0) {
+                        break;
+                    }
+                } while (v.moveToNext());
+            }
+        }
+        if (!name.equals("") && time != 0 && duration != 0) {
+            setNotify(name, time, duration);
+        }
 
+    }
+
+    void setNotify(String name, long diff, long duration) {
+
+        long start = Calendar.getInstance().getTimeInMillis() + diff;
+
+        Intent notify = new Intent(this, AlarmWorkManager.class)
+                .setAction(AlarmWorkManager.ACTION_EVENT);
+        int days = (int) (diff / 1000 / 60 / 60 / 24);
+        int hour = (int) (diff / 1000 / 60 / 60 % 24);
+        int min = (int) (diff / 1000 / 60 % 60);
+        Log.d("faltan", days + "d " + hour + " h" + min + " m");
+
+        notify.putExtra("name", name);
+        notify.putExtra("time", start);
+        notify.putExtra("duration", duration);
+        PendingIntent pendingNotify = PendingIntent.getBroadcast(
+                this,
+                1, notify,
+                PendingIntent.FLAG_UPDATE_CURRENT);
+
+
+        AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        manager.cancel(pendingNotify);
+        manager.setExact(AlarmManager.RTC_WAKEUP, start - (60 * 60 * 1000), pendingNotify);
+    }
 }
