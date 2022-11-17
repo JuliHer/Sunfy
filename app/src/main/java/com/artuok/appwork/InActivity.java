@@ -1,14 +1,25 @@
 package com.artuok.appwork;
 
+import android.app.AlarmManager;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
+
+import com.artuok.appwork.db.DbHelper;
+import com.artuok.appwork.services.AlarmWorkManager;
+
+import java.util.Calendar;
 
 public class InActivity extends AppCompatActivity {
 
@@ -24,6 +35,8 @@ public class InActivity extends AppCompatActivity {
         Preferences();
 
         createNotificationChannel();
+        restauredAlarm();
+        setAlarmSchedule();
 
         new Handler().postDelayed(this::loadMain, 2000);
     }
@@ -66,5 +79,123 @@ public class InActivity extends AppCompatActivity {
         manager.createNotificationChannel(notificationChannel2);
         manager.createNotificationChannel(notificationChannel1);
         manager.createNotificationChannel(notificationChannel3);
+    }
+
+    void cancelAlarm() {
+        AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        Intent notify = new Intent(this, AlarmWorkManager.class)
+                .setAction(AlarmWorkManager.ACTION_TIME_TO_DO_HOMEWORK);
+        PendingIntent pendingNotify = PendingIntent.getBroadcast(
+                this,
+                0, notify,
+                0);
+        manager.cancel(pendingNotify);
+    }
+
+    void setAlarm(int hour, int minute, boolean alarm) {
+        final Calendar c = Calendar.getInstance();
+        int day = 1000 * 60 * 60 * 24;
+        AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        c.set(Calendar.HOUR_OF_DAY, hour);
+        c.set(Calendar.MINUTE, minute);
+        c.set(Calendar.SECOND, 0);
+        long whe = c.getTimeInMillis() <= Calendar.getInstance().getTimeInMillis() ? c.getTimeInMillis() + day : c.getTimeInMillis();
+        Intent notify = new Intent(this, AlarmWorkManager.class)
+                .setAction(AlarmWorkManager.ACTION_TIME_TO_DO_HOMEWORK);
+        notify.putExtra("time", whe);
+        if (alarm) {
+            notify.putExtra("alarm", 1);
+        }
+        PendingIntent pendingNotify = PendingIntent.getBroadcast(
+                this,
+                0, notify,
+                PendingIntent.FLAG_UPDATE_CURRENT);
+        manager.cancel(pendingNotify);
+
+        manager.setExact(AlarmManager.RTC_WAKEUP, whe, pendingNotify);
+    }
+
+    void restauredAlarm() {
+        SharedPreferences sharedPreferences = getSharedPreferences("settings", Context.MODE_PRIVATE);
+        boolean as = sharedPreferences.getBoolean("AlarmSet", false);
+        int h = Integer.parseInt(sharedPreferences.getString("timeTDH", "11:00").split(":")[0]);
+        int m = Integer.parseInt(sharedPreferences.getString("timeTDH", "11:00").split(":")[1]);
+        setAlarm(h, m, as);
+    }
+
+    void setAlarmSchedule() {
+        DbHelper dbHelper = new DbHelper(this);
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Cursor v = db.rawQuery("SELECT * FROM " + DbHelper.t_event + " ORDER BY day_of_week ASC, time ASC", null);
+        Calendar c = Calendar.getInstance();
+        long time = 0;
+        long duration = 0;
+        int day = -1;
+        String name = "";
+        long hour = (60 * 60 * c.get(Calendar.HOUR_OF_DAY)) + (60 * c.get(Calendar.MINUTE));
+        int dow = c.get(Calendar.DAY_OF_WEEK) - 1;
+        if (v.moveToFirst()) {
+            do {
+                if (v.getLong(3) > (hour + (60 * 60)) && dow == v.getInt(2)) {
+                    time = v.getLong(3) * 1000;
+                    day = v.getInt(2);
+                    time = time - (hour * 1000);
+                    duration = v.getLong(4) * 1000;
+                    name = v.getString(1);
+                    break;
+                } else if (dow < v.getInt(2)) {
+                    time = v.getLong(3) * 1000;
+                    day = v.getInt(2);
+                    int r = (day + 1) - (dow + 1);
+                    time = (r * 86400000L) + (time) - (hour * 1000);
+                    duration = v.getLong(4) * 1000;
+                    name = v.getString(1);
+                    break;
+                }
+            } while (v.moveToNext());
+            if (!(!name.equals("") && time != 0 && duration != 0)) {
+                v.moveToFirst();
+                do {
+                    time = v.getLong(3) * 1000;
+                    day = v.getInt(2);
+                    int r = (day + 1) - (dow + 1);
+                    time = (r * 86400000L) + (time) - (hour * 1000);
+                    duration = v.getLong(4) * 1000;
+                    name = v.getString(1);
+                    if (duration != 0) {
+                        break;
+                    }
+                } while (v.moveToNext());
+            }
+        }
+        if (!name.equals("") && time != 0 && duration != 0) {
+            setNotify(name, time, duration);
+        }
+
+    }
+
+    void setNotify(String name, long diff, long duration) {
+
+        long start = Calendar.getInstance().getTimeInMillis() + diff;
+
+        Intent notify = new Intent(this, AlarmWorkManager.class)
+                .setAction(AlarmWorkManager.ACTION_EVENT);
+        int days = (int) (diff / 1000 / 60 / 60 / 24);
+        int hour = (int) (diff / 1000 / 60 / 60 % 24);
+        int min = (int) (diff / 1000 / 60 % 60);
+        Log.d("faltan", days + "d " + hour + " h" + min + " m");
+
+        notify.putExtra("name", name);
+        notify.putExtra("time", start);
+        notify.putExtra("duration", duration);
+        PendingIntent pendingNotify = PendingIntent.getBroadcast(
+                this,
+                1, notify,
+                PendingIntent.FLAG_UPDATE_CURRENT);
+
+
+        AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        manager.cancel(pendingNotify);
+        manager.setExact(AlarmManager.RTC_WAKEUP, start - (60 * 60 * 1000), pendingNotify);
     }
 }

@@ -10,6 +10,7 @@ public class AlarmWorkManager extends BroadcastReceiver {
     public static final String ACTION_TIME_TO_DO_HOMEWORK = "HOMEWORK";
     public static final String ACTION_POSTPONE = "POSTPONE";
     public static final String ACTION_DISMISS = "DISMISS";
+    public static final String ACTION_EVENT = "EVENT";
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -38,6 +39,13 @@ public class AlarmWorkManager extends BroadcastReceiver {
                     intent1.setAction(ACTION_POSTPONE);
                     intent1.putExtra("time", intent.getLongExtra("time", 0));
                     intent1.putExtra("alarm", 1);
+                    context.startForegroundService(intent1);
+                    break;
+                case ACTION_EVENT:
+                    intent1.setAction(ACTION_POSTPONE);
+                    intent1.putExtra("name", intent.getStringExtra("name"));
+                    intent1.putExtra("time", intent.getLongExtra("time", 0));
+                    intent1.putExtra("duration", intent.getLongExtra("duration", 0));
                     context.startForegroundService(intent1);
                     break;
             }

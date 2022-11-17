@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.artuok.appwork.CreateActivity;
+import com.artuok.appwork.MainActivity;
 import com.artuok.appwork.R;
 import com.artuok.appwork.adapters.BottomEventAdapter;
 import com.artuok.appwork.db.DbHelper;
@@ -74,8 +75,8 @@ public class CalendarFragment extends Fragment {
         weekView.setViewRegisterListener(() -> weekView.scrollAt(time));
 
         calendarV.addOnDateClickListener(this::showEvents);
-        weekView.setDateListener(eventsTask -> {
-
+        weekView.setDateListener(() -> {
+            ((MainActivity) requireActivity()).navigateTo(3);
         });
         weekView.setSelectListener(this::startCreateActivity);
 
