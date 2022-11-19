@@ -38,7 +38,7 @@ public class InActivity extends AppCompatActivity {
         restauredAlarm();
         setAlarmSchedule();
 
-        new Handler().postDelayed(this::loadMain, 2000);
+        new Handler().postDelayed(this::loadMain, 500);
     }
 
     @Override
@@ -100,6 +100,13 @@ public class InActivity extends AppCompatActivity {
         c.set(Calendar.MINUTE, minute);
         c.set(Calendar.SECOND, 0);
         long whe = c.getTimeInMillis() <= Calendar.getInstance().getTimeInMillis() ? c.getTimeInMillis() + day : c.getTimeInMillis();
+
+        long diff = whe - Calendar.getInstance().getTimeInMillis();
+        int days = (int) (diff / 1000 / 60 / 60 / 24);
+        int hou = (int) (diff / 1000 / 60 / 60 % 24);
+        int min = (int) (diff / 1000 / 60 % 60);
+        Log.d("faltan", days + "d " + hou + "h " + min + "m");
+
         Intent notify = new Intent(this, AlarmWorkManager.class)
                 .setAction(AlarmWorkManager.ACTION_TIME_TO_DO_HOMEWORK);
         notify.putExtra("time", whe);
@@ -138,7 +145,6 @@ public class InActivity extends AppCompatActivity {
             do {
                 if (v.getLong(3) > (hour + (60 * 60)) && dow == v.getInt(2)) {
                     time = v.getLong(3) * 1000;
-                    day = v.getInt(2);
                     time = time - (hour * 1000);
                     duration = v.getLong(4) * 1000;
                     name = v.getString(1);
@@ -158,7 +164,7 @@ public class InActivity extends AppCompatActivity {
                 do {
                     time = v.getLong(3) * 1000;
                     day = v.getInt(2);
-                    int r = (day + 1) - (dow + 1);
+                    int r = 7 - (dow + 1) + (day + 1);
                     time = (r * 86400000L) + (time) - (hour * 1000);
                     duration = v.getLong(4) * 1000;
                     name = v.getString(1);
@@ -171,7 +177,7 @@ public class InActivity extends AppCompatActivity {
         if (!name.equals("") && time != 0 && duration != 0) {
             setNotify(name, time, duration);
         }
-
+        v.close();
     }
 
     void setNotify(String name, long diff, long duration) {
@@ -180,10 +186,6 @@ public class InActivity extends AppCompatActivity {
 
         Intent notify = new Intent(this, AlarmWorkManager.class)
                 .setAction(AlarmWorkManager.ACTION_EVENT);
-        int days = (int) (diff / 1000 / 60 / 60 / 24);
-        int hour = (int) (diff / 1000 / 60 / 60 % 24);
-        int min = (int) (diff / 1000 / 60 % 60);
-        Log.d("faltan", days + "d " + hour + " h" + min + " m");
 
         notify.putExtra("name", name);
         notify.putExtra("time", start);
@@ -192,8 +194,6 @@ public class InActivity extends AppCompatActivity {
                 this,
                 1, notify,
                 PendingIntent.FLAG_UPDATE_CURRENT);
-
-
         AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         manager.cancel(pendingNotify);
         manager.setExact(AlarmManager.RTC_WAKEUP, start - (60 * 60 * 1000), pendingNotify);

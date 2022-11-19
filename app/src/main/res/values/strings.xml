@@ -96,4 +96,9 @@
     <string name="min_friday">F</string>
     <string name="min_saturday">S</string>
     <string name="min_sunday">S</string>
+
+    <string name="your_subject">Your subject</string>
+    <string name="is_going_to_start">is going to start!</string>
+    <string name="schedule">Schedule</string>
+    <string name="Calendar">Calendar</string>
 </resources>

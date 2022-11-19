@@ -37,7 +37,7 @@
             android:textColor="@color/white"
             android:paddingVertical="10dp"
             android:paddingHorizontal="20dp"
-            android:backgroundTint="?highLightColor" />
+            android:backgroundTint="?iMainColor" />
     </LinearLayout>
 
     <LinearLayout

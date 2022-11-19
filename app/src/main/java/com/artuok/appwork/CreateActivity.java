@@ -437,7 +437,7 @@ public class CreateActivity extends AppCompatActivity {
                 do {
                     time = v.getLong(3) * 1000;
                     day = v.getInt(2);
-                    int r = (day + 1) - (dow + 1);
+                    int r = 7 - (dow + 1) + (day + 1);
                     time = (r * 86400000L) + (time) - (hour * 1000);
                     duration = v.getLong(4) * 1000;
                     name = v.getString(1);

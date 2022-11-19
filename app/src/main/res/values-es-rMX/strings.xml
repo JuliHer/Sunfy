@@ -93,4 +93,8 @@
     <string name="min_friday">V</string>
     <string name="min_saturday">S</string>
     <string name="min_sunday">D</string>
+    <string name="your_subject">Tu materia</string>
+    <string name="is_going_to_start">va a comenzar!</string>
+    <string name="schedule">Horario</string>
+    <string name="Calendar">Calendario</string>
 </resources>

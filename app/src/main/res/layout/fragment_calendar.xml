@@ -19,7 +19,7 @@
                 android:id="@+id/schedule"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Horario"
+                android:text="@string/schedule"
                 android:background="@drawable/button"
                 android:backgroundTint="?backgroundHint"
                 android:paddingVertical="4dp"
@@ -33,7 +33,7 @@
                 android:id="@+id/calendar"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Calendario"
+                android:text="@string/calendar"
                 android:background="@drawable/button"
                 android:backgroundTint="?backgroundHint"
                 android:paddingVertical="4dp"
@@ -49,13 +49,13 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:weekPaddingBottom="100dp"
-            app:textSize="14sp"
-            android:visibility="gone" />
+            app:textSize="14sp" />
 
         <com.artuok.appwork.library.Calendar
             android:id="@+id/n_calendar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:visibility="gone"
             style="@style/Calendar" />
     </LinearLayout>
 </FrameLayout>

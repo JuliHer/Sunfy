@@ -42,7 +42,7 @@ public class AlarmWorkManager extends BroadcastReceiver {
                     context.startForegroundService(intent1);
                     break;
                 case ACTION_EVENT:
-                    intent1.setAction(ACTION_POSTPONE);
+                    intent1.setAction(ACTION_EVENT);
                     intent1.putExtra("name", intent.getStringExtra("name"));
                     intent1.putExtra("time", intent.getLongExtra("time", 0));
                     intent1.putExtra("duration", intent.getLongExtra("duration", 0));
