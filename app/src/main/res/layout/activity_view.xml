@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ViewActivity"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="8dp">
+
+        <ImageView
+            android:id="@+id/back_button"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:padding="5dp"
+            android:src="@drawable/ic_arrow_left"
+            app:tint="?backgroundBorder" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="15dp"
+        android:paddingVertical="7dp">
+
+        <TextView
+            android:id="@+id/title_subject"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/subject"
+            android:textSize="26sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/days_left"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/day_left"
+            android:textSize="13sp"
+            android:textColor="?subTextColor" />
+
+        <TextView
+            android:id="@+id/description_task"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque diam ante, semper ut lorem a, dapibus iaculis elit. In aliquet purus sit amet magna vestibulum, eget pretium metus tristique. Morbi ut rhoncus neque. Donec dictum lorem diam, in convallis ante."
+            android:justificationMode="inter_word"
+            android:maxLines="15"
+            android:ellipsize="end"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+    <GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:columnCount="2"
+        android:rowCount="2"
+        android:paddingVertical="3dp"
+        android:paddingHorizontal="10dp">
+
+        <androidx.cardview.widget.CardView
+            android:layout_columnWeight="1"
+            android:layout_rowWeight="1"
+            android:elevation="0dp"
+            app:cardElevation="0dp"
+            android:background="@drawable/transparent_background"
+            app:cardCornerRadius="12dp"
+            android:layout_margin="5dp">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:src="@drawable/ic_hexagon" />
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:layout_columnWeight="1"
+            android:layout_rowWeight="1"
+            android:elevation="0dp"
+            app:cardElevation="0dp"
+            android:background="@drawable/transparent_background"
+            app:cardCornerRadius="12dp"
+            android:layout_margin="5dp">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:src="@drawable/ic_hexagon" />
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:layout_columnWeight="1"
+            android:layout_rowWeight="1"
+            android:elevation="0dp"
+            app:cardElevation="0dp"
+            android:background="@drawable/transparent_background"
+            app:cardCornerRadius="12dp"
+            android:layout_margin="5dp">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:src="@drawable/ic_hexagon" />
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:layout_columnWeight="1"
+            android:layout_rowWeight="1"
+            android:elevation="0dp"
+            app:cardElevation="0dp"
+            android:background="@drawable/transparent_background"
+            app:cardCornerRadius="12dp"
+            android:layout_margin="5dp">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:src="@drawable/ic_hexagon" />
+        </androidx.cardview.widget.CardView>
+    </GridLayout>
+
+</LinearLayout>

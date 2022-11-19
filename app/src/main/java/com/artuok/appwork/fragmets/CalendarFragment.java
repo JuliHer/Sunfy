@@ -100,7 +100,7 @@ public class CalendarFragment extends Fragment {
     }
 
     public void setEvents() {
-        DbHelper dbHelper = new DbHelper(requireActivity());
+        DbHelper dbHelper = new DbHelper(requireActivity().getApplicationContext());
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
         Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.t_event, null);
@@ -122,7 +122,7 @@ public class CalendarFragment extends Fragment {
     }
 
     public void calendarEvents() {
-        DbHelper dbHelper = new DbHelper(requireActivity());
+        DbHelper dbHelper = new DbHelper(requireActivity().getApplicationContext());
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         List<TaskEvent> e = new ArrayList<>();
         Cursor c = db.rawQuery("SELECT * FROM " + DbHelper.t_task, null);
@@ -196,7 +196,7 @@ public class CalendarFragment extends Fragment {
     }
 
     public void loadEvents(int dd, int mm, int yyyy) {
-        DbHelper dbHelper = new DbHelper(requireActivity());
+        DbHelper dbHelper = new DbHelper(requireActivity().getApplicationContext());
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
         String m = mm < 10 ? "0" + (mm + 1) : "" + (mm + 1);

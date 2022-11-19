@@ -67,6 +67,7 @@ public class NotificationService extends Service {
                     break;
                 case AlarmWorkManager.ACTION_EVENT:
                     eventNotification(extras.getString("name"), extras.getLong("time"), extras.getLong("duration"));
+                    destroy();
                     break;
             }
         }
@@ -187,7 +188,7 @@ public class NotificationService extends Service {
     }
 
     public void eventNotification(String name, long time, long duration) {
-        String t = "your subject " + name + " is going to start";
+        String t = getString(R.string.your_subject) + " " + name + " " + getString(R.string.is_going_to_start);
 
         Calendar v = Calendar.getInstance();
         v.setTimeInMillis(time);
@@ -201,7 +202,7 @@ public class NotificationService extends Service {
         m = min < 10 ? "0" + min : min + "";
         tm = v.get(Calendar.AM_PM) == Calendar.AM ? "am" : "pm";
         g += v.get(Calendar.HOUR) + ":" + m + " " + tm;
-        Notification foreground = new NotificationCompat.Builder(this, InActivity.CHANNEL_ID_2)
+        Notification foreground = new NotificationCompat.Builder(this, InActivity.CHANNEL_ID_1)
                 .setSmallIcon(R.drawable.ic_stat_name)
                 .setContentTitle(t)
                 .setContentText(g)
@@ -268,7 +269,6 @@ public class NotificationService extends Service {
         Intent notify = new Intent(this, AlarmWorkManager.class)
                 .setAction(AlarmWorkManager.ACTION_TIME_TO_DO_HOMEWORK);
         notify.putExtra("time", whe);
-        Log.d("say", "alarmset " + alarm);
         if (alarm) {
             notify.putExtra("alarm", 1);
         }
@@ -344,7 +344,7 @@ public class NotificationService extends Service {
                 do {
                     time = v.getLong(3) * 1000;
                     day = v.getInt(2);
-                    int r = (day + 1) - (dow + 1);
+                    int r = 7 - (dow + 1) + (day + 1);
                     time = (r * 86400000L) + (time) - (hour * 1000);
                     duration = v.getLong(4) * 1000;
                     name = v.getString(1);
@@ -369,7 +369,7 @@ public class NotificationService extends Service {
         int days = (int) (diff / 1000 / 60 / 60 / 24);
         int hour = (int) (diff / 1000 / 60 / 60 % 24);
         int min = (int) (diff / 1000 / 60 % 60);
-        Log.d("faltan", days + "d " + hour + " h" + min + " m");
+        Log.d("faltan", days + "d " + hour + " h" + min + " min");
 
         notify.putExtra("name", name);
         notify.putExtra("time", start);

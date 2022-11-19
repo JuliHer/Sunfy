@@ -13,6 +13,7 @@ import com.artuok.appwork.R;
 import com.artuok.appwork.objects.AwaitingElement;
 import com.artuok.appwork.objects.Item;
 import com.artuok.appwork.objects.StatisticsElement;
+import com.thekhaeng.pushdownanim.PushDownAnim;
 
 import java.util.List;
 
@@ -20,10 +21,12 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     List<Item> mData;
     LayoutInflater mInflater;
+    OnClickListener listener;
 
     public AwaitingAdapter(Context context, List<Item> mData) {
         this.mData = mData;
         this.mInflater = LayoutInflater.from(context);
+
     }
 
     @NonNull
@@ -56,12 +59,16 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         return mData.size();
     }
 
+    public void setOnClickListener(OnClickListener listener) {
+        this.listener = listener;
+    }
+
     @Override
     public int getItemViewType(int position) {
         return mData.get(position).getType();
     }
 
-    class AwaitingViewHolder extends RecyclerView.ViewHolder {
+    class AwaitingViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         TextView title, description, subject, status, date;
 
@@ -72,12 +79,17 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             subject = itemView.findViewById(R.id.subjects_card);
             status = itemView.findViewById(R.id.status_card);
             date = itemView.findViewById(R.id.date_card);
+            PushDownAnim.setPushDownAnimTo(itemView)
+                    .setDurationPush(100)
+                    .setScale(PushDownAnim.MODE_SCALE, 0.98f)
+                    .setOnClickListener(this);
         }
 
         void onBindData(AwaitingElement element) {
-            title.setText(element.getTitle());
-            description.setText(element.getDescription());
-            subject.setText(element.getSubject());
+            title.setText(element.getSubject());
+            String t = element.getTitle().equals("") ? element.getDescription() : element.getTitle() + ": " + element.getDescription();
+            description.setText(t);
+            subject.setText("");
 
             String d = element.getStatus() + " " + mInflater.getContext().getString(R.string.day_left);
 
@@ -108,6 +120,11 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                 }
             }
         }
+
+        @Override
+        public void onClick(View view) {
+            listener.onClick(view, getLayoutPosition());
+        }
     }
 
     class StatisticViewHolder extends RecyclerView.ViewHolder {
@@ -130,5 +147,9 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             String l = "" + element.getLosed();
             losed.setText(l);
         }
+    }
+
+    public interface OnClickListener {
+        void onClick(View view, int position);
     }
 }

@@ -128,10 +128,10 @@
     </style>
 
     <style name="Theme.AppWork.AppWidgetContainer" parent="Theme.AppWork.AppWidgetContainerParent">
-        <item name="android:colorBackground">#bFFF</item>
-        <item name="appWidgetRadius">25dp</item>
-        <item name="appWidgetPadding">5dp</item>
-        <item name="appWidgetInnerRadius">25dp</item>
+        <item name="android:colorBackground">#FFFF</item>
+        <item name="appWidgetRadius">15dp</item>
+        <item name="appWidgetPadding">2dp</item>
+        <item name="appWidgetInnerRadius">15dp</item>
     </style>
 
     <style name="Calendar">

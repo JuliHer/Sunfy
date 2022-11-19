@@ -1,6 +1,7 @@
 package com.artuok.appwork.fragmets;
 
 import android.content.ContentValues;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Canvas;
@@ -19,6 +20,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.artuok.appwork.MainActivity;
 import com.artuok.appwork.R;
+import com.artuok.appwork.ViewActivity;
 import com.artuok.appwork.adapters.AwaitingAdapter;
 import com.artuok.appwork.db.DbHelper;
 import com.artuok.appwork.objects.AwaitingElement;
@@ -39,6 +41,7 @@ public class AwaitingFragment extends Fragment {
     AwaitingAdapter adapter;
     LinearLayoutManager manager;
     TextView done, onHold, lose;
+    AwaitingAdapter.OnClickListener listener;
 
     ItemTouchHelper.SimpleCallback touchHelper = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
         @Override
@@ -58,8 +61,8 @@ public class AwaitingFragment extends Fragment {
                     checkTask(position);
                     break;
             }
-            String d = ((AwaitingElement) elements.get(position).getObject()).getDate();
-            ((MainActivity) requireActivity()).notifyChangedInHome(d);
+            ((MainActivity) requireActivity()).updateWidget();
+            statistics();
         }
 
         @Override
@@ -88,8 +91,10 @@ public class AwaitingFragment extends Fragment {
                              @Nullable Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.awaiting_fragment, container, false);
 
+        setListener();
         elements = new ArrayList<>();
         adapter = new AwaitingAdapter(requireActivity(), elements);
+        adapter.setOnClickListener(listener);
         manager = new LinearLayoutManager(requireContext(), RecyclerView.VERTICAL, false);
         recyclerView = root.findViewById(R.id.awaiting_recycler);
         done = root.findViewById(R.id.done_txt);
@@ -107,6 +112,18 @@ public class AwaitingFragment extends Fragment {
         loadAwaitings(true);
 
         return root;
+    }
+
+    void setListener() {
+        listener = (view, p) -> {
+            if (elements.get(p).getType() == 0) {
+                AwaitingElement e = ((AwaitingElement) elements.get(p).getObject());
+                Intent i = new Intent(requireActivity(), ViewActivity.class);
+                i.putExtra("id", e.getId());
+                startActivity(i);
+            }
+
+        };
     }
 
     void statistics() {

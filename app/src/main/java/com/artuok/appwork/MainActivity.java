@@ -1,32 +1,20 @@
 package com.artuok.appwork;
 
+import android.app.Activity;
 import android.app.AlarmManager;
-import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.app.PendingIntent;
-import android.app.TimePickerDialog;
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
-import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.ViewGroup;
-import android.view.Window;
-import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.RemoteViews;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -36,18 +24,12 @@ import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
-import com.artuok.appwork.adapters.SubjectAdapter;
-import com.artuok.appwork.db.DbHelper;
 import com.artuok.appwork.fragmets.AwaitingFragment;
 import com.artuok.appwork.fragmets.CalendarFragment;
 import com.artuok.appwork.fragmets.SettingsFragment;
 import com.artuok.appwork.fragmets.SubjectsFragment;
 import com.artuok.appwork.fragmets.homeFragment;
-import com.artuok.appwork.objects.ItemSubjectElement;
-import com.artuok.appwork.objects.SubjectElement;
 import com.artuok.appwork.services.AlarmWorkManager;
 import com.artuok.appwork.services.RemotesService;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -55,9 +37,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationBarView;
 import com.thekhaeng.pushdownanim.PushDownAnim;
 
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.List;
 import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
@@ -126,14 +106,18 @@ public class MainActivity extends AppCompatActivity {
 
         instance = this;
 
-        setDialog();
         actionButton = findViewById(R.id.floating_button);
 
         alarmset = Calendar.getInstance();
         PushDownAnim.setPushDownAnimTo(actionButton)
                 .setScale(PushDownAnim.MODE_SCALE, 0.98f)
                 .setDurationPush(100)
-                .setOnClickListener(view -> showAwaitingCreator());
+                .setOnClickListener(view -> {
+                    Intent i = new Intent(this, CreateAwaitingActivity.class);
+                    i.getIntExtra("requestCode", 2);
+
+                    resultLauncher.launch(i);
+                });
 
         navigation.setOnItemSelectedListener(mOnNavigationItemSelectedListener);
 
@@ -168,205 +152,27 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void setDialog() {
-        dialog = new Dialog(this);
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog.setContentView(R.layout.bottom_task_layout);
-        dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        dialog.getWindow().getAttributes().windowAnimations = R.style.DialogAnimation;
-        dialog.getWindow().setGravity(Gravity.BOTTOM);
-    }
-
-    private void setSelectSubject(TextView a) {
-        Dialog subjectDialog = new Dialog(this);
-        subjectDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        subjectDialog.setContentView(R.layout.bottom_sheet_layout);
-        subjectDialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        subjectDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        subjectDialog.getWindow().getAttributes().windowAnimations = R.style.DialogAnimation;
-        subjectDialog.getWindow().setGravity(Gravity.BOTTOM);
-
-        RecyclerView recyclerView = subjectDialog.findViewById(R.id.subjects_recycler);
-        LinearLayoutManager manager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
-        final List<ItemSubjectElement> elements = getSubjects();
-        SubjectAdapter adapter = new SubjectAdapter(this, elements, (view, position) -> {
-            subject = ((SubjectElement) elements.get(position).getObject()).getName();
-            subjectDialog.dismiss();
-            a.setText(subject);
-        });
-
-        LinearLayout add = subjectDialog.findViewById(R.id.add_subject);
-        add.setOnClickListener(view -> {
-            subjectDialog.dismiss();
-            dialog.dismiss();
-            navigateTo(3);
-        });
-
-        recyclerView.setHasFixedSize(true);
-        recyclerView.setLayoutManager(manager);
-        recyclerView.setAdapter(adapter);
-        subjectDialog.show();
-    }
-
-    private List<ItemSubjectElement> getSubjects() {
-        DbHelper dbHelper = new DbHelper(this);
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-
-        List<ItemSubjectElement> elements = new ArrayList<>();
-
-        Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.t_subjects + " ORDER BY name DESC", null);
-        if (cursor.moveToFirst()) {
-            do {
-                elements.add(new ItemSubjectElement(new SubjectElement(cursor.getString(1), cursor.getInt(2)), 2));
-            } while (cursor.moveToNext());
-        }
-
-        db.close();
-
-        return elements;
-    }
-
-    private void showAwaitingCreator() {
-        String[] items = subjects();
-
-
-        TextView chooseSubject = dialog.findViewById(R.id.choose_subject);
-        chooseSubject.setText(getString(R.string.select_subject));
-
-        chooseSubject.setOnClickListener(view -> {
-            setSelectSubject(chooseSubject);
-        });
-
-        Button cancel, accept;
-
-        cancel = dialog.findViewById(R.id.cancel_awaiting);
-        accept = dialog.findViewById(R.id.accept_awaiting);
-        title = dialog.findViewById(R.id.title_task);
-        title.setText("");
-        description = dialog.findViewById(R.id.description_task);
-        description.setText("");
-        date = dialog.findViewById(R.id.datepicker);
-        date.setText(R.string.Date_string);
-
-
-        date.setOnClickListener(view -> {
-            final Calendar calendar = Calendar.getInstance();
-            dd = calendar.get(Calendar.DAY_OF_MONTH);
-            mm = calendar.get(Calendar.MONTH);
-            aaaa = calendar.get(Calendar.YEAR);
-
-            final TimePickerDialog timePicker = new TimePickerDialog(MainActivity.this, (timePicker1, i, i1) -> {
-
-
-                String a = i1 < 10 ? "0" + i1 : i1 + "";
-                String e = i < 10 ? "0" + i : i + "";
-                datetime += " " + e + ":" + a + ":00";
-
-
-                if (i > 12) {
-                    int b = i - 12;
-                    dateText += " " + b + ":" + a + " PM";
-                } else {
-                    dateText += " " + i + ":" + a + " AM";
-                }
-
-                alarmset.set(Calendar.HOUR_OF_DAY, i);
-                alarmset.set(Calendar.MINUTE, i1);
-                alarmset.set(Calendar.SECOND, 0);
-                date.setText(dateText);
-            }, hh, mn, false);
-
-            DatePickerDialog datePicker = new DatePickerDialog(MainActivity.this, (datePicker1, i, i1, i2) -> {
-                int m = i1 + 1;
-                String e = m < 10 ? "0" + m : m + "";
-                String a = i2 < 10 ? "0" + i2 : i2 + "";
-                datetime = i + "-" + e + "-" + a;
-
-                Calendar c = Calendar.getInstance();
-                c.set(i, i1, i2, 12, 0, 0);
-                int day = c.get(Calendar.DAY_OF_WEEK);
-                dateText = homeFragment.getDayOfWeek(this, day) + " " + i2 + ", " + homeFragment.getMonthMinor(this, i1) + " " + i;
-
-                alarmset.set(i, i1, i2);
-                timePicker.show();
-            }, dd, mm, aaaa);
-
-            Calendar c = Calendar.getInstance();
-            c.set(Calendar.YEAR, aaaa);
-            c.set(Calendar.MONTH, mm);
-            c.set(Calendar.DAY_OF_MONTH, dd);
-
-            datePicker.getDatePicker().setMinDate(c.getTimeInMillis());
-            datePicker.show();
-        });
-
-        PushDownAnim.setPushDownAnimTo(cancel)
-                .setScale(PushDownAnim.MODE_SCALE, 0.98f)
-                .setDurationPush(100)
-                .setOnClickListener(view -> dialog.dismiss());
-        PushDownAnim.setPushDownAnimTo(accept)
-                .setScale(PushDownAnim.MODE_SCALE, 0.98f)
-                .setDurationPush(100)
-                .setOnClickListener(view -> {
-                    if (!title.getText().toString().isEmpty()) {
-                        if (!datetime.isEmpty()) {
-                            if (!subject.isEmpty()) {
-                                dialog.dismiss();
-                                insertAwaiting(title.getText().toString(), datetime, subject, description.getText().toString());
-
-                                setAlarmAt(title.getText().toString(), description.getText().toString(), alarmset, false);
-                            } else {
-                                Toast.makeText(MainActivity.this, "Elige una asignatura", Toast.LENGTH_SHORT).show();
-                            }
-                        }
+    ActivityResultLauncher<Intent> resultLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == Activity.RESULT_OK) {
+                    Intent data = result.getData();
+                    if (data.getIntExtra("requestCode", 0) == 3) {
+                        navigateTo(3);
+                    } else if (data.getIntExtra("requestCode", 0) == 2) {
+                        updateWidget();
+                        notifyAllChanged();
                     }
-                });
-        dialog.show();
-    }
-
-    private String[] subjects() {
-        DbHelper dbHelper = new DbHelper(MainActivity.this);
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.t_subjects + " ORDER BY name DESC", null);
-
-        if (subjects == null || subjects.length != cursor.getCount() || subjects.length == 0) {
-
-            List<String> a = new ArrayList<>();
-            if (cursor.moveToFirst()) {
-                do {
-                    a.add(cursor.getString(1));
-                } while (cursor.moveToNext());
+                }
             }
+    );
 
-            subjects = new String[a.size()];
-
-            for (int c = 0; c < a.size(); c++) {
-                subjects[c] = a.get(c);
-            }
-        }
-
-        cursor.close();
-        return subjects;
-    }
-
-    private void insertAwaiting(String name, String date, String subject, String description) {
-        DbHelper dbHelper = new DbHelper(MainActivity.this);
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        Calendar c = Calendar.getInstance();
-
-        String now = c.get(Calendar.YEAR) + "-" + c.get(Calendar.MONTH) + "-" + c.get(Calendar.DAY_OF_MONTH) + " " + c.get(Calendar.HOUR_OF_DAY) + ":" + c.get(Calendar.MINUTE) + ":" + c.get(Calendar.SECOND);
-        values.put("date", now);
-        values.put("title", name);
-        values.put("end_date", date);
-        values.put("subject", subject);
-        values.put("description", description);
-        values.put("status", false);
-
-        db.insert(DbHelper.t_task, null, values);
-        updateWidget(this);
-        notifyAllChanged();
+    public void updateWidget() {
+        Intent uw = new Intent(this, AwaitingWidget.class);
+        uw.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+        int[] ids = AppWidgetManager.getInstance(this).getAppWidgetIds(new ComponentName(this, AwaitingWidget.class));
+        uw.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids);
+        sendBroadcast(uw);
     }
 
     @Override
@@ -551,10 +357,6 @@ public class MainActivity extends AppCompatActivity {
         ComponentName thisWidget = new ComponentName(context, AwaitingWidget.class);
         remoteViews.setRemoteAdapter(R.id.list_widget, new Intent(context, RemotesService.class));
         appWidgetManager.updateAppWidget(thisWidget, remoteViews);
-    }
-
-    public void notifyChangedInHome(String d) {
-        //homefragment.notifyInData(d);
     }
 
     public static MainActivity getInstance() {
