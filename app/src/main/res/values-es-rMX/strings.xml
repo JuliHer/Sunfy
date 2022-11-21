@@ -3,9 +3,9 @@
     <string name="app_name">TaskApp</string>
     <string name="home_fragment_menu">Inicio</string>
     <string name="awaiting_fragment_menu">Pendientes</string>
-    <string name="subjects_fragment_menu">Asignaturas</string>
+    <string name="subjects_fragment_menu">Materias</string>
     <string name="average_fragment_menu">Promedios</string>
-    <string name="subject">Asignatura</string>
+    <string name="subject">Materia</string>
     <string name="awaiting">Actividad</string>
     <string name="settings_menu">Configuracion</string>
     <string name="task_is_open">Abierto</string>
@@ -14,8 +14,8 @@
     <string name="title_string">Titulo</string>
     <string name="description_string">Descripción</string>
     <string name="Date_string">Plazo</string>
-    <string name="create_subject">Agregar Asignatura</string>
-    <string name="select_subject">Elige la asignatura</string>
+    <string name="create_subject">Agregar Materia</string>
+    <string name="select_subject">Elige la materia</string>
     <string name="name_string">Nombre</string>
     <string name="Accept_M">ACEPTAR</string>
     <string name="Cancel_M">CANCELAR</string>
@@ -97,4 +97,7 @@
     <string name="is_going_to_start">va a comenzar!</string>
     <string name="schedule">Horario</string>
     <string name="Calendar">Calendario</string>
+    <string name="activity">Tarea</string>
+    <string name="events">Eventos</string>
+    <string name="add">Agregar</string>
 </resources>

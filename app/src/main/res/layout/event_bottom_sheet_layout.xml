@@ -24,7 +24,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Events"
+            android:text="@string/events"
             android:textSize="26sp"
             android:textStyle="bold"
             android:textAlignment="center" />

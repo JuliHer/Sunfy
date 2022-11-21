@@ -76,7 +76,7 @@ public class SubjectAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         return mData.get(position).getType();
     }
 
-    class SubjectViewHolder extends RecyclerView.ViewHolder {
+    class SubjectViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         TextView title;
         CardView backgroud;
@@ -85,6 +85,10 @@ public class SubjectAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             super(itemView);
             title = itemView.findViewById(R.id.subject_name);
             backgroud = itemView.findViewById(R.id.background);
+            PushDownAnim.setPushDownAnimTo(itemView)
+                    .setScale(PushDownAnim.MODE_SCALE, 0.95f)
+                    .setDurationPush(100)
+                    .setOnClickListener(this);
         }
 
         void onBindData(SubjectElement element) {
@@ -93,11 +97,16 @@ public class SubjectAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 backgroud.setCardBackgroundColor(element.getColor());
             }
         }
+
+        @Override
+        public void onClick(View view) {
+            listener.onClick(view, getLayoutPosition());
+        }
     }
 
     class ButtonViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-        SubjectClickListener listener;
+        SubjectClickListener listenert;
 
         public ButtonViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -109,12 +118,12 @@ public class SubjectAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         }
 
         void onBindData(SubjectClickListener listener) {
-            this.listener = listener;
+            this.listenert = listener;
         }
 
         @Override
         public void onClick(View view) {
-            listener.onClick(view, getLayoutPosition());
+            listenert.onClick(view, getLayoutPosition());
         }
     }
 
@@ -150,4 +159,6 @@ public class SubjectAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     public interface SubjectClickListener {
         void onClick(View view, int position);
     }
+
+
 }

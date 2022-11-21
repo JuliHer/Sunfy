@@ -101,4 +101,7 @@
     <string name="is_going_to_start">is going to start!</string>
     <string name="schedule">Schedule</string>
     <string name="Calendar">Calendar</string>
+    <string name="activity">Task</string>
+    <string name="events">Events</string>
+    <string name="add">Add</string>
 </resources>

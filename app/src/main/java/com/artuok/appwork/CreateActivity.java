@@ -8,6 +8,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -23,6 +24,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -62,6 +64,16 @@ public class CreateActivity extends AppCompatActivity {
     String subject_txt = "";
     ImageView colorD;
 
+    TextView day, hours;
+
+
+    CardView today;
+
+
+    private int sDay;
+    private long sHour;
+    private long sDuration;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -73,6 +85,9 @@ public class CreateActivity extends AppCompatActivity {
         LinearLayoutManager manager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
         recyclerView = findViewById(R.id.times_recycler);
         subject = findViewById(R.id.subject_text);
+        day = findViewById(R.id.day_date);
+        hours = findViewById(R.id.time_date);
+        today = findViewById(R.id.today);
 
         recyclerView.setHasFixedSize(false);
         recyclerView.setLayoutManager(manager);
@@ -96,7 +111,12 @@ public class CreateActivity extends AppCompatActivity {
                 .setOnClickListener(view -> setSelectSubject(subject));
 
         TextView act = findViewById(R.id.addevent);
-
+        PushDownAnim.setPushDownAnimTo(today)
+                .setDurationPush(100)
+                .setScale(PushDownAnim.MODE_SCALE, 0.98f)
+                .setOnClickListener(view -> {
+                    showDialog(null, true);
+                });
 
         PushDownAnim.setPushDownAnimTo(act)
                 .setDurationPush(100)
@@ -109,35 +129,50 @@ public class CreateActivity extends AppCompatActivity {
 
     private void setEvents() {
         if (!Objects.equals(subject_txt, "")) {
-            DbHelper dbHelper = new DbHelper(this);
-            SQLiteDatabase dbw = dbHelper.getWritableDatabase();
-            SQLiteDatabase dbr = dbHelper.getReadableDatabase();
+            Bundle extras = getIntent().getExtras();
+            insert(subject_txt, sDay, sHour, sDuration, color);
             for (CalendarWeekView.EventsTask e : elements) {
-                ContentValues values = new ContentValues();
-                values.put("title", subject_txt);
-                values.put("day_of_week", e.getDay());
-                values.put("time", e.getHour());
-                values.put("duration", e.getDuration());
-                values.put("type", color);
-
-                Cursor c = dbr.rawQuery("SELECT id FROM " + DbHelper.t_subjects + " WHERE name = '" + subject_txt + "'", null);
-                int idSubject = -1;
-                if (c.moveToFirst()) {
-                    idSubject = c.getInt(0);
-                }
-                values.put("subject", idSubject);
-                setAlarmSchedule();
-                dbw.insert(DbHelper.t_event, null, values);
-                c.close();
-                finish();
+                insert(subject_txt, e.getDay(), e.getHour(), e.getDuration(), color);
             }
+            Intent i = new Intent();
+            i.putExtra("requestCode", 1);
+            setResult(RESULT_OK, i);
+
+            finish();
         }
+    }
+
+    private void insert(String title, int dow, long time, long dur, int color) {
+        DbHelper dbHelper = new DbHelper(this);
+        SQLiteDatabase dbw = dbHelper.getWritableDatabase();
+        SQLiteDatabase dbr = dbHelper.getReadableDatabase();
+
+        ContentValues values = new ContentValues();
+
+
+        values.put("title", title);
+        values.put("day_of_week", dow);
+        values.put("time", time);
+        values.put("duration", dur);
+        values.put("type", color);
+
+        title = DatabaseUtils.sqlEscapeString(title);
+        Cursor c = dbr.rawQuery("SELECT id FROM " + DbHelper.t_subjects + " WHERE name = " + title + "", null);
+        int idSubject = -1;
+        if (c.moveToFirst()) {
+            idSubject = c.getInt(0);
+        }
+        values.put("subject", idSubject);
+
+        setAlarmSchedule();
+        dbw.insert(DbHelper.t_event, null, values);
+        c.close();
     }
 
     private void setListeners() {
         listener = (view, pos) -> {
             posModify = pos;
-            showDialog(elements.get(pos));
+            showDialog(elements.get(pos), false);
         };
 
         removeListener = (view, pos) -> {
@@ -149,15 +184,11 @@ public class CreateActivity extends AppCompatActivity {
     private void setElements() {
         if (getIntent().getExtras() != null) {
             Bundle extras = getIntent().getExtras();
-            CalendarWeekView.EventsTask e = new CalendarWeekView.EventsTask(
-                    extras.getInt("day", 0),
-                    extras.getLong("hour", 0),
-                    extras.getLong("duration", 0),
-                    0,
-                    ""
-            );
+            sHour = extras.getLong("hour", 0);
+            sDuration = extras.getLong("duration", 0);
+            sDay = extras.getInt("day", 0);
 
-            elements.add(e);
+            updateMainDate();
         }
 
         recyclerView.setAdapter(adapter);
@@ -165,18 +196,27 @@ public class CreateActivity extends AppCompatActivity {
 
     private void addElement() {
         if (elements.size() < 7) {
-            int day = (elements.get(elements.size() - 1).getDay() + 1) % 7;
-            long hour = elements.get(elements.size() - 1).getHour();
-            long duration = elements.get(elements.size() - 1).getDuration();
-
+            int day;
+            long hour;
+            long duration;
+            if (elements.size() <= 0) {
+                day = (sDay + 1) % 7;
+                hour = sHour;
+                duration = sDuration;
+            } else {
+                day = (elements.get(elements.size() - 1).getDay() + 1) % 7;
+                hour = elements.get(elements.size() - 1).getHour();
+                duration = elements.get(elements.size() - 1).getDuration();
+            }
             CalendarWeekView.EventsTask e = new CalendarWeekView.EventsTask(day, hour, duration, 1, "");
             elements.add(e);
             elements.get(0).setColor(0);
             adapter.notifyDataSetChanged();
+            Log.d("eSize", elements.size() + "");
         }
     }
 
-    void showDialog(CalendarWeekView.EventsTask e) {
+    void showDialog(CalendarWeekView.EventsTask e, boolean f) {
         Dialog edit = new Dialog(this);
         edit.requestWindowFeature(Window.FEATURE_NO_TITLE);
         edit.setContentView(R.layout.bottom_recurrence_layout);
@@ -185,9 +225,15 @@ public class CreateActivity extends AppCompatActivity {
         edit.getWindow().getAttributes().windowAnimations = R.style.DialogAnimation;
         edit.getWindow().setGravity(Gravity.BOTTOM);
 
-        startModify = elements.get(posModify).getHour();
-        endModify = elements.get(posModify).getDuration() + elements.get(posModify).getHour();
-        dayModify = elements.get(posModify).getDay();
+        if (f) {
+            startModify = sHour;
+            endModify = sDuration + sHour;
+            dayModify = sDay;
+        } else {
+            startModify = elements.get(posModify).getHour();
+            endModify = elements.get(posModify).getDuration() + elements.get(posModify).getHour();
+            dayModify = elements.get(posModify).getDay();
+        }
 
         LinearLayout edi = edit.findViewById(R.id.edit_create);
         edi.setVisibility(View.VISIBLE);
@@ -218,6 +264,7 @@ public class CreateActivity extends AppCompatActivity {
                 }
                 String desc = convertMillisInTime(startModify);
                 start.setText(desc);
+
             }, 0, 0, false);
             timePickerDialog.show();
         });
@@ -239,18 +286,34 @@ public class CreateActivity extends AppCompatActivity {
             timePickerDialog.show();
         });
 
-        String dayDate = homeFragment.getDayOfWeek(this, e.getDay() + 1);
-        textDay.setText(dayDate);
+        if (f) {
+            String dayDate = homeFragment.getDayOfWeek(this, sDay + 1);
+            textDay.setText(dayDate);
 
-        String desc = convertMillisInTime(e.getHour());
+            String desc = convertMillisInTime(sHour);
 
 
-        start.setText(desc);
+            start.setText(desc);
 
-        long hourEndMillis = e.getDuration() + e.getHour();
-        desc = convertMillisInTime(hourEndMillis);
+            long hourEndMillis = sDuration + sHour;
+            desc = convertMillisInTime(hourEndMillis);
 
-        end.setText(desc);
+            end.setText(desc);
+        } else {
+            String dayDate = homeFragment.getDayOfWeek(this, e.getDay() + 1);
+            textDay.setText(dayDate);
+
+            String desc = convertMillisInTime(e.getHour());
+
+
+            start.setText(desc);
+
+            long hourEndMillis = e.getDuration() + e.getHour();
+            desc = convertMillisInTime(hourEndMillis);
+
+            end.setText(desc);
+        }
+
 
         Button accept = edit.findViewById(R.id.accept);
         PushDownAnim
@@ -258,14 +321,55 @@ public class CreateActivity extends AppCompatActivity {
                 .setDurationPush(100)
                 .setScale(PushDownAnim.MODE_SCALE, 0.98f)
                 .setOnClickListener(view -> {
-                    elements.get(posModify).setDay(dayModify);
-                    elements.get(posModify).setHour(startModify);
-                    elements.get(posModify).setDuration(endModify - startModify);
-                    adapter.notifyItemChanged(posModify);
+                    if (f) {
+                        sDay = dayModify;
+                        sHour = startModify;
+                        sDuration = endModify - startModify;
+                        updateMainDate();
+                    } else {
+                        elements.get(posModify).setDay(dayModify);
+                        elements.get(posModify).setHour(startModify);
+                        elements.get(posModify).setDuration(endModify - startModify);
+                        adapter.notifyItemChanged(posModify);
+                    }
+
                     edit.dismiss();
                 });
 
         edit.show();
+    }
+
+    private void updateMainDate() {
+        long hourStartMillis = sHour;
+        int hour = (int) (hourStartMillis / 3600);
+        int minute = (int) (hourStartMillis / 60) % 60;
+        hour = hour % 24;
+        String tm = hour > 11 ? "PM" : "AM";
+        hour = hour > 12 ? hour - 12 : hour;
+        if (hour == 0) {
+            hour = 12;
+        }
+        String min = minute < 10 ? "0" + minute : minute + "";
+
+        String desc = hour + ":" + min + " " + tm + " -> ";
+
+        long hourEndMillis = sDuration + sHour;
+        hour = (int) (hourEndMillis / 3600);
+        minute = (int) (hourEndMillis / 60) % 60;
+        hour = hour % 24;
+        tm = hour > 11 ? "PM" : "AM";
+        hour = hour > 12 ? hour - 12 : hour;
+        if (hour == 0) {
+            hour = 12;
+        }
+
+        min = minute < 10 ? "0" + minute : minute + "";
+
+        desc += hour + ":" + min + " " + tm;
+
+        String mon = homeFragment.getDayOfWeek(this, sDay + 1);
+        day.setText(mon);
+        hours.setText(desc);
     }
 
     String convertMillisInTime(long timeInMillis) {
@@ -450,7 +554,7 @@ public class CreateActivity extends AppCompatActivity {
         if (!name.equals("") && time != 0 && duration != 0) {
             setNotify(name, time, duration);
         }
-
+        v.close();
     }
 
     void setNotify(String name, long diff, long duration) {

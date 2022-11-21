@@ -22,6 +22,7 @@
         <attr name="palette_yellow" format="color" />
         <attr name="palette_red" format="color" />
         <attr name="palette_purple" format="color" />
+        <attr name="cardBackgroundColorTask" format="color" />
     </declare-styleable>
 
     <declare-styleable name="CalendarWeekView">

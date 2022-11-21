@@ -25,8 +25,9 @@
         android:id="@+id/appbottom"
         app:fabCradleMargin="10dp"
         style="@style/mainColors"
-        app:fabCradleRoundedCornerRadius="15dp"
-        app:fabCradleVerticalOffset="10dp">
+        app:fabCradleRoundedCornerRadius="10dp"
+        app:fabCradleVerticalOffset="10dp"
+        app:fabAlignmentMode="end">
 
         <com.google.android.material.bottomnavigation.BottomNavigationView
             android:id="@+id/bottom_navigation"

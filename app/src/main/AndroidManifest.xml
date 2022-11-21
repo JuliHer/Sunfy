@@ -31,8 +31,7 @@
         </activity>
         <activity
             android:name=".CreateAwaitingActivity"
-            android:exported="false"
-            android:configChanges="uiMode">
+            android:exported="false">
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />

@@ -150,7 +150,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="v0.4.0"
+            android:text="v0.5.0"
             android:textAlignment="textEnd"
             android:paddingEnd="32dp"
             style="@style/subtext" />
