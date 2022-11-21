@@ -61,11 +61,11 @@ public class PermissionDialog extends DialogFragment {
 
         builder.setView(root);
         if (negative != null) {
-            builder.setNegativeButton(requireActivity().getString(R.string.Accept_M), (dialogInterface, i) -> negative.onClick(dialogInterface, i));
+            builder.setNegativeButton(requireActivity().getString(R.string.Cancel_M), (dialogInterface, i) -> negative.onClick(dialogInterface, i));
         }
 
         if (positive != null) {
-            builder.setPositiveButton(requireActivity().getString(R.string.Cancel_M), (dialogInterface, i) -> positive.onClick(dialogInterface, i));
+            builder.setPositiveButton(requireActivity().getString(R.string.Accept_M), (dialogInterface, i) -> positive.onClick(dialogInterface, i));
         }
 
         return builder.create();

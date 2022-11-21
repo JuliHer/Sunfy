@@ -6,14 +6,12 @@ import android.app.Dialog;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
-import android.widget.RemoteViews;
 import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -31,7 +29,6 @@ import com.artuok.appwork.fragmets.SettingsFragment;
 import com.artuok.appwork.fragmets.SubjectsFragment;
 import com.artuok.appwork.fragmets.homeFragment;
 import com.artuok.appwork.services.AlarmWorkManager;
-import com.artuok.appwork.services.RemotesService;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationBarView;
@@ -129,9 +126,9 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onResume() {
-        super.onResume();
-        LoadFragment(currentFragment);
+        navigateTo(position - 1);
         Preferences();
+        super.onResume();
     }
 
     public void navigateTo(int n) {
@@ -142,11 +139,11 @@ public class MainActivity extends AppCompatActivity {
             case 1:
                 navigation.setSelectedItemId(R.id.awaiting_fragment);
                 break;
-            case 2:
+            case 3:
                 navigation.setSelectedItemId(R.id.calendar_fragment);
 
                 break;
-            case 3:
+            case 4:
                 navigation.setSelectedItemId(R.id.subjects_fragment);
                 break;
         }
@@ -204,11 +201,11 @@ public class MainActivity extends AppCompatActivity {
                 LoadFragment(awaitingFragment);
                 return true;
             case R.id.calendar_fragment:
-                position = 3;
+                position = 4;
                 LoadFragment(calendarFragment);
                 return true;
             case R.id.subjects_fragment:
-                position = 4;
+                position = 3;
                 LoadFragment(subjectsFragment);
                 return true;
         }
@@ -303,9 +300,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void notifyAllChanged() {
-        homefragment.NotifyDataAdd();
-        awaitingFragment.NotifyChanged();
-        calendarFragment.NotifyChanged();
+        if (homefragment.isAdded()) {
+            homefragment.NotifyDataAdd();
+        }
+        if (awaitingFragment.isAdded()) {
+            awaitingFragment.NotifyChanged();
+        }
+        if (calendarFragment.isAdded()) {
+            calendarFragment.NotifyChanged();
+        }
+
     }
 
     public void notifyChanged() {
@@ -350,14 +354,6 @@ public class MainActivity extends AppCompatActivity {
         alarmManager.setExact(AlarmType, c.getTimeInMillis(), pendingNotify);
     }
 
-    public static void updateWidget(Context contex) {
-        Context context = contex;
-        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
-        RemoteViews remoteViews = new RemoteViews(context.getPackageName(), R.layout.awaiting_widget);
-        ComponentName thisWidget = new ComponentName(context, AwaitingWidget.class);
-        remoteViews.setRemoteAdapter(R.id.list_widget, new Intent(context, RemotesService.class));
-        appWidgetManager.updateAppWidget(thisWidget, remoteViews);
-    }
 
     public static MainActivity getInstance() {
         return instance;

@@ -38,6 +38,7 @@
         <item name="palette_yellow">@color/palette_yellow_b_700</item>
         <item name="palette_red">@color/palette_red_b_700</item>
         <item name="palette_purple">@color/palette_purple_b_700</item>
+        <item name="cardBackgroundColorTask">@color/gray_100</item>
     </style>
 
     <style name="DialogAnimation">

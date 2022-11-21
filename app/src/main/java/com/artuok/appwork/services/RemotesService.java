@@ -55,7 +55,7 @@ public class RemotesService extends RemoteViewsService {
                 } else if (Integer.parseInt(status) == 0) {
                     d = context.getString(R.string.today);
                 }
-                elements.add(new WidgetElement(awaitings.getString(2), awaitings.getString(5), d));
+                elements.add(new WidgetElement(awaitings.getString(5), awaitings.getString(5), d));
             } while (awaitings.moveToNext());
         }
 

@@ -54,7 +54,7 @@
             <ImageView
                 android:layout_width="30dp"
                 android:layout_height="30dp"
-                android:src="@drawable/ic_chevron_down"
+                android:src="@drawable/chevron_right"
                 app:tint="?backgroundBorder" />
         </LinearLayout>
 

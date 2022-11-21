@@ -99,11 +99,6 @@ public class ScheduleAdapter extends RecyclerView.Adapter<ScheduleAdapter.Recurr
 
             desc += hour + ":" + min + " " + tm;
             time.setText(desc);
-
-            if (pos == 0) {
-                delete.setVisibility(View.GONE);
-            }
-
         }
 
         @Override

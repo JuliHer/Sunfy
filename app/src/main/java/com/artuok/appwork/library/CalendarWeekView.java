@@ -397,21 +397,24 @@ public class CalendarWeekView extends View {
 
         @Override
         public boolean onSingleTapConfirmed(@NonNull MotionEvent e) {
-            Cell a = getPositionAt((int) (e.getX() - mSpacingOfHalfHours), (int) (e.getY() - mSpacingOfTopBar) + offsetY);
-            if (a != null) {
-                if (dateListener != null) {
-                    dateListener.onClick();
-                }
-            } else {
-                if (isSelect && isInSelect((int) (e.getX() - mSpacingOfHalfHours), (int) (e.getY() - mSpacingOfTopBar) + offsetY)) {
-                    if (selectListener != null) {
-                        selectListener.onClick(posToEvent(sX, sY));
+            if (e.getX() > mHalfSpacingOfDays && e.getY() > mSpacingOfTopBar && (e.getY() + offsetY) < (mHeightMax - mPadding)) {
+                Cell a = getPositionAt((int) (e.getX() - mHalfSpacingOfDays), (int) (e.getY() - mSpacingOfTopBar) + offsetY);
+                if (a != null) {
+                    if (dateListener != null) {
+                        dateListener.onClick();
                     }
                 } else {
-                    isSelect = !isSelect;
-                    select((int) (e.getX() - mHalfSpacingOfDays), (int) (e.getY() - mSpacingOfTopBar) + offsetY);
+                    if (isSelect && isInSelect((int) (e.getX() - mHalfSpacingOfDays), (int) (e.getY() - mSpacingOfTopBar) + offsetY)) {
+                        if (selectListener != null) {
+                            selectListener.onClick(posToEvent(sX, sY));
+                        }
+                    } else {
+                        isSelect = !isSelect;
+                        select((int) (e.getX() - mHalfSpacingOfDays), (int) (e.getY() - mSpacingOfTopBar) + offsetY);
+                    }
                 }
             }
+
             return true;
         }
     });
@@ -619,6 +622,7 @@ public class CalendarWeekView extends View {
     public void setEvents(List<EventsTask> events) {
         this.mTempData = events;
         if (mHalfSpacingOfDays != 0) {
+            isViewRegister = false;
             onViewRegister();
         }
     }
@@ -800,6 +804,7 @@ public class CalendarWeekView extends View {
         private long duration;
         private int color;
         private final String title;
+        private int id;
 
         public EventsTask(int day, long hour, long duration, int color, String title) {
             this.day = day;
@@ -807,6 +812,19 @@ public class CalendarWeekView extends View {
             this.duration = duration;
             this.color = color;
             this.title = title;
+        }
+
+        public EventsTask(int id, int day, long hour, long duration, int color, String title) {
+            this.id = id;
+            this.day = day;
+            this.hour = hour;
+            this.duration = duration;
+            this.color = color;
+            this.title = title;
+        }
+
+        public int getId() {
+            return id;
         }
 
         public int getDay() {

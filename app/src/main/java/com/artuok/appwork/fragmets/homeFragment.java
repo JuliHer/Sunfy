@@ -194,7 +194,7 @@ public class homeFragment extends Fragment {
         if (cursor.moveToFirst()) {
             do {
                 boolean check = Integer.parseInt(cursor.getString(6)) > 0;
-                String title = cursor.getString(2);
+                String title = cursor.getString(5);
                 String[] t = cursor.getString(3).split(" ");
 
                 String[] date = t[0].split("-");

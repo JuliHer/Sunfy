@@ -1,16 +1,23 @@
 package com.artuok.appwork.fragmets;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -91,8 +98,24 @@ public class CalendarFragment extends Fragment {
             intent.putExtra("duration", e.getDuration());
         }
 
-        startActivity(intent);
+        resultLauncher.launch(intent);
     }
+
+    ActivityResultLauncher<Intent> resultLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            new ActivityResultCallback<ActivityResult>() {
+                @Override
+                public void onActivityResult(ActivityResult result) {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        Intent data = result.getData();
+                        if (data.getIntExtra("requestCode", 0) == 1) {
+                            NotifyChanged();
+                            Log.d("Drawi", "codeDraw");
+                        }
+                    }
+                }
+            }
+    );
 
     public void NotifyChanged() {
         elements = new ArrayList<>();
@@ -100,7 +123,7 @@ public class CalendarFragment extends Fragment {
     }
 
     public void setEvents() {
-        DbHelper dbHelper = new DbHelper(requireActivity().getApplicationContext());
+        DbHelper dbHelper = new DbHelper(requireActivity());
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
         Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.t_event, null);
@@ -146,7 +169,10 @@ public class CalendarFragment extends Fragment {
                 long tim = a.getTimeInMillis();
                 String sub = c.getString(4);
 
-                Cursor b = db.rawQuery("SELECT color FROM " + DbHelper.t_subjects + " WHERE name = '" + sub + "'", null);
+                sub = DatabaseUtils.sqlEscapeString(sub);
+
+                Cursor b = db.rawQuery("SELECT color FROM " + DbHelper.t_subjects + " WHERE name = " + sub, null);
+
 
                 int color = 0;
                 if (b.moveToFirst()) {
@@ -224,6 +250,7 @@ public class CalendarFragment extends Fragment {
 
                 long tim = a.getTimeInMillis();
                 String sub = c.getString(4);
+                sub = DatabaseUtils.sqlEscapeString(sub);
 
                 Cursor b = db.rawQuery("SELECT color FROM " + DbHelper.t_subjects + " WHERE name = '" + sub + "'", null);
 

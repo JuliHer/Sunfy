@@ -5,11 +5,13 @@ import android.app.Dialog
 import android.app.TimePickerDialog
 import android.content.ContentValues
 import android.content.Intent
+import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.os.PersistableBundle
 import android.provider.MediaStore
+import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -18,6 +20,7 @@ import android.widget.*
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -35,18 +38,28 @@ class CreateAwaitingActivity : AppCompatActivity() {
     private lateinit var chooseSubject: TextView
     private lateinit var datePicker: TextView
     private lateinit var cameraPicker: CardView
+    private lateinit var imgPreview: ImageView
+    private lateinit var img: Bitmap;
 
-    private lateinit var subject: String
-    private lateinit var datetime: String
+    private var subject: String = ""
+    private var datetime: String = ""
     private lateinit var dateText: String
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_create_awaiting)
+
         activity = findViewById(R.id.description_task)
         chooseSubject = findViewById(R.id.choose_subject)
         datePicker = findViewById(R.id.datepicker)
+        cameraPicker = findViewById(R.id.camera)
+
+        preferences()
+
+        cameraPicker.setOnClickListener {
+
+        }
 
         chooseSubject.setOnClickListener {
             setSelectSubject(chooseSubject)
@@ -98,11 +111,11 @@ class CreateAwaitingActivity : AppCompatActivity() {
         }
 
         PushDownAnim.setPushDownAnimTo(cancel)
-                .setScale(PushDownAnim.MODE_SCALE, 0.98f)
+                .setScale(PushDownAnim.MODE_SCALE, 0.95f)
                 .setDurationPush(100)
                 .setOnClickListener { view: View? -> finish() }
         PushDownAnim.setPushDownAnimTo(accept)
-                .setScale(PushDownAnim.MODE_SCALE, 0.98f)
+                .setScale(PushDownAnim.MODE_SCALE, 0.95f)
                 .setDurationPush(100)
                 .setOnClickListener { view: View? ->
                     if (!datetime.isEmpty()) {
@@ -136,9 +149,7 @@ class CreateAwaitingActivity : AppCompatActivity() {
     }
 
     private fun openCamera() {
-        val camera = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-        camera.putExtra("requestCode", 1)
-        resultLauncher.launch(camera)
+        resultLauncher.launch(Intent(MediaStore.ACTION_IMAGE_CAPTURE))
     }
 
     override fun onSaveInstanceState(outState: Bundle, outPersistentState: PersistableBundle) {
@@ -147,6 +158,12 @@ class CreateAwaitingActivity : AppCompatActivity() {
         outState.putString("date", datetime)
         outState.putString("activity", activity.getText().toString())
         outState.putString("dateText", dateText)
+        outState.putParcelable("img", img)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
     }
 
 
@@ -154,13 +171,14 @@ class CreateAwaitingActivity : AppCompatActivity() {
             ActivityResultContracts.StartActivityForResult()
     ) {
         if (it.resultCode == RESULT_OK) {
-            val data = it.data
-            if (data != null) {
-                if (data!!.getIntExtra("requestCode", 0) == 1) {
-                }
-            }
+
+            val extras = it.data?.extras
+            img = extras?.get("data") as Bitmap
+
+            Log.d("catto", "camera " + img)
         }
     }
+
 
     private fun setSelectSubject(a: TextView) {
         val subjectDialog = Dialog(this)
@@ -202,7 +220,18 @@ class CreateAwaitingActivity : AppCompatActivity() {
                 elements.add(ItemSubjectElement(SubjectElement(cursor.getString(1), cursor.getInt(2)), 2))
             } while (cursor.moveToNext())
         }
-        db.close()
+        cursor.close()
         return elements
+    }
+
+    fun preferences() {
+        val sharedPreferences = getSharedPreferences("settings", MODE_PRIVATE)
+        val b = sharedPreferences.getBoolean("DarkMode", false)
+        if (b) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+        } else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+        }
+        Log.d("catto", "camera l")
     }
 }
