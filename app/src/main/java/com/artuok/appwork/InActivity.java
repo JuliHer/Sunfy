@@ -67,12 +67,10 @@ public class InActivity extends AppCompatActivity {
     void createNotificationChannel() {
         NotificationChannel notificationChannel1 = new NotificationChannel(CHANNEL_ID_1, "NOTES", NotificationManager.IMPORTANCE_HIGH);
         notificationChannel1.setDescription("Channel for remembers");
-        NotificationChannel notificationChannel2 = new NotificationChannel(CHANNEL_ID_2, "TTDH", NotificationManager.IMPORTANCE_HIGH);
+        NotificationChannel notificationChannel2 = new NotificationChannel(CHANNEL_ID_2, "Homework", NotificationManager.IMPORTANCE_HIGH);
         notificationChannel2.setDescription("Channel for remember when you need to do homework");
         NotificationChannel notificationChannel3 = new NotificationChannel(CHANNEL_ID_3, "Alarm", NotificationManager.IMPORTANCE_HIGH);
-        notificationChannel3.setDescription("Channel for remember when you need to do homework with alarm");
-        notificationChannel3.enableVibration(true);
-        notificationChannel3.setVibrationPattern(new long[]{1000, 1000, 1000, 100});
+        notificationChannel3.setDescription("Alarm to do homework");
 
         NotificationManager manager = getSystemService(NotificationManager.class);
 
@@ -94,22 +92,37 @@ public class InActivity extends AppCompatActivity {
 
     void setAlarm(int hour, int minute, boolean alarm) {
         final Calendar c = Calendar.getInstance();
-        int day = 1000 * 60 * 60 * 24;
-        AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        c.set(Calendar.HOUR_OF_DAY, hour);
-        c.set(Calendar.MINUTE, minute);
-        c.set(Calendar.SECOND, 0);
-        long whe = c.getTimeInMillis() <= Calendar.getInstance().getTimeInMillis() ? c.getTimeInMillis() + day : c.getTimeInMillis();
+        long rest = 0;
+        int hr = 0;
+        if (c.get(Calendar.HOUR_OF_DAY) >= hour) {
+            hr = 24 + hour - c.get(Calendar.HOUR_OF_DAY);
+        } else {
+            hr = hour - c.get(Calendar.HOUR_OF_DAY);
+        }
 
-        long diff = whe - Calendar.getInstance().getTimeInMillis();
+        int mr = minute - c.get(Calendar.MINUTE);
+
+        rest = (hr * 60L * 60L * 1000L) + (mr * 60L * 1000L);
+
+        Calendar a = Calendar.getInstance();
+        rest += a.getTimeInMillis();
+
+        a.setTimeInMillis(rest);
+
+
+        AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+
+
+        long diff = rest - Calendar.getInstance().getTimeInMillis();
         int days = (int) (diff / 1000 / 60 / 60 / 24);
         int hou = (int) (diff / 1000 / 60 / 60 % 24);
         int min = (int) (diff / 1000 / 60 % 60);
-        Log.d("faltan", days + "d " + hou + "h " + min + "m");
+
+        Log.d("catto", "faltan " + days + "d " + hou + "h " + min + "m ");
 
         Intent notify = new Intent(this, AlarmWorkManager.class)
                 .setAction(AlarmWorkManager.ACTION_TIME_TO_DO_HOMEWORK);
-        notify.putExtra("time", whe);
+        notify.putExtra("time", rest);
         if (alarm) {
             notify.putExtra("alarm", 1);
         }
@@ -117,9 +130,9 @@ public class InActivity extends AppCompatActivity {
                 this,
                 0, notify,
                 PendingIntent.FLAG_UPDATE_CURRENT);
-        manager.cancel(pendingNotify);
 
-        manager.setExact(AlarmManager.RTC_WAKEUP, whe, pendingNotify);
+        manager.cancel(pendingNotify);
+        manager.setExact(AlarmManager.RTC_WAKEUP, rest, pendingNotify);
     }
 
     void restauredAlarm() {
@@ -143,7 +156,7 @@ public class InActivity extends AppCompatActivity {
         int dow = c.get(Calendar.DAY_OF_WEEK) - 1;
         if (v.moveToFirst()) {
             do {
-                if (v.getLong(3) > (hour + (60 * 60)) && dow == v.getInt(2)) {
+                if (v.getLong(3) > (hour + (60 * 5)) && dow == v.getInt(2)) {
                     time = v.getLong(3) * 1000;
                     time = time - (hour * 1000);
                     duration = v.getLong(4) * 1000;
@@ -196,6 +209,6 @@ public class InActivity extends AppCompatActivity {
                 PendingIntent.FLAG_UPDATE_CURRENT);
         AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         manager.cancel(pendingNotify);
-        manager.setExact(AlarmManager.RTC_WAKEUP, start - (60 * 60 * 1000), pendingNotify);
+        manager.setExact(AlarmManager.RTC_WAKEUP, start - (60 * 5 * 1000), pendingNotify);
     }
 }

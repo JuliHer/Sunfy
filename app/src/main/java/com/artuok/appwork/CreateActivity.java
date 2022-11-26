@@ -519,7 +519,7 @@ public class CreateActivity extends AppCompatActivity {
         int dow = c.get(Calendar.DAY_OF_WEEK) - 1;
         if (v.moveToFirst()) {
             do {
-                if (v.getLong(3) > (hour + (60 * 60)) && dow == v.getInt(2)) {
+                if (v.getLong(3) > (hour + (60 * 5)) && dow == v.getInt(2)) {
                     time = v.getLong(3) * 1000;
                     day = v.getInt(2);
                     time = time - (hour * 1000);
@@ -563,10 +563,6 @@ public class CreateActivity extends AppCompatActivity {
 
         Intent notify = new Intent(this, AlarmWorkManager.class)
                 .setAction(AlarmWorkManager.ACTION_EVENT);
-        int days = (int) (diff / 1000 / 60 / 60 / 24);
-        int hour = (int) (diff / 1000 / 60 / 60 % 24);
-        int min = (int) (diff / 1000 / 60 % 60);
-        Log.d("faltan", days + "d " + hour + " h" + min + " m");
 
         notify.putExtra("name", name);
         notify.putExtra("time", start);
@@ -579,6 +575,6 @@ public class CreateActivity extends AppCompatActivity {
 
         AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         manager.cancel(pendingNotify);
-        manager.setExact(AlarmManager.RTC_WAKEUP, start - (60 * 60 * 1000), pendingNotify);
+        manager.setExact(AlarmManager.RTC_WAKEUP, start - (60 * 5 * 1000), pendingNotify);
     }
 }

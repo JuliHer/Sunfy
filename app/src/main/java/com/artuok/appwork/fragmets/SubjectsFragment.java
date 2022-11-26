@@ -29,15 +29,12 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.artuok.appwork.MainActivity;
 import com.artuok.appwork.R;
 import com.artuok.appwork.adapters.ColorSelectAdapter;
-import com.artuok.appwork.adapters.ScheduleAdapter;
 import com.artuok.appwork.adapters.SubjectAdapter;
 import com.artuok.appwork.db.DbHelper;
 import com.artuok.appwork.dialogs.PermissionDialog;
-import com.artuok.appwork.library.CalendarWeekView;
 import com.artuok.appwork.objects.ColorSelectElement;
 import com.artuok.appwork.objects.ItemSubjectElement;
 import com.artuok.appwork.objects.SubjectElement;
-import com.thekhaeng.pushdownanim.PushDownAnim;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -61,7 +58,7 @@ public class SubjectsFragment extends Fragment {
 
         elements = new ArrayList<>();
         adapter = new SubjectAdapter(requireActivity(), elements, (view, pos) -> {
-            showSubjectInfo(((SubjectElement) elements.get(pos).getObject()).getName());
+            notifyDelete(((SubjectElement) elements.get(pos).getObject()).getName());
         });
         manager = new LinearLayoutManager(requireActivity().getApplicationContext(), LinearLayoutManager.VERTICAL, false);
         recyclerView = root.findViewById(R.id.subject_recycler);
@@ -75,121 +72,12 @@ public class SubjectsFragment extends Fragment {
         return root;
     }
 
-    ScheduleAdapter adapterS;
-    ScheduleAdapter.OnClickListener n;
-    List<CalendarWeekView.EventsTask> element;
-
-    private void setListener() {
-        n = (view, pos) -> {
-            removeEvent(element.get(pos).getId());
-            element.remove(pos);
-            adapterS.notifyItemRemoved(pos);
-            ((MainActivity) requireActivity()).notifyAllChanged();
-        };
-    }
-
-    private void removeEvent(int id) {
-        DbHelper dbHelper = new DbHelper(requireActivity());
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-
-        db.delete(DbHelper.t_event, "id = '" + id + "'", null);
-    }
-
-    private void showSubjectInfo(String subject) {
-        final Dialog dialog = new Dialog(requireContext());
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog.setContentView(R.layout.bottom_task_layout);
 
 
-        TextView title = dialog.findViewById(R.id.title_subject);
-        title.setText(subject);
-        LinearLayout delete = dialog.findViewById(R.id.deleteSubject);
 
-        PushDownAnim.setPushDownAnimTo(delete)
-                .setDurationPush(100)
-                .setScale(PushDownAnim.MODE_SCALE, 0.95f)
-                .setOnClickListener(view -> {
-                    notifyDelete(subject);
-                    dialog.dismiss();
-                });
 
-        RecyclerView r = dialog.findViewById(R.id.recycler);
-        setListener();
-        element = new ArrayList<>();
 
-        element = getSSchedule(subject);
-        adapterS = new ScheduleAdapter(
-                requireActivity(),
-                element,
-                (view, pos) -> {
 
-                },
-                n);
-
-        LinearLayoutManager m = new LinearLayoutManager(requireActivity().getApplicationContext(), RecyclerView.VERTICAL, false);
-        r.setLayoutManager(m);
-        r.setHasFixedSize(false);
-
-        if (element != null)
-            r.setAdapter(adapterS);
-
-        dialog.show();
-        dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        dialog.getWindow().getAttributes().windowAnimations = R.style.DialogAnimation;
-        dialog.getWindow().setGravity(Gravity.BOTTOM);
-    }
-
-    private void deleteSubject(String subject) {
-        DbHelper dbHelper = new DbHelper(requireActivity());
-        SQLiteDatabase dbr = dbHelper.getReadableDatabase();
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-        subject = DatabaseUtils.sqlEscapeString(subject);
-
-        Cursor c = dbr.rawQuery("SELECT id FROM " + DbHelper.t_subjects + " WHERE name = " + subject, null);
-        int idSubject = -1;
-        if (c.moveToFirst()) {
-            idSubject = c.getInt(0);
-        }
-        if (idSubject >= 0) {
-            db.delete(DbHelper.t_task, "subject = " + subject, null);
-            db.delete(DbHelper.t_event, "subject = '" + idSubject + "'", null);
-            db.delete(DbHelper.t_subjects, "name = " + subject, null);
-            ((MainActivity) requireActivity()).notifyAllChanged();
-            loadSubjects(false);
-        }
-        c.close();
-    }
-
-    private List<CalendarWeekView.EventsTask> getSSchedule(String n) {
-        List<CalendarWeekView.EventsTask> a = new ArrayList<>();
-        DbHelper dbHelper = new DbHelper(requireActivity());
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-        n = DatabaseUtils.sqlEscapeString(n);
-        Cursor c = db.rawQuery("SELECT * FROM " + DbHelper.t_subjects + " WHERE name = " + n + "", null);
-        if (c.moveToFirst()) {
-            int id = c.getInt(0);
-            Cursor s = db.rawQuery("SELECT * FROM " + DbHelper.t_event + " WHERE subject = '" + id + "' ORDER BY day_of_week ASC, time ASC", null);
-
-            if (s.moveToFirst()) {
-                do {
-                    int ids = s.getInt(0);
-                    int dd = s.getInt(2);
-                    long h = s.getLong(3);
-                    long d = s.getLong(4);
-                    int t = s.getInt(5);
-                    String tt = s.getString(1);
-
-                    a.add(new CalendarWeekView.EventsTask(ids, dd, h, d, t, tt));
-                } while (s.moveToNext());
-            }
-            s.close();
-        }
-
-        c.close();
-
-        return a;
-    }
 
     public void showSubjectCreator() {
         final Dialog dialog = new Dialog(requireContext());
@@ -318,6 +206,27 @@ public class SubjectsFragment extends Fragment {
         e.add(new ColorSelectElement("brown", Color.parseColor("#795547"), Color.parseColor("#4a2c21")));
 
         return e;
+    }
+
+    private void deleteSubject(String subject) {
+        DbHelper dbHelper = new DbHelper(requireActivity());
+        SQLiteDatabase dbr = dbHelper.getReadableDatabase();
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        subject = DatabaseUtils.sqlEscapeString(subject);
+
+        Cursor c = dbr.rawQuery("SELECT id FROM " + DbHelper.t_subjects + " WHERE name = " + subject, null);
+        int idSubject = -1;
+        if (c.moveToFirst()) {
+            idSubject = c.getInt(0);
+        }
+        if (idSubject >= 0) {
+            db.delete(DbHelper.t_task, "subject = " + subject, null);
+            db.delete(DbHelper.t_event, "subject = '" + idSubject + "'", null);
+            db.delete(DbHelper.t_subjects, "name = " + subject, null);
+            ((MainActivity) requireActivity()).notifyAllChanged();
+            loadSubjects(false);
+        }
+        c.close();
     }
 
     public void notifyDelete(String subject) {

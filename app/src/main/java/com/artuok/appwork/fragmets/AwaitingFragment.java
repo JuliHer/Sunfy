@@ -3,12 +3,14 @@ package com.artuok.appwork.fragmets;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Canvas;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -42,6 +44,8 @@ public class AwaitingFragment extends Fragment {
     LinearLayoutManager manager;
     TextView done, onHold, lose;
     AwaitingAdapter.OnClickListener listener;
+
+    LinearLayout empty;
 
     ItemTouchHelper.SimpleCallback touchHelper = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
         @Override
@@ -100,6 +104,7 @@ public class AwaitingFragment extends Fragment {
         done = root.findViewById(R.id.done_txt);
         onHold = root.findViewById(R.id.onHold_txt);
         lose = root.findViewById(R.id.losed_txt);
+        empty = root.findViewById(R.id.empty_tasks);
 
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(manager);
@@ -185,8 +190,6 @@ public class AwaitingFragment extends Fragment {
                 int minute = Integer.parseInt(time[1]);
 
                 c.set(year, (month - 1), day, hour, minute);
-
-                String mm = month < 10 ? "0" + month : "" + month;
                 String dd = day < 10 ? "0" + day : "" + day;
                 String datetime = dd + " " + homeFragment.getMonthMinor(requireActivity(), (month - 1)) + " " + year + " ";
 
@@ -212,8 +215,19 @@ public class AwaitingFragment extends Fragment {
                 }
 
                 boolean done = cursor.getInt(6) == 1;
+                String subjectName = DatabaseUtils.sqlEscapeString(cursor.getString(4));
 
-                elements.add(new Item(new AwaitingElement(cursor.getInt(0), cursor.getString(2), cursor.getString(4), datetime, status, cursor.getString(5), done, e), 0));
+                Cursor s = db.rawQuery("SELECT * FROM " + DbHelper.t_subjects + " WHERE name = " + subjectName, null);
+                int colors = 0;
+                if (s.moveToFirst()) {
+                    colors = s.getInt(2);
+                }
+
+                s.close();
+
+                AwaitingElement eb = new AwaitingElement(cursor.getInt(0), cursor.getString(2), cursor.getString(4), datetime, status, cursor.getString(5), done, e);
+                eb.setColorSubject(colors);
+                elements.add(new Item(eb, 0));
             } while (cursor.moveToNext());
         }
         loadLate();
@@ -223,6 +237,12 @@ public class AwaitingFragment extends Fragment {
             recyclerView.setAdapter(adapter);
         } else {
             adapter.notifyDataSetChanged();
+        }
+
+        if (elements.size() != 0) {
+            empty.setVisibility(View.GONE);
+        } else {
+            empty.setVisibility(View.VISIBLE);
         }
     }
 
@@ -276,8 +296,19 @@ public class AwaitingFragment extends Fragment {
                 }
 
                 boolean done = cursor.getInt(6) == 1;
+                String subjectName = DatabaseUtils.sqlEscapeString(cursor.getString(4));
 
-                elements.add(new Item(new AwaitingElement(cursor.getInt(0), cursor.getString(2), cursor.getString(4), datetime, status, cursor.getString(5), done, e), 0));
+                Cursor s = db.rawQuery("SELECT * FROM " + DbHelper.t_subjects + " WHERE name = " + subjectName, null);
+                int colors = 0;
+                if (s.moveToFirst()) {
+                    colors = s.getInt(2);
+                }
+
+                s.close();
+
+                AwaitingElement eb = new AwaitingElement(cursor.getInt(0), cursor.getString(2), cursor.getString(4), datetime, status, cursor.getString(5), done, e);
+                eb.setColorSubject(colors);
+                elements.add(new Item(eb, 0));
             } while (cursor.moveToNext());
         }
         cursor.close();
@@ -333,8 +364,19 @@ public class AwaitingFragment extends Fragment {
                 }
 
                 boolean done = cursor.getInt(6) == 1;
+                String subjectName = DatabaseUtils.sqlEscapeString(cursor.getString(4));
 
-                elements.add(new Item(new AwaitingElement(cursor.getInt(0), cursor.getString(2), cursor.getString(4), datetime, status, cursor.getString(5), done, e), 0));
+                Cursor s = db.rawQuery("SELECT * FROM " + DbHelper.t_subjects + " WHERE name = " + subjectName, null);
+                int colors = 0;
+                if (s.moveToFirst()) {
+                    colors = s.getInt(2);
+                }
+
+                s.close();
+
+                AwaitingElement eb = new AwaitingElement(cursor.getInt(0), cursor.getString(2), cursor.getString(4), datetime, status, cursor.getString(5), done, e);
+                eb.setColorSubject(colors);
+                elements.add(new Item(eb, 0));
             } while (cursor.moveToNext());
         }
         cursor.close();

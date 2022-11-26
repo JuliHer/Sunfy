@@ -1,9 +1,13 @@
 package com.artuok.appwork.adapters;
 
 import android.content.Context;
+import android.content.res.TypedArray;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -70,13 +74,14 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     class AwaitingViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-        TextView title, description, subject, status, date;
+        TextView title, status, date;
+
+        LinearLayout subject;
 
         public AwaitingViewHolder(@NonNull View itemView) {
             super(itemView);
             title = itemView.findViewById(R.id.title_card);
-            description = itemView.findViewById(R.id.description_card);
-            subject = itemView.findViewById(R.id.subjects_card);
+            subject = itemView.findViewById(R.id.subject_color);
             status = itemView.findViewById(R.id.status_card);
             date = itemView.findViewById(R.id.date_card);
             PushDownAnim.setPushDownAnimTo(itemView)
@@ -86,10 +91,12 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         }
 
         void onBindData(AwaitingElement element) {
-            title.setText(element.getSubject());
+
             String t = element.getTitle().equals("") ? element.getDescription() : element.getTitle() + ": " + element.getDescription();
-            description.setText(t);
-            subject.setText("");
+            t = t.substring(0, 1).toUpperCase() + t.substring(1).toLowerCase();
+
+            title.setText(t);
+            subject.setBackgroundColor(element.getColorSubject());
 
             String d = element.getStatus() + " " + mInflater.getContext().getString(R.string.day_left);
 
@@ -106,6 +113,15 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             if (element.isStatusB()) {
                 status.setText(R.string.done_string);
                 status.setBackgroundColor(mInflater.getContext().getColor(R.color.blue_400));
+                title.setPaintFlags(title.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+
+
+                TypedArray ta = mInflater.getContext().obtainStyledAttributes(R.styleable.AppWidgetAttrs);
+
+                int color = ta.getColor(R.styleable.AppWidgetAttrs_subTextColor, Color.WHITE);
+
+                title.setTextColor(color);
+                ta.recycle();
             } else {
                 if (element.isOpen()) {
                     if (Integer.parseInt(element.getStatus()) > 2) {

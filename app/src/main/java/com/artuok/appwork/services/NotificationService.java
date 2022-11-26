@@ -10,11 +10,11 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Color;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.util.Log;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
@@ -98,85 +98,90 @@ public class NotificationService extends Service {
 
     private void cancelDoHomework() {
         NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-
         if (manager != null) {
             manager.cancel(2);
+        }
+    }
+
+    private void showNotifyDH() {
+        String g;
+        String t;
+        int count = awaitingActivities();
+
+        if (count > 0) {
+            t = getString(R.string.its_time_to_do_homework);
+        } else {
+            t = getString(R.string.congratulations);
+        }
+
+        if (count > 1) {
+            g = getString(R.string.you_have) + " " + count + " " + getString(R.string.pending_activities);
+        } else if (count == 1) {
+            g = getString(R.string.you_have) + " " + count + " " + getString(R.string.pending_activity);
+        } else {
+            g = getString(R.string.you_havent_tasks);
+        }
+        Notification foreground = new NotificationCompat.Builder(this, InActivity.CHANNEL_ID_2)
+                .setSmallIcon(R.drawable.ic_stat_name)
+                .setColor(Color.parseColor("#1982C4"))
+                .setContentTitle(t)
+                .setContentText(g)
+                .setShowWhen(true)
+                .build();
+        NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        assert manager != null;
+        manager.notify(2, foreground);
+    }
+
+    private void displayAlarmDH() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            Intent cancelAlarm = new Intent(this, AlarmWorkManager.class);
+            cancelAlarm.setAction(AlarmWorkManager.ACTION_DISMISS);
+            PendingIntent cancelPendingIntent =
+                    PendingIntent.getBroadcast(this, 0, cancelAlarm, 0);
+
+            Intent postponeIntent = new Intent(this, AlarmWorkManager.class);
+            postponeIntent.setAction(AlarmWorkManager.ACTION_DISMISS);
+            PendingIntent postponePendingIntent =
+                    PendingIntent.getBroadcast(this, 0, postponeIntent, 0);
+
+
+            Intent fullScreenIntent = new Intent(this, AlarmActivity.class);
+            PendingIntent fullScreenPendingIntent = PendingIntent.getActivity(this,
+                    0,
+                    fullScreenIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT);
+
+
+            Notification foreground = new NotificationCompat.Builder(this, InActivity.CHANNEL_ID_3)
+                    .setSmallIcon(R.drawable.ic_stat_name)
+                    .setContentTitle(getString(R.string.its_time_to_do_homework))
+                    .setContentText("Playing Alarm Ringtone")
+                    .setSilent(true)
+                    .setOngoing(true)
+                    .setPriority(NotificationCompat.PRIORITY_HIGH)
+                    .setCategory(NotificationCompat.CATEGORY_ALARM)
+                    .addAction(R.drawable.ic_stat_name, getString(R.string.Cancel_M), cancelPendingIntent)
+                    .setFullScreenIntent(fullScreenPendingIntent, true)
+                    .build();
+
+            NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+
+            assert manager != null;
+            manager.notify(2, foreground);
+        } else {
+            Intent intent = new Intent(this, AlarmActivity.class)
+                    .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
         }
     }
 
     private void notifyDoHomework(boolean alarm) {
 
         if (alarm) {
-            /*KeyguardManager myKM = (KeyguardManager) getSystemService(Context.KEYGUARD_SERVICE);
-            if( myKM.inKeyguardRestrictedInputMode()) {
-
-            } else {
-
-            }*/
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                Intent cancelIntent = new Intent(this, AlarmWorkManager.class);
-                cancelIntent.setAction(AlarmWorkManager.ACTION_DISMISS);
-                PendingIntent cancelPendingIntent =
-                        PendingIntent.getBroadcast(this, 0, cancelIntent, 0);
-
-                Intent postponeIntent = new Intent(this, AlarmWorkManager.class);
-                postponeIntent.setAction(AlarmWorkManager.ACTION_DISMISS);
-                PendingIntent postponePendingIntent =
-                        PendingIntent.getBroadcast(this, 0, postponeIntent, 0);
-                Log.d("say", "hi " + alarm);
-                Intent fullScreenIntent = new Intent(this, AlarmActivity.class);
-                PendingIntent fullScreenPendingIntent = PendingIntent.getActivity(this,
-                        0,
-                        fullScreenIntent,
-                        PendingIntent.FLAG_UPDATE_CURRENT);
-                Notification foreground = new NotificationCompat.Builder(this, InActivity.CHANNEL_ID_2)
-                        .setSmallIcon(R.drawable.ic_stat_name)
-                        .setContentTitle(getString(R.string.its_time_to_do_homework))
-                        .setContentText("Playing Alarm Ringtone")
-                        .setSilent(true)
-                        .setOngoing(true)
-                        .setPriority(NotificationCompat.PRIORITY_HIGH)
-                        .setCategory(NotificationCompat.CATEGORY_ALARM)
-                        .addAction(R.drawable.ic_stat_name, "Cancel", cancelPendingIntent)
-                        .setFullScreenIntent(fullScreenPendingIntent, true)
-                        .build();
-                NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-
-                assert manager != null;
-                manager.notify(2, foreground);
-            } else {
-                Intent intent = new Intent(this, AlarmActivity.class)
-                        .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(intent);
-            }
+            displayAlarmDH();
         } else {
-
-            String g;
-            String t;
-            int count = awaitingActivities();
-
-            if (count > 0) {
-                t = getString(R.string.its_time_to_do_homework);
-            } else {
-                t = getString(R.string.congratulations);
-            }
-
-            if (count > 1) {
-                g = getString(R.string.you_have) + " " + count + " " + getString(R.string.pending_activities);
-            } else if (count == 1) {
-                g = getString(R.string.you_have) + " " + count + " " + getString(R.string.pending_activity);
-            } else {
-                g = getString(R.string.you_havent_tasks);
-            }
-            Notification foreground = new NotificationCompat.Builder(this, InActivity.CHANNEL_ID_2)
-                    .setSmallIcon(R.drawable.ic_stat_name)
-                    .setContentTitle(t)
-                    .setContentText(g)
-                    .setShowWhen(true)
-                    .build();
-            NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-            assert manager != null;
-            manager.notify(2, foreground);
+            showNotifyDH();
         }
 
 
@@ -202,9 +207,10 @@ public class NotificationService extends Service {
         m = min < 10 ? "0" + min : min + "";
         tm = v.get(Calendar.AM_PM) == Calendar.AM ? "am" : "pm";
         g += v.get(Calendar.HOUR) + ":" + m + " " + tm;
-        Notification foreground = new NotificationCompat.Builder(this, InActivity.CHANNEL_ID_1)
+        Notification foreground = new NotificationCompat.Builder(this, InActivity.CHANNEL_ID_2)
                 .setSmallIcon(R.drawable.ic_stat_name)
                 .setContentTitle(t)
+                .setColor(Color.parseColor("#1982C4"))
                 .setContentText(g)
                 .setShowWhen(true)
                 .build();
@@ -260,15 +266,26 @@ public class NotificationService extends Service {
 
     private void setAlarm(int hour, int minute, boolean alarm) {
         final Calendar c = Calendar.getInstance();
-        int day = 1000 * 60 * 60 * 24;
+        long rest = 0;
+        int hr = 0;
+        if (c.get(Calendar.HOUR_OF_DAY) >= hour) {
+            hr = 24 + hour - c.get(Calendar.HOUR_OF_DAY);
+        } else {
+            hr = hour - c.get(Calendar.HOUR_OF_DAY);
+        }
+
+        int mr = minute - c.get(Calendar.MINUTE);
+
+        rest = (hr * 60L * 60L * 1000L) + (mr * 60L * 1000L);
+
+        Calendar a = Calendar.getInstance();
+        rest += a.getTimeInMillis();
+
+        a.setTimeInMillis(rest);
         AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        c.set(Calendar.HOUR_OF_DAY, hour);
-        c.set(Calendar.MINUTE, minute);
-        c.set(Calendar.SECOND, 0);
-        long whe = c.getTimeInMillis() <= Calendar.getInstance().getTimeInMillis() ? c.getTimeInMillis() + day : c.getTimeInMillis();
         Intent notify = new Intent(this, AlarmWorkManager.class)
                 .setAction(AlarmWorkManager.ACTION_TIME_TO_DO_HOMEWORK);
-        notify.putExtra("time", whe);
+        notify.putExtra("time", rest);
         if (alarm) {
             notify.putExtra("alarm", 1);
         }
@@ -276,37 +293,9 @@ public class NotificationService extends Service {
                 this,
                 0, notify,
                 PendingIntent.FLAG_UPDATE_CURRENT);
-        manager.cancel(pendingNotify);
-
-        manager.setExact(AlarmManager.RTC_WAKEUP, whe, pendingNotify);
-    }
-
-    private void setPAlarm(int hour, int minute, int time) {
-
-        hour = hour + (minute / 60);
-
-        minute = minute % 60;
-
-        hour = hour % 24;
-
-        Calendar c = Calendar.getInstance();
-        int day = 1000 * 60 * 60 * 24;
-        AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        c.set(Calendar.HOUR_OF_DAY, hour);
-        c.set(Calendar.MINUTE, minute);
-        c.set(Calendar.SECOND, 0);
-        long whe = c.getTimeInMillis() <= Calendar.getInstance().getTimeInMillis() ? c.getTimeInMillis() + day : c.getTimeInMillis();
-        Intent notify = new Intent(this, AlarmWorkManager.class)
-                .setAction(AlarmWorkManager.ACTION_POSTPONE);
-
-        notify.putExtra("time", time);
-        PendingIntent pendingNotify = PendingIntent.getBroadcast(
-                this,
-                1, notify,
-                PendingIntent.FLAG_UPDATE_CURRENT);
 
         manager.cancel(pendingNotify);
-        manager.setExact(AlarmManager.RTC_WAKEUP, whe, pendingNotify);
+        manager.setExact(AlarmManager.RTC_WAKEUP, rest, pendingNotify);
     }
 
     void setAlarmSchedule() {
@@ -322,7 +311,7 @@ public class NotificationService extends Service {
         int dow = c.get(Calendar.DAY_OF_WEEK) - 1;
         if (v.moveToFirst()) {
             do {
-                if (v.getLong(3) > (hour + (60 * 60)) && dow == v.getInt(2)) {
+                if (v.getLong(3) > (hour + (60 * 5)) && dow == v.getInt(2)) {
                     time = v.getLong(3) * 1000;
                     day = v.getInt(2);
                     time = time - (hour * 1000);
@@ -366,10 +355,6 @@ public class NotificationService extends Service {
 
         Intent notify = new Intent(this, AlarmWorkManager.class)
                 .setAction(AlarmWorkManager.ACTION_EVENT);
-        int days = (int) (diff / 1000 / 60 / 60 / 24);
-        int hour = (int) (diff / 1000 / 60 / 60 % 24);
-        int min = (int) (diff / 1000 / 60 % 60);
-        Log.d("faltan", days + "d " + hour + " h" + min + " min");
 
         notify.putExtra("name", name);
         notify.putExtra("time", start);
@@ -382,6 +367,6 @@ public class NotificationService extends Service {
 
         AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         manager.cancel(pendingNotify);
-        manager.setExact(AlarmManager.RTC_WAKEUP, start - (60 * 60 * 1000), pendingNotify);
+        manager.setExact(AlarmManager.RTC_WAKEUP, start - (60 * 5 * 1000), pendingNotify);
     }
 }

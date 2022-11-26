@@ -65,6 +65,8 @@ class CreateAwaitingActivity : AppCompatActivity() {
             setSelectSubject(chooseSubject)
         }
 
+        getDeadline()
+
         val cancel: ImageView = findViewById(R.id.cancel_awaiting)
         val accept: Button = findViewById(R.id.accept_awaiting)
 
@@ -123,10 +125,27 @@ class CreateAwaitingActivity : AppCompatActivity() {
                             insertAwaiting("", datetime, subject, activity.getText().toString())
                             finish()
                         } else {
-                            Toast.makeText(this@CreateAwaitingActivity, "Elige una asignatura", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@CreateAwaitingActivity, getString(R.string.select_subject), Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
+    }
+
+    private fun getDeadline() {
+        if (intent.extras != null) {
+            val deadline = intent.extras!!.getLong("deadline", 0);
+            val c = Calendar.getInstance();
+            c.timeInMillis = deadline;
+            val d = c[Calendar.YEAR].toString() + "-" + (c[Calendar.MONTH] + 1) + "-" + c[Calendar.DAY_OF_MONTH] + " 00:00:00";
+
+
+            datetime = d;
+            val dow = c[Calendar.DAY_OF_WEEK]
+            dateText = homeFragment.getDayOfWeek(this@CreateAwaitingActivity, dow) + " " + c[Calendar.DAY_OF_MONTH] + ", " +
+                    homeFragment.getMonthMinor(this, c[Calendar.MONTH]) +
+                    " " + c[Calendar.YEAR] + " 00:00 AM"
+            datePicker.text = dateText
+        }
     }
 
     private fun insertAwaiting(name: String, date: String, subject: String, description: String) {
@@ -134,7 +153,7 @@ class CreateAwaitingActivity : AppCompatActivity() {
         val db = dbHelper.writableDatabase
         val values = ContentValues()
         val c = Calendar.getInstance()
-        val now = c[Calendar.YEAR].toString() + "-" + c[Calendar.MONTH] + "-" + c[Calendar.DAY_OF_MONTH] + " " + c[Calendar.HOUR_OF_DAY] + ":" + c[Calendar.MINUTE] + ":" + c[Calendar.SECOND]
+        val now = c[Calendar.YEAR].toString() + "-" + (c[Calendar.MONTH] + 1) + "-" + c[Calendar.DAY_OF_MONTH] + " " + c[Calendar.HOUR_OF_DAY] + ":" + c[Calendar.MINUTE] + ":" + c[Calendar.SECOND]
         values.put("date", now)
         values.put("title", name)
         values.put("end_date", date)

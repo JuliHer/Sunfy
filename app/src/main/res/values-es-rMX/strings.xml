@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">TaskApp</string>
+    <string name="app_name">Diarify</string>
     <string name="home_fragment_menu">Inicio</string>
     <string name="awaiting_fragment_menu">Pendientes</string>
     <string name="subjects_fragment_menu">Materias</string>
@@ -100,4 +100,5 @@
     <string name="activity">Tarea</string>
     <string name="events">Eventos</string>
     <string name="add">Agregar</string>
+    <string name="made_by_artwork_studios">Creado por ARTWORK STUDIOS</string>
 </resources>

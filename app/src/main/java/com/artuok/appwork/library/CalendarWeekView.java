@@ -25,6 +25,7 @@ import com.artuok.appwork.R;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -280,15 +281,15 @@ public class CalendarWeekView extends View {
 
         translucent.setAlpha(255 / 8);
 
-        canvas.drawRoundRect(rectF, 15, 15, translucent);
+        canvas.drawRoundRect(rectF, 10, 10, translucent);
         translucent.setAlpha(255);
         canvas.save();
 
         Path path = new Path();
 
-        path.addRoundRect(rectM, 15, 15, Path.Direction.CCW);
+        path.addRoundRect(rectM, 10, 10, Path.Direction.CCW);
         canvas.clipOutPath(path);
-        canvas.drawRoundRect(rectF, 20, 20, mPaintHighlight);
+        canvas.drawRoundRect(rectF, 15, 15, mPaintHighlight);
 
         canvas.restore();
     }
@@ -302,9 +303,11 @@ public class CalendarWeekView extends View {
     private void drawEvent(@NonNull Canvas canvas, @NonNull Intersects i, int y) {
         int count = i.getCount();
         int width = i.getWidth();
-        int spacingOfEvent = mSpacingOfDays / count;
+        int spacingOfEvent = mSpacingOfDays / width;
         float height = (mSpacingOfHours * 24);
         float day = 86400;
+
+        List<Cell> draws = new ArrayList<>();
 
         for (int j = 0; j < count; j++) {
             RectF event = new RectF();
@@ -312,11 +315,18 @@ public class CalendarWeekView extends View {
             float end = e.getDuration();
             float start = e.getHour();
 
+            Cell c = new Cell(e);
+
+            int lefts = getDrawsPos(draws, c);
+
+            i.getEvent(j).setLeftPos(lefts);
+            draws.add(c);
+
             int b = i.intersects(e) - width;
 
-            int left = mHalfSpacingOfDays + (mSpacingOfDays * e.getDay()) + (spacingOfEvent * j);
+            int left = mHalfSpacingOfDays + (mSpacingOfDays * e.getDay()) + (spacingOfEvent * lefts);
             float top = (int) (mSpacingOfTopBar + (height / day * start) + 1) - y;
-            int right = left + spacingOfEvent - convertToDpToPx(2 / width);
+            int right = left + spacingOfEvent - convertToDpToPx(2);
             float bottom = (int) (top + (height / day * end) - convertToDpToPx(2));
 
             event.set(left, top, right, bottom);
@@ -324,10 +334,10 @@ public class CalendarWeekView extends View {
             if (e.getColor() != 0)
                 mPaintHighlight.setColor(e.getColor());
 
-            canvas.drawRoundRect(event, 15, 15, mPaintHighlight);
+            canvas.drawRoundRect(event, 10, 10, mPaintHighlight);
             mPaintHighlight.setColor(mColorHighlight);
 
-            if (count == 1) {
+            if (width <= 2) {
                 int padding = convertToDpToPx(3);
                 canvas.save();
                 canvas.clipRect(event);
@@ -350,6 +360,21 @@ public class CalendarWeekView extends View {
             }
         }
     }
+
+    private int getDrawsPos(List<Cell> draws, Cell d) {
+        int count = 0;
+        for (int i = 0; i < draws.size(); i++) {
+            Cell b = draws.get(i);
+            for (int j = d.getHourMin(); j < (d.getHourMax() + 1); j++) {
+                if (j >= b.getHourMin() && j <= b.getHourMax()) {
+                    count++;
+                    break;
+                }
+            }
+        }
+        return count;
+    }
+
 
     private void drawIndicator(@NonNull Canvas canvas, int fy) {
         int h = calendar.get(Calendar.HOUR_OF_DAY);
@@ -401,7 +426,7 @@ public class CalendarWeekView extends View {
                 Cell a = getPositionAt((int) (e.getX() - mHalfSpacingOfDays), (int) (e.getY() - mSpacingOfTopBar) + offsetY);
                 if (a != null) {
                     if (dateListener != null) {
-                        dateListener.onClick();
+                        dateListener.onClick(a);
                     }
                 } else {
                     if (isSelect && isInSelect((int) (e.getX() - mHalfSpacingOfDays), (int) (e.getY() - mSpacingOfTopBar) + offsetY)) {
@@ -508,10 +533,21 @@ public class CalendarWeekView extends View {
     private Cell getPositionAt(int x, int y) {
         Pos p = new Pos();
         p.getCell(x, y, mSpacingOfDays, mSpacingOfHalfHours);
+        for (Intersects i : mIntersects) {
+            int spacingEvent = mSpacingOfDays / i.getWidth();
+            if (i.getDay() == p.getX()) {
+                for (int j = 0; j < i.getCount(); j++) {
+                    EventsTask e = i.getEvent(j);
+                    Cell c = new Cell(e);
+                    if (p.getY() >= c.getHourMin() && p.getY() <= c.getHourMax()) {
+                        int dx = x - (mSpacingOfDays * p.getX());
+                        int de = dx / spacingEvent;
+                        if (de == e.getLeftPos()) {
+                            return c;
+                        }
+                    }
+                }
 
-        for (Cell c : mData) {
-            if (p.getX() == c.getDay() && (p.getY() >= c.getHourMin() && p.getY() <= c.getHourMax())) {
-                return c;
             }
         }
 
@@ -650,7 +686,7 @@ public class CalendarWeekView extends View {
     }
 
     //Classes
-    private static class Cell {
+    public static class Cell {
         private int hourMin;
         private int hourMax;
         private int day;
@@ -721,6 +757,7 @@ public class CalendarWeekView extends View {
         private int count = 0;
         private final List<EventsTask> events;
 
+
         public Intersects(List<EventsTask> events) {
             this.events = events;
             reorganization();
@@ -744,7 +781,13 @@ public class CalendarWeekView extends View {
             events.sort((t, t1) -> (int) (t.getHour() - t1.getHour()));
 
             min = new Cell(events.get(0)).getHourMin();
+
+            events.sort((t, t1) -> (int) (t.getDuration() - t1.getDuration()));
+
+
             max = new Cell(events.get(count - 1)).getHourMax();
+
+            Collections.reverse(events);
 
             int diff = max - min;
             int count = events.size();
@@ -796,6 +839,10 @@ public class CalendarWeekView extends View {
         public int getWidth() {
             return widthMax;
         }
+
+        public int getDay() {
+            return day;
+        }
     }
 
     public static class EventsTask {
@@ -805,6 +852,7 @@ public class CalendarWeekView extends View {
         private int color;
         private final String title;
         private int id;
+        private int leftPos;
 
         public EventsTask(int day, long hour, long duration, int color, String title) {
             this.day = day;
@@ -862,6 +910,14 @@ public class CalendarWeekView extends View {
         public void setDuration(long duration) {
             this.duration = duration;
         }
+
+        public int getLeftPos() {
+            return leftPos;
+        }
+
+        public void setLeftPos(int leftPos) {
+            this.leftPos = leftPos;
+        }
     }
 
     public class UpdateTimeTask extends TimerTask {
@@ -882,7 +938,7 @@ public class CalendarWeekView extends View {
     }
 
     public interface OnDateListener {
-        void onClick();
+        void onClick(Cell c);
     }
 
     public interface OnViewRegister {

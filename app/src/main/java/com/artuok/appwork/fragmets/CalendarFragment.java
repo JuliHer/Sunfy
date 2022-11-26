@@ -1,21 +1,24 @@
 package com.artuok.appwork.fragmets;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import androidx.activity.result.ActivityResult;
-import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.fragment.app.Fragment;
@@ -26,6 +29,7 @@ import com.artuok.appwork.CreateActivity;
 import com.artuok.appwork.MainActivity;
 import com.artuok.appwork.R;
 import com.artuok.appwork.adapters.BottomEventAdapter;
+import com.artuok.appwork.adapters.ScheduleAdapter;
 import com.artuok.appwork.db.DbHelper;
 import com.artuok.appwork.library.CalendarWeekView;
 import com.artuok.appwork.objects.TaskEvent;
@@ -82,9 +86,7 @@ public class CalendarFragment extends Fragment {
         weekView.setViewRegisterListener(() -> weekView.scrollAt(time));
 
         calendarV.addOnDateClickListener(this::showEvents);
-        weekView.setDateListener(() -> {
-            ((MainActivity) requireActivity()).navigateTo(3);
-        });
+        weekView.setDateListener(c1 -> showSubjectInfo(c1.getEvent().getTitle()));
         weekView.setSelectListener(this::startCreateActivity);
 
         return root;
@@ -103,15 +105,12 @@ public class CalendarFragment extends Fragment {
 
     ActivityResultLauncher<Intent> resultLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
-            new ActivityResultCallback<ActivityResult>() {
-                @Override
-                public void onActivityResult(ActivityResult result) {
-                    if (result.getResultCode() == Activity.RESULT_OK) {
-                        Intent data = result.getData();
-                        if (data.getIntExtra("requestCode", 0) == 1) {
-                            NotifyChanged();
-                            Log.d("Drawi", "codeDraw");
-                        }
+            result -> {
+                if (result.getResultCode() == Activity.RESULT_OK) {
+                    Intent data = result.getData();
+                    if (data.getIntExtra("requestCode", 0) == 1) {
+                        NotifyChanged();
+                        Log.d("Drawi", "codeDraw");
                     }
                 }
             }
@@ -120,13 +119,14 @@ public class CalendarFragment extends Fragment {
     public void NotifyChanged() {
         elements = new ArrayList<>();
         setEvents();
+        calendarEvents();
     }
 
     public void setEvents() {
         DbHelper dbHelper = new DbHelper(requireActivity());
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
-        Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.t_event, null);
+        Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.t_event + " ORDER BY duration DESC", null);
         if (cursor.moveToFirst()) {
             do {
                 String title = cursor.getString(1);
@@ -218,7 +218,6 @@ public class CalendarFragment extends Fragment {
             assert layout != null;
             layout.setMinimumHeight(Resources.getSystem().getDisplayMetrics().heightPixels / 2);
         }
-
     }
 
     public void loadEvents(int dd, int mm, int yyyy) {
@@ -252,7 +251,7 @@ public class CalendarFragment extends Fragment {
                 String sub = c.getString(4);
                 sub = DatabaseUtils.sqlEscapeString(sub);
 
-                Cursor b = db.rawQuery("SELECT color FROM " + DbHelper.t_subjects + " WHERE name = '" + sub + "'", null);
+                Cursor b = db.rawQuery("SELECT color FROM " + DbHelper.t_subjects + " WHERE name = " + sub, null);
 
                 int color = 0;
                 if (b.moveToFirst()) {
@@ -264,5 +263,103 @@ public class CalendarFragment extends Fragment {
             } while (c.moveToNext());
         }
         c.close();
+    }
+
+    ScheduleAdapter adapterS;
+    ScheduleAdapter.OnClickListener n;
+    List<CalendarWeekView.EventsTask> elementS;
+
+    private void setListener() {
+        n = (view, pos) -> {
+            removeEvent(elementS.get(pos).getId());
+            elementS.remove(pos);
+            adapterS.notifyItemRemoved(pos);
+            ((MainActivity) requireActivity()).notifyAllChanged();
+        };
+    }
+
+    private void removeEvent(int id) {
+        DbHelper dbHelper = new DbHelper(requireActivity());
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+
+        db.delete(DbHelper.t_event, "id = '" + id + "'", null);
+    }
+
+
+    private void showSubjectInfo(String subject) {
+        final Dialog dialog = new Dialog(requireContext());
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.bottom_task_layout);
+
+
+        TextView title = dialog.findViewById(R.id.title_subject);
+        title.setText(subject);
+        LinearLayout delete = dialog.findViewById(R.id.deleteSubject);
+
+        delete.setVisibility(View.GONE);
+
+        PushDownAnim.setPushDownAnimTo(delete)
+                .setDurationPush(100)
+                .setScale(PushDownAnim.MODE_SCALE, 0.95f)
+                .setOnClickListener(view -> {
+                    dialog.dismiss();
+                });
+
+        RecyclerView r = dialog.findViewById(R.id.recycler);
+        setListener();
+        elementS = new ArrayList<>();
+
+        elementS = getSSchedule(subject);
+        adapterS = new ScheduleAdapter(
+                requireActivity(),
+                elementS,
+                (view, pos) -> {
+
+                },
+                n);
+
+        LinearLayoutManager m = new LinearLayoutManager(requireActivity().getApplicationContext(), RecyclerView.VERTICAL, false);
+        r.setLayoutManager(m);
+        r.setHasFixedSize(false);
+
+        if (elementS != null)
+            r.setAdapter(adapterS);
+
+        dialog.show();
+        dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        dialog.getWindow().getAttributes().windowAnimations = R.style.DialogAnimation;
+        dialog.getWindow().setGravity(Gravity.BOTTOM);
+    }
+
+
+    private List<CalendarWeekView.EventsTask> getSSchedule(String n) {
+        List<CalendarWeekView.EventsTask> a = new ArrayList<>();
+        DbHelper dbHelper = new DbHelper(requireActivity());
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        n = DatabaseUtils.sqlEscapeString(n);
+        Cursor c = db.rawQuery("SELECT * FROM " + DbHelper.t_subjects + " WHERE name = " + n + "", null);
+        if (c.moveToFirst()) {
+            int id = c.getInt(0);
+            Cursor s = db.rawQuery("SELECT * FROM " + DbHelper.t_event + " WHERE subject = '" + id + "' ORDER BY day_of_week ASC, time ASC", null);
+
+            if (s.moveToFirst()) {
+                do {
+                    int ids = s.getInt(0);
+                    int dd = s.getInt(2);
+                    long h = s.getLong(3);
+                    long d = s.getLong(4);
+                    int t = s.getInt(5);
+                    String tt = s.getString(1);
+
+                    a.add(new CalendarWeekView.EventsTask(ids, dd, h, d, t, tt));
+                } while (s.moveToNext());
+            }
+            s.close();
+        }
+
+        c.close();
+
+        return a;
     }
 }

@@ -1,6 +1,7 @@
 package com.artuok.appwork.fragmets;
 
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -14,6 +15,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.artuok.appwork.CreateAwaitingActivity;
 import com.artuok.appwork.MainActivity;
 import com.artuok.appwork.R;
 import com.artuok.appwork.adapters.TasksAdapter;
@@ -54,6 +56,24 @@ public class homeFragment extends Fragment {
 
         elements = new ArrayList<>();
         adapter = new TasksAdapter(requireActivity(), elements, listener);
+        adapter.setAddEventListener((view, pos) -> {
+            String d = ((TasksElement) elements.get(pos).getObject()).getDateTime();
+            String dat = d.split(" ")[0];
+            String[] date = dat.split("-");
+            int day = Integer.parseInt(date[2]);
+            int month = Integer.parseInt(date[1]) - 1;
+            int year = Integer.parseInt(date[0]);
+
+            Calendar c = Calendar.getInstance();
+
+            c.set(year, month, day, 0, 0);
+
+            long b = c.getTimeInMillis();
+
+            Intent a = new Intent(requireActivity(), CreateAwaitingActivity.class);
+            a.putExtra("deadline", b);
+            startActivity(a);
+        });
         manager = new LinearLayoutManager(requireActivity(), LinearLayoutManager.VERTICAL, false);
         recyclerView = root.findViewById(R.id.home_recyclerView);
 
@@ -128,7 +148,10 @@ public class homeFragment extends Fragment {
 
                 String date = c.get(Calendar.DAY_OF_MONTH) + " " + getMonthMinor(requireActivity(), c.get(Calendar.MONTH)) + " " + c.get(Calendar.YEAR);
 
-                elements.add(new Item(new TasksElement(title, date, element), 0));
+                TasksElement e = new TasksElement(title, date, element);
+                e.setDateTime(dat1);
+                elements.add(new Item(e, 0));
+
             }
 
         }

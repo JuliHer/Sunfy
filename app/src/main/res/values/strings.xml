@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name" translatable="false">TaskApp</string>
+    <string name="app_name" translatable="false">Diarify</string>
     <string name="home_fragment_menu">Home</string>
     <string name="awaiting_fragment_menu">Awaiting</string>
     <string name="subjects_fragment_menu">Subjects</string>
@@ -104,4 +104,5 @@
     <string name="activity">Task</string>
     <string name="events">Events</string>
     <string name="add">Add</string>
+    <string name="made_by_artwork_studios">Created by ARTWORK STUDIOS</string>
 </resources>

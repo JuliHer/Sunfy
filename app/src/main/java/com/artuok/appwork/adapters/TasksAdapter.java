@@ -24,11 +24,16 @@ public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     LayoutInflater mInflater;
     List<Item> mData;
     OnRecyclerListener listener;
+    OnAddEventListener aListener;
 
     public TasksAdapter(Context context, List<Item> mData, OnRecyclerListener listener) {
         mInflater = LayoutInflater.from(context);
         this.mData = mData;
         this.listener = listener;
+    }
+
+    public void setAddEventListener(OnAddEventListener aListener) {
+        this.aListener = aListener;
     }
 
     @NonNull
@@ -66,7 +71,7 @@ public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         RecyclerView recyclerView;
         TextView date_title, date_txt;
         CardView display_card;
-        LinearLayout linearLayout;
+        LinearLayout linearLayout, addTask;
 
         public TasksViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -78,6 +83,15 @@ public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             date_txt = itemView.findViewById(R.id.date_txt);
             display_card = itemView.findViewById(R.id.display_card);
             linearLayout = itemView.findViewById(R.id.empty_tasks);
+            addTask = itemView.findViewById(R.id.add_task);
+            PushDownAnim.setPushDownAnimTo(addTask)
+                    .setScale(PushDownAnim.MODE_SCALE, 0.95f)
+                    .setDurationPush(100)
+                    .setOnClickListener(view -> {
+                        if (aListener != null) {
+                            aListener.onClick(view, getLayoutPosition());
+                        }
+                    });
             PushDownAnim.setPushDownAnimTo(display_card)
                     .setScale(PushDownAnim.MODE_SCALE, 0.98f)
                     .setDurationPush(100)
@@ -109,6 +123,10 @@ public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         public void onClick(View view) {
             listener.onClick(view, getLayoutPosition());
         }
+    }
+
+    public interface OnAddEventListener {
+        void onClick(View view, int pos);
     }
 
     public interface OnRecyclerListener {

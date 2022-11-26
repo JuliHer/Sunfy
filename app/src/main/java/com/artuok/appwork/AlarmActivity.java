@@ -167,7 +167,6 @@ public class AlarmActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         if (receiver != null) {
-
             unregisterReceiver(receiver);
         }
         cancelVibration();

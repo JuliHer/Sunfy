@@ -9,6 +9,7 @@ public class AwaitingElement {
     String description;
     boolean statusB;
     boolean open;
+    int colorSubject;
 
     public AwaitingElement(int id, String title, String subject, String date, String status, String description, boolean statusB, boolean open) {
         this.id = id;
@@ -19,6 +20,14 @@ public class AwaitingElement {
         this.description = description;
         this.statusB = statusB;
         this.open = open;
+    }
+
+    public int getColorSubject() {
+        return colorSubject;
+    }
+
+    public void setColorSubject(int colorSubject) {
+        this.colorSubject = colorSubject;
     }
 
     public int getId() {
