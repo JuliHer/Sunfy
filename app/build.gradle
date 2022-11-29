@@ -30,6 +30,9 @@ android {
         viewBinding true
     }
     namespace 'com.artuok.appwork'
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
 }
 
 dependencies {
@@ -40,6 +43,8 @@ dependencies {
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.5.1'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1'
+    implementation 'androidx.navigation:navigation-fragment-ktx:2.4.1'
+    implementation 'androidx.navigation:navigation-ui-ktx:2.4.1'
     testImplementation 'junit:junit:'
     androidTestImplementation 'androidx.test.ext:junit:1.1.4'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.0'
@@ -69,8 +74,5 @@ dependencies {
     implementation 'com.airbnb.android:lottie:3.7.0'
 
     implementation 'it.xabaras.android:recyclerview-swipedecorator:1.2.3'
-
-    //FAB expandible
-
 
 }

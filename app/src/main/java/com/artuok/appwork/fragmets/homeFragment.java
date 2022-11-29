@@ -1,5 +1,6 @@
 package com.artuok.appwork.fragmets;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -9,6 +10,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -25,9 +28,11 @@ import com.artuok.appwork.objects.TaskElement;
 import com.artuok.appwork.objects.TasksElement;
 import com.faltenreich.skeletonlayout.Skeleton;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 public class homeFragment extends Fragment {
@@ -57,22 +62,23 @@ public class homeFragment extends Fragment {
         elements = new ArrayList<>();
         adapter = new TasksAdapter(requireActivity(), elements, listener);
         adapter.setAddEventListener((view, pos) -> {
-            String d = ((TasksElement) elements.get(pos).getObject()).getDateTime();
-            String dat = d.split(" ")[0];
-            String[] date = dat.split("-");
-            int day = Integer.parseInt(date[2]);
-            int month = Integer.parseInt(date[1]) - 1;
-            int year = Integer.parseInt(date[0]);
+            String d = ((TasksElement) elements.get(pos).getObject()).getDate();
 
-            Calendar c = Calendar.getInstance();
+            SimpleDateFormat format = new SimpleDateFormat("MMMM dd, yyyy");
+            Date date = new Date();
+            try {
+                date = format.parse(d);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
 
-            c.set(year, month, day, 0, 0);
-
-            long b = c.getTimeInMillis();
+            long b = date.getTime();
 
             Intent a = new Intent(requireActivity(), CreateAwaitingActivity.class);
             a.putExtra("deadline", b);
-            startActivity(a);
+            a.getIntExtra("requestCode", 2);
+
+            resultLauncher.launch(a);
         });
         manager = new LinearLayoutManager(requireActivity(), LinearLayoutManager.VERTICAL, false);
         recyclerView = root.findViewById(R.id.home_recyclerView);
@@ -81,8 +87,8 @@ public class homeFragment extends Fragment {
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(manager);
 
+        loadTasks(-1);
 
-        loadTaksDates(true, false);
         return root;
     }
 
@@ -90,130 +96,72 @@ public class homeFragment extends Fragment {
         listener = (view, position) -> ((MainActivity) requireActivity()).navigateTo(1);
     }
 
-    void loadTaksDates(boolean firstTime, boolean dataChanged) {
-
-        if (!firstTime && !dataChanged) {
-            changeView();
-        } else {
-            Calendar c = Calendar.getInstance();
-            int year = c.get(Calendar.YEAR);
-            int month = c.get(Calendar.MONTH);
-            int day = c.get(Calendar.DAY_OF_MONTH);
-            int hour = 0;
-            for (int i = 0; i < 7; i++) {
-                c.set(year, month, day, hour, 0, 0);
-                long dayTM = 86400000;
-                long timeInMillis = c.getTimeInMillis() + (dayTM * i);
-                c.setTimeInMillis(timeInMillis);
-
-                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                String dat1 = format.format(c.getTime());
-
-                c.set(year, month, day, hour, 0, 0);
-
-                timeInMillis = c.getTimeInMillis() + (dayTM * (i + 1));
-
-                c.setTimeInMillis(timeInMillis);
-
-
-                int Hdif = (24 - c.get(Calendar.HOUR_OF_DAY)) % 24;
-                if (Hdif != 0) {
-                    long hdif = timeInMillis + (60L * 60 * Hdif * 1000);
-                    c.setTimeInMillis(hdif);
-                    hour++;
-                }
-
-                String dat2 = format.format(c.getTime());
-
-                List<TaskElement> element = getTaskInterval(dat1, dat2);
-
-                history.add(element.size());
-
-                c.set(year, month, day, hour, 0, 0);
-                timeInMillis = c.getTimeInMillis() + (dayTM * i);
-                long today = c.getTimeInMillis();
-                c.setTimeInMillis(timeInMillis);
-
-                String title = "";
-
-                int dif = (int) ((c.getTimeInMillis() - today) / 86400000);
-                if (dif == 1) {
-                    title += requireActivity().getString(R.string.tomorrow);
-                } else if (dif == 0) {
-                    title += requireActivity().getString(R.string.today);
-                } else {
-
-                    title += getDayOfWeek(requireActivity(), c.get(Calendar.DAY_OF_WEEK));
-                }
-
-                String date = c.get(Calendar.DAY_OF_MONTH) + " " + getMonthMinor(requireActivity(), c.get(Calendar.MONTH)) + " " + c.get(Calendar.YEAR);
-
-                TasksElement e = new TasksElement(title, date, element);
-                e.setDateTime(dat1);
-                elements.add(new Item(e, 0));
-
-            }
-
-        }
-
-        if (firstTime) {
-            recyclerView.setAdapter(adapter);
-        } else if (dataChanged) {
-            adapter.notifyDataSetChanged();
-        }
-    }
-
-    void changeView() {
+    void loadTasks(int pos) {
+        boolean changedData = pos >= 0;
         Calendar c = Calendar.getInstance();
-        int year = c.get(Calendar.YEAR);
-        int month = c.get(Calendar.MONTH);
-        int day = c.get(Calendar.DAY_OF_MONTH);
-        int hour = 0;
-        for (int i = 0; i < 7; i++) {
-            c.set(year, month, day, hour, 0, 0);
-            long dayTM = 86400000;
-            long timeInMillis = c.getTimeInMillis() + (dayTM * i);
-            c.setTimeInMillis(timeInMillis);
+        long d = c.getTimeInMillis();
+        long day = 86400000;
+        int dayWeek = c.get(Calendar.DAY_OF_WEEK) - 1;
+        if (!changedData) {
+            for (int i = 0; i < 7; i++) {
+                long today = d + (day * i);
+                List<TaskElement> task = getTaskDay(today);
+                int dow = ((dayWeek + i) % 7) + 1;
 
-            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            String dat1 = format.format(c.getTime());
+                String title = dow - 1 == dayWeek ? requireActivity().getString(R.string.today) : getDayOfWeek(requireActivity(), dow);
+                title = dow - 1 == (dayWeek + 1) % 7 ? requireActivity().getString(R.string.tomorrow) : title;
 
-            c.set(year, month, day, hour, 0, 0);
-
-            timeInMillis = c.getTimeInMillis() + (dayTM * (i + 1));
-
-            c.setTimeInMillis(timeInMillis);
+                Date date = new Date();
+                date.setTime(today);
+                SimpleDateFormat format = new SimpleDateFormat("MMMM dd, yyyy");
+                String time = format.format(date);
 
 
-            int Hdif = (24 - c.get(Calendar.HOUR_OF_DAY)) % 24;
-            if (Hdif != 0) {
-                long hdif = timeInMillis + (60L * 60 * Hdif * 1000);
-                c.setTimeInMillis(hdif);
-                hour++;
+                elements.add(new Item(new TasksElement(title, time, task), 0));
             }
-
-            String dat2 = format.format(c.getTime());
-
-            List<TaskElement> element = getTaskInterval(dat1, dat2);
-
-            if (history.get(i) != element.size()) {
-                if (elements.get(i).getType() == 0) {
-                    ((TasksElement) elements.get(i).getObject()).setData(element);
-                }
-                adapter.notifyItemChanged(i);
-                history.add(i, element.size());
-            }
+        } else {
+            long today = d + (day * pos);
+            List<TaskElement> task = getTaskDay(today);
+            ((TasksElement) elements.get(pos).getObject()).setData(task);
+            adapter.notifyItemChanged(pos);
         }
+        if (!changedData) {
+            recyclerView.setAdapter(adapter);
+        }
+
     }
 
+    ActivityResultLauncher<Intent> resultLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == Activity.RESULT_OK) {
+                    Intent data = result.getData();
+                    if (data.getIntExtra("requestCode", 0) == 3) {
+                        ((MainActivity) requireActivity()).navigateTo(2);
+                    } else if (data.getIntExtra("requestCode", 0) == 2) {
+                        ((MainActivity) requireActivity()).notifyAllChanged();
+                    }
+                }
+            }
+    );
 
-    public List<TaskElement> getTaskInterval(String date1, String date2) {
+
+    public List<TaskElement> getTaskDay(long aday) {
         DbHelper dbHelper = new DbHelper(requireActivity().getApplicationContext());
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
         List<TaskElement> tasks = new ArrayList<>();
 
-        Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.t_task + " WHERE end_date BETWEEN '" + date1 + "' AND '" + date2 + "' ORDER BY end_date ASC", null);
+        Date datet = new Date();
+        datet.setTime(aday);
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd 00:00:00");
+        String td = format.format(datet);
+
+        long tomorrow = aday + 86400000;
+        datet.setTime(tomorrow);
+        String tm = format.format(datet);
+
+        Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.t_task + " WHERE end_date BETWEEN '" + td + "' AND '" + tm + "' ORDER BY end_date ASC", null);
         if (cursor.moveToFirst()) {
             do {
                 boolean check = Integer.parseInt(cursor.getString(6)) > 0;
@@ -237,7 +185,12 @@ public class homeFragment extends Fragment {
                     hour = hour - 12;
                     time += hour + ":" + mn + " PM";
                 } else {
-                    time += hour + ":" + mn;
+
+                    int fh = hour;
+                    if (hour == 0) {
+                        fh = 12;
+                    }
+                    time += fh + ":" + mn;
 
                     if (hour == 12) {
                         time += " PM";
@@ -245,6 +198,7 @@ public class homeFragment extends Fragment {
                         time += " AM";
                     }
                 }
+
 
                 tasks.add(new TaskElement(check, title, time, m.getTimeInMillis()));
             } while (cursor.moveToNext());
@@ -255,11 +209,12 @@ public class homeFragment extends Fragment {
     }
 
     public void NotifyDataAdd() {
-        loadTaksDates(false, false);
+        elements.clear();
+        loadTasks(-1);
     }
 
-    public void NotifyDataChanged() {
-        loadTaksDates(false, true);
+    public void NotifyDataChanged(int pos) {
+        loadTasks(pos);
     }
 
     public static String getMonthMinor(Context context, int MM) {
@@ -311,58 +266,6 @@ public class homeFragment extends Fragment {
                 return context.getString(R.string.saturday);
             default:
                 return "";
-        }
-    }
-
-    public void notifyInData(String d) {
-        DbHelper dbHelper = new DbHelper(requireActivity().getApplicationContext());
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-
-        Calendar c = Calendar.getInstance();
-        int year = c.get(Calendar.YEAR);
-        int month = c.get(Calendar.MONTH);
-        int day = c.get(Calendar.DAY_OF_MONTH);
-        int hour = 0;
-        int pos = -1;
-
-        List<TaskElement> element = new ArrayList<>();
-
-        for (int i = 0; i < 7; i++) {
-            c.set(year, month, day, hour, 0, 0);
-            long dayTM = 86400000;
-            long timeInMillis = c.getTimeInMillis() + (dayTM * i);
-            c.setTimeInMillis(timeInMillis);
-
-            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            String dat1 = format.format(c.getTime());
-
-            c.set(year, month, day, hour, 0, 0);
-
-            timeInMillis = c.getTimeInMillis() + (dayTM * (i + 1));
-
-            c.setTimeInMillis(timeInMillis);
-
-
-            int Hdif = (24 - c.get(Calendar.HOUR_OF_DAY)) % 24;
-            if (Hdif != 0) {
-                long hdif = timeInMillis + (60L * 60 * Hdif * 1000);
-                c.setTimeInMillis(hdif);
-                hour++;
-            }
-
-            String dat2 = format.format(c.getTime());
-
-
-            if (dat1.equals(d)) {
-                pos = i;
-                element = getTaskInterval(dat1, dat2);
-                break;
-            }
-        }
-
-        if (pos >= 0) {
-            ((TasksElement) elements.get(pos).getObject()).setData(element);
-            adapter.notifyItemChanged(pos);
         }
     }
 }

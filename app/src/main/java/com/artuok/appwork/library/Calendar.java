@@ -172,6 +172,12 @@ public class Calendar extends View {
     //draw methods
 
     @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+    }
+
+    @Override
     protected void onDraw(Canvas canvas) {
         drawing(canvas);
     }
@@ -181,6 +187,7 @@ public class Calendar extends View {
         setValues();
 
         int[] date = new int[2];
+
 
         for (int i = -1; i < 2; i++) {
             if (i == -1) {
@@ -451,6 +458,24 @@ public class Calendar extends View {
             default:
                 return getContext().getString(R.string.january);
         }
+    }
+
+
+    private int getWeeksCountOfMonth(int month, int year) {
+        java.util.Calendar c = java.util.Calendar.getInstance();
+        c.set(java.util.Calendar.MONTH, month);
+        c.set(java.util.Calendar.YEAR, year);
+        c.set(java.util.Calendar.DAY_OF_MONTH, 1);
+
+        int weekStart = c.get(java.util.Calendar.WEEK_OF_YEAR);
+
+        int dayOfMonth = getDaysInMoth(month, year);
+        c.set(java.util.Calendar.DAY_OF_MONTH, dayOfMonth);
+        int weekEnd = c.get(java.util.Calendar.WEEK_OF_YEAR);
+
+        int WIM = weekEnd - weekStart + 1;
+
+        return WIM;
     }
 
     //Convert methods

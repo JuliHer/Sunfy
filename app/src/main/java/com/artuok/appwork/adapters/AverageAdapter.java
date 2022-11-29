@@ -1,6 +1,7 @@
 package com.artuok.appwork.adapters;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,6 +9,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.artuok.appwork.R;
@@ -56,17 +58,43 @@ public class AverageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     }
 
     class AverageViewHolder extends RecyclerView.ViewHolder {
-        TextView title, status;
+        TextView title;
         ProgressBar progressBar;
+        CardView card;
 
         public AverageViewHolder(@NonNull View itemView) {
             super(itemView);
 
+            title = itemView.findViewById(R.id.title_subject);
+            progressBar = itemView.findViewById(R.id.progress_circular);
+            card = itemView.findViewById(R.id.cardColor);
 
         }
 
         void onBindData(AverageElement element) {
+            title.setText(element.getSubject());
+            card.setCardBackgroundColor(element.getColor());
 
+            if (element.getMax() == 0) {
+                progressBar.setProgressDrawable(mInflater.getContext().getDrawable(R.drawable.circle_progress_green));
+                progressBar.setMax(1);
+                progressBar.setProgress(1);
+            } else {
+                Log.d("cattoPercent", element.getProgress() + "/" + element.getMax());
+
+                int progress = 100 / element.getMax() * element.getProgress();
+
+                if (progress < 60) {
+                    progressBar.setProgressDrawable(mInflater.getContext().getDrawable(R.drawable.circle_progress_red));
+                } else if (progress < 70) {
+                    progressBar.setProgressDrawable(mInflater.getContext().getDrawable(R.drawable.circle_progress_yellow));
+                } else {
+                    progressBar.setProgressDrawable(mInflater.getContext().getDrawable(R.drawable.circle_progress_green));
+                }
+
+                progressBar.setMax(element.getMax());
+                progressBar.setProgress(element.getProgress());
+            }
         }
     }
 }

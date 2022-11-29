@@ -1,58 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="4dp"
-        android:layout_marginVertical="4dp"
-        android:elevation="0dp"
-        app:cardCornerRadius="5dp"
-        app:cardElevation="0dp"
         app:cardBackgroundColor="@android:color/transparent"
-        android:background="@drawable/transparent_background">
+        app:cardElevation="0dp">
 
         <LinearLayout
-            android:layout_height="match_parent"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
-            <ImageView
-                android:id="@+id/subject_color"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:adjustViewBounds="true"
-                android:src="@drawable/ic_baseline_circle_24" />
+            <ProgressBar
+                android:id="@+id/progress_circular"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:indeterminateOnly="false"
+                android:progressDrawable="@drawable/circle_progress_yellow"
+                android:progress="60" />
 
-            <LinearLayout
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardColor"
                 android:layout_weight="1"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="8dp">
+                android:layout_height="match_parent"
+                app:cardBackgroundColor="@color/yellow_700"
+                app:cardElevation="2dp"
+                app:cardCornerRadius="5dp"
+                android:layout_margin="10dp">
 
-                <TextView
-                    android:id="@+id/time"
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="6:00 PM"
-                    android:textColor="?subTextColor"
-                    android:textSize="11sp" />
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical"
+                    android:padding="8dp">
 
-                <TextView
-                    android:id="@+id/text"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Event"
-                    android:textSize="15sp" />
-            </LinearLayout>
-
+                    <TextView
+                        android:id="@+id/title_subject"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/subject"
+                        android:textStyle="bold"
+                        android:textColor="@color/black"
+                        android:alpha="0.5" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
 
         </LinearLayout>
-    </androidx.cardview.widget.CardView>
 
+    </androidx.cardview.widget.CardView>
 </LinearLayout>

@@ -232,7 +232,7 @@ public class CalendarFragment extends Fragment {
         Cursor c = db.rawQuery("SELECT * FROM " + DbHelper.t_task + " WHERE end_date BETWEEN '" + date + "' AND '" + dated + "'", null);
         if (c.moveToFirst()) {
             do {
-                String ti = c.getString(2);
+                String ti = c.getString(5);
                 String[] t = c.getString(3).split(" ");
 
                 String[] dat = t[0].split("-");

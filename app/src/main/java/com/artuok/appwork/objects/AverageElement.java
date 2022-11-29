@@ -2,13 +2,13 @@ package com.artuok.appwork.objects;
 
 public class AverageElement {
     String subject;
-    String status;
+    int color;
     int progress;
     int max;
 
-    public AverageElement(String subject, String status, int progress, int max) {
+    public AverageElement(String subject, int color, int progress, int max) {
         this.subject = subject;
-        this.status = status;
+        this.color = color;
         this.progress = progress;
         this.max = max;
     }
@@ -21,12 +21,12 @@ public class AverageElement {
         this.subject = subject;
     }
 
-    public String getStatus() {
-        return status;
+    public int getColor() {
+        return color;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
+    public void setStatus(int color) {
+        this.color = color;
     }
 
     public int getProgress() {

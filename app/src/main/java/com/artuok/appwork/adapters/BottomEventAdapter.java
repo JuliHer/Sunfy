@@ -28,7 +28,7 @@ public class BottomEventAdapter extends RecyclerView.Adapter<BottomEventAdapter.
     @NonNull
     @Override
     public EventViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = mInflater.inflate(R.layout.item_average_layout, parent, false);
+        View view = mInflater.inflate(R.layout.item_event_layout, parent, false);
 
         return new EventViewHolder(view);
     }

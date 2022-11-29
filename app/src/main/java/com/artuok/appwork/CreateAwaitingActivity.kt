@@ -122,7 +122,7 @@ class CreateAwaitingActivity : AppCompatActivity() {
                 .setOnClickListener { view: View? ->
                     if (!datetime.isEmpty()) {
                         if (!subject.isEmpty()) {
-                            insertAwaiting("", datetime, subject, activity.getText().toString())
+                            insertAwaiting("", datetime, subject, activity.text.toString())
                             finish()
                         } else {
                             Toast.makeText(this@CreateAwaitingActivity, getString(R.string.select_subject), Toast.LENGTH_SHORT).show()
@@ -133,17 +133,20 @@ class CreateAwaitingActivity : AppCompatActivity() {
 
     private fun getDeadline() {
         if (intent.extras != null) {
-            val deadline = intent.extras!!.getLong("deadline", 0);
-            val c = Calendar.getInstance();
-            c.timeInMillis = deadline;
-            val d = c[Calendar.YEAR].toString() + "-" + (c[Calendar.MONTH] + 1) + "-" + c[Calendar.DAY_OF_MONTH] + " 00:00:00";
-
+            val deadline = intent.extras!!.getLong("deadline", 0)
+            val c = Calendar.getInstance()
+            c.timeInMillis = deadline + 43200000
+            val d =
+                c[Calendar.YEAR].toString() + "-" + (c[Calendar.MONTH] + 1) + "-" + c[Calendar.DAY_OF_MONTH] + " 12:00:00"
 
             datetime = d;
             val dow = c[Calendar.DAY_OF_WEEK]
-            dateText = homeFragment.getDayOfWeek(this@CreateAwaitingActivity, dow) + " " + c[Calendar.DAY_OF_MONTH] + ", " +
+            dateText = homeFragment.getDayOfWeek(
+                this@CreateAwaitingActivity,
+                dow
+            ) + " " + c[Calendar.DAY_OF_MONTH] + ", " +
                     homeFragment.getMonthMinor(this, c[Calendar.MONTH]) +
-                    " " + c[Calendar.YEAR] + " 00:00 AM"
+                    " " + c[Calendar.YEAR] + " 12:00 PM"
             datePicker.text = dateText
         }
     }

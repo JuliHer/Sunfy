@@ -19,7 +19,7 @@
         <item name="backgroundBorder">@color/white</item>
         <item name="subTextColor">@color/gray_800</item>
         <item name="iconHint">#D6BDFF</item>
-        <item name="backgroundHint">#30283E</item>
+        <item name="backgroundHint">#2A1F3A</item>
         <item name="iMainColor">@color/purple_200</item>
 
         <!--calendar-->
@@ -39,6 +39,7 @@
         <item name="palette_red">@color/palette_red_b_700</item>
         <item name="palette_purple">@color/palette_purple_b_700</item>
         <item name="cardBackgroundColorTask">@color/gray_100</item>
+        <item name="imageBackground">@mipmap/wallpaper_black</item>
     </style>
 
     <style name="DialogAnimation">

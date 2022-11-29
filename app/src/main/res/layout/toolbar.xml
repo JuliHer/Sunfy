@@ -2,7 +2,7 @@
 <androidx.appcompat.widget.Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:elevation="2dp"
+    android:elevation="0dp"
     android:padding="0dp">
 
     <TextView
@@ -10,5 +10,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/app_name"
-        android:textSize="20sp" />
+        android:textSize="20sp"
+        android:fontFamily="@font/poppins"
+        android:includeFontPadding="false"
+        android:textFontWeight="500" />
 </androidx.appcompat.widget.Toolbar>

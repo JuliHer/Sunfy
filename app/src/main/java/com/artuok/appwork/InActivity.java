@@ -31,7 +31,7 @@ public class InActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         setTheme(R.style.Theme_AppWork);
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_in);
+        setContentView(R.layout.activity_splash);
         Preferences();
 
         createNotificationChannel();

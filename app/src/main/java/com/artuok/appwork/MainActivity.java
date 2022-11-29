@@ -4,8 +4,6 @@ import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.Dialog;
 import android.app.PendingIntent;
-import android.appwidget.AppWidgetManager;
-import android.content.ComponentName;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -20,9 +18,12 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
+import com.artuok.appwork.fragmets.AveragesFragment;
 import com.artuok.appwork.fragmets.AwaitingFragment;
 import com.artuok.appwork.fragmets.CalendarFragment;
 import com.artuok.appwork.fragmets.SettingsFragment;
@@ -32,6 +33,7 @@ import com.artuok.appwork.services.AlarmWorkManager;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationBarView;
+import com.google.android.material.navigation.NavigationView;
 import com.thekhaeng.pushdownanim.PushDownAnim;
 
 import java.util.Calendar;
@@ -42,12 +44,15 @@ public class MainActivity extends AppCompatActivity {
 
     //Navigation
     private BottomNavigationView navigation;
+    private DrawerLayout drawerLayout;
     public Fragment currentFragment;
+    private NavigationView navigationView;
     //fragments
     homeFragment homefragment = new homeFragment();
     AwaitingFragment awaitingFragment = new AwaitingFragment();
     CalendarFragment calendarFragment = new CalendarFragment();
     SubjectsFragment subjectsFragment = new SubjectsFragment();
+    AveragesFragment averagesFragment = new AveragesFragment();
 
 
     SettingsFragment settingsFragment = new SettingsFragment();
@@ -55,7 +60,6 @@ public class MainActivity extends AppCompatActivity {
     Fragment firstCurrentFragment = homefragment;
     Fragment secondCurrentFragment = awaitingFragment;
     Fragment thirdCurrentFragment = calendarFragment;
-    Fragment fourthCurrentFragment = subjectsFragment;
 
 
     //floating button
@@ -96,6 +100,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         navigation = findViewById(R.id.bottom_navigation);
 
+        drawerLayout = findViewById(R.id.drawerLayout);
+        navigationView = findViewById(R.id.navigationView);
+
         toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle("");
         setSupportActionBar(toolbar);
@@ -117,6 +124,7 @@ public class MainActivity extends AppCompatActivity {
                 });
 
         navigation.setOnItemSelectedListener(mOnNavigationItemSelectedListener);
+        navigationView.setNavigationItemSelectedListener(mOnItemSelectedListener);
 
         if (getIntent().getExtras() != null)
             if (getIntent().getStringExtra("task").equals("do tasks"))
@@ -141,10 +149,9 @@ public class MainActivity extends AppCompatActivity {
                 break;
             case 3:
                 navigation.setSelectedItemId(R.id.calendar_fragment);
-
                 break;
-            case 4:
-                navigation.setSelectedItemId(R.id.subjects_fragment);
+            case 2:
+                navigationView.setCheckedItem(R.id.nav_subject);
                 break;
         }
     }
@@ -155,7 +162,7 @@ public class MainActivity extends AppCompatActivity {
                 if (result.getResultCode() == Activity.RESULT_OK) {
                     Intent data = result.getData();
                     if (data.getIntExtra("requestCode", 0) == 3) {
-                        navigateTo(3);
+                        navigateTo(2);
                     } else if (data.getIntExtra("requestCode", 0) == 2) {
                         updateWidget();
                         notifyAllChanged();
@@ -165,11 +172,7 @@ public class MainActivity extends AppCompatActivity {
     );
 
     public void updateWidget() {
-        Intent uw = new Intent(this, AwaitingWidget.class);
-        uw.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
-        int[] ids = AppWidgetManager.getInstance(this).getAppWidgetIds(new ComponentName(this, AwaitingWidget.class));
-        uw.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids);
-        sendBroadcast(uw);
+
     }
 
     @Override
@@ -183,14 +186,35 @@ public class MainActivity extends AppCompatActivity {
 
         int id = item.getItemId();
 
-        if (id == R.id.settings) {
-            LoadTextFragment(settingsFragment, MainActivity.this.getString(R.string.settings_menu));
-        }
-
         return true;
     }
 
+    boolean changesFromDrawer = false;
+
+    NavigationView.OnNavigationItemSelectedListener mOnItemSelectedListener = item -> {
+        drawerLayout.close();
+        changesFromDrawer = true;
+        navigation.setSelectedItemId(R.id.homefragment);
+        switch (item.getItemId()) {
+            case R.id.nav_subject:
+                LoadFragment(subjectsFragment);
+                return true;
+            case R.id.nav_averages:
+                LoadFragment(averagesFragment);
+                return true;
+            case R.id.nav_settings:
+                LoadTextFragment(settingsFragment, MainActivity.this.getString(R.string.settings_menu));
+                return true;
+        }
+
+        return false;
+    };
+
     NavigationBarView.OnItemSelectedListener mOnNavigationItemSelectedListener = item -> {
+        if (!changesFromDrawer && item.getItemId() != R.id.nav_menu) {
+            navigationView.setCheckedItem(R.id.nav_subject);
+        }
+        changesFromDrawer = false;
         switch (item.getItemId()) {
             case R.id.homefragment:
                 position = 1;
@@ -201,13 +225,12 @@ public class MainActivity extends AppCompatActivity {
                 LoadFragment(awaitingFragment);
                 return true;
             case R.id.calendar_fragment:
-                position = 4;
+                position = 3;
                 LoadFragment(calendarFragment);
                 return true;
-            case R.id.subjects_fragment:
-                position = 3;
-                LoadFragment(subjectsFragment);
-                return true;
+            case R.id.nav_menu:
+                drawerLayout.openDrawer(GravityCompat.START);
+                return false;
         }
 
         return false;
@@ -224,8 +247,6 @@ public class MainActivity extends AppCompatActivity {
             secondCurrentFragment = fragment;
         } else if (position == 3) {
             thirdCurrentFragment = fragment;
-        } else if (position == 4) {
-            fourthCurrentFragment = fragment;
         }
         currentFragment = fragment;
         transaction.commit();
@@ -309,18 +330,23 @@ public class MainActivity extends AppCompatActivity {
         if (calendarFragment.isAdded()) {
             calendarFragment.NotifyChanged();
         }
-
+        if (averagesFragment.isAdded()) {
+            averagesFragment.notifyDataChanged();
+        }
     }
 
-    public void notifyChanged() {
-        if (position != 1) {
-            homefragment.NotifyDataChanged();
+    public void notifyChanged(int pos) {
+        if (homefragment.isAdded() && position != 1) {
+            homefragment.NotifyDataChanged(pos);
         }
-        if (position != 2) {
+        if (awaitingFragment.isAdded() && position != 2) {
             awaitingFragment.NotifyChanged();
         }
-        if (position != 3) {
+        if (calendarFragment.isAdded() && position != 3) {
             calendarFragment.NotifyChanged();
+        }
+        if (averagesFragment.isAdded()) {
+            averagesFragment.notifyDataChanged();
         }
     }
 

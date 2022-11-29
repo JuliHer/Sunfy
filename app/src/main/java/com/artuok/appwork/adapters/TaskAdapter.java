@@ -1,6 +1,9 @@
 package com.artuok.appwork.adapters;
 
 import android.content.Context;
+import android.content.res.TypedArray;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -60,12 +63,20 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             date.setText(element.getDate());
 
 
+
             Calendar c = Calendar.getInstance();
 
             long timeIM = element.getMillisSeconds();
 
             if (element.isCheck()) {
                 status.setColorFilter(mInflater.getContext().getColor(R.color.blue_400));
+                title.setPaintFlags(title.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+                TypedArray ta = mInflater.getContext().obtainStyledAttributes(R.styleable.AppWidgetAttrs);
+
+                int color = ta.getColor(R.styleable.AppWidgetAttrs_subTextColor, Color.WHITE);
+
+                title.setTextColor(color);
+                ta.recycle();
             } else {
                 if (c.getTimeInMillis() < timeIM) {
 

@@ -105,4 +105,9 @@
     <string name="events">Events</string>
     <string name="add">Add</string>
     <string name="made_by_artwork_studios">Created by ARTWORK STUDIOS</string>
+    <string name="menu">Menu</string>
+
+    <string name="pending_tasks">Pending Tasks</string>
+    <string name="completed_tasks">Completed tasks</string>
+    <string name="weekly_summary">Weekly Summary</string>
 </resources>

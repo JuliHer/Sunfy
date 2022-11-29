@@ -96,6 +96,7 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             t = t.substring(0, 1).toUpperCase() + t.substring(1).toLowerCase();
 
             title.setText(t);
+            title.setPaintFlags(title.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
             subject.setBackgroundColor(element.getColorSubject());
 
             String d = element.getStatus() + " " + mInflater.getContext().getString(R.string.day_left);
@@ -109,19 +110,23 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             }
             status.setText(d);
             date.setText(element.getDate());
+            TypedArray ta = mInflater.getContext().obtainStyledAttributes(R.styleable.AppWidgetAttrs);
+
+            int color = ta.getColor(R.styleable.AppWidgetAttrs_backgroundBorder, Color.WHITE);
+
+
+            title.setTextColor(color);
 
             if (element.isStatusB()) {
                 status.setText(R.string.done_string);
                 status.setBackgroundColor(mInflater.getContext().getColor(R.color.blue_400));
+
                 title.setPaintFlags(title.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
 
+                color = ta.getColor(R.styleable.AppWidgetAttrs_subTextColor, Color.WHITE);
 
-                TypedArray ta = mInflater.getContext().obtainStyledAttributes(R.styleable.AppWidgetAttrs);
-
-                int color = ta.getColor(R.styleable.AppWidgetAttrs_subTextColor, Color.WHITE);
 
                 title.setTextColor(color);
-                ta.recycle();
             } else {
                 if (element.isOpen()) {
                     if (Integer.parseInt(element.getStatus()) > 2) {
@@ -135,6 +140,8 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                     status.setBackgroundColor(mInflater.getContext().getColor(R.color.red_500));
                 }
             }
+
+            ta.recycle();
         }
 
         @Override

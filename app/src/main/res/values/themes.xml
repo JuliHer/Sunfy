@@ -40,6 +40,7 @@
         <item name="palette_red">@color/palette_red_n_700</item>
         <item name="palette_purple">@color/palette_purple_n_700</item>
         <item name="cardBackgroundColorTask">@color/white</item>
+        <item name="imageBackground">@mipmap/wallpaper_white</item>
     </style>
 
     <style name="ThemeDialogCustom">
