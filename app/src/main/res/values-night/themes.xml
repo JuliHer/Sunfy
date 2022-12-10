@@ -13,14 +13,19 @@
         <!-- Status bar color. -->
         <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
         <!-- Customize your theme here. -->
-        <item name="shimmerColor">@color/gray_500</item>
-        <item name="maskColor">@color/gray_400</item>
+        <item name="shimmerSkeleton">@color/gray_300</item>
+        <item name="maskSkeleton">@color/gray_200</item>
+        <item name="shimmerHintSkeleton">@color/purple_750</item>
+        <item name="maskHintSkeleton">@color/purple_800</item>
+
         <item name="backgroundDialog">@color/gray_100</item>
+        <item name="backgroundAlert">@color/gray_200</item>
         <item name="backgroundBorder">@color/white</item>
         <item name="subTextColor">@color/gray_800</item>
         <item name="iconHint">#D6BDFF</item>
-        <item name="backgroundHint">#2A1F3A</item>
+        <item name="backgroundHint">@color/purple_900</item>
         <item name="iMainColor">@color/purple_200</item>
+        <item name="hintInputColor">@color/gray_100</item>
 
         <!--calendar-->
         <item name="gridColor">@color/gray_200</item>
@@ -39,7 +44,6 @@
         <item name="palette_red">@color/palette_red_b_700</item>
         <item name="palette_purple">@color/palette_purple_b_700</item>
         <item name="cardBackgroundColorTask">@color/gray_100</item>
-        <item name="imageBackground">@mipmap/wallpaper_black</item>
     </style>
 
     <style name="DialogAnimation">
@@ -133,5 +137,10 @@
         <item name="ColorHighlight">@color/palette_purple_200</item>
         <item name="ColorMonth">@color/white</item>
         <item name="ColorOutMonth">@color/gray_500</item>
+    </style>
+
+    <style name="AveragesLineChart">
+        <item name="hintColors">@color/gray_300</item>
+        <item name="textValuesColor">@color/gray_400</item>
     </style>
 </resources>

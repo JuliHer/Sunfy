@@ -25,6 +25,7 @@ import com.artuok.appwork.MainActivity;
 import com.artuok.appwork.R;
 import com.artuok.appwork.adapters.AwaitingAdapter;
 import com.artuok.appwork.db.DbHelper;
+import com.artuok.appwork.dialogs.PermissionDialog;
 import com.artuok.appwork.objects.AwaitingElement;
 import com.artuok.appwork.objects.Item;
 
@@ -64,6 +65,7 @@ public class AwaitingFragment extends Fragment {
                     removeTask(position);
                     break;
                 case ItemTouchHelper.RIGHT:
+
                     checkTask(position);
                     break;
             }
@@ -126,7 +128,6 @@ public class AwaitingFragment extends Fragment {
             if (elements.get(p).getType() == 0) {
 
             }
-
         };
     }
 
@@ -413,33 +414,83 @@ public class AwaitingFragment extends Fragment {
         int id = ((AwaitingElement) elements.get(position).getObject()).getId();
 
         Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.t_task + " WHERE id = '" + id + "'", null);
+        boolean sa = false;
         if (cursor.moveToFirst() && cursor.getCount() == 1) {
             boolean s = cursor.getInt(6) > 0;
+            sa = s;
             ContentValues values = new ContentValues();
-            ((AwaitingElement) elements.get(position).getObject()).setStatusB(!s);
+            if (s) {
+                PermissionDialog permissionDialog = new PermissionDialog();
 
-            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            String dat = format.format(new Date());
 
-            values.put("date", dat);
-            values.put("status", !s);
-            SQLiteDatabase db2 = dbHelper.getWritableDatabase();
-            db2.update(DbHelper.t_task, values, " id = '" + id + "'", null);
+                permissionDialog.setTitleDialog(requireActivity().getString(R.string.uncheck));
+                permissionDialog.setTextDialog(requireActivity().getString(R.string.uncheck_task));
+                permissionDialog.setDrawable(R.drawable.ic_check_circle);
+                permissionDialog.setNegative((view, which) -> {
+                    permissionDialog.dismiss();
+                    cursor.close();
+                });
+
+                permissionDialog.setPositive((view, which) -> {
+                    ((AwaitingElement) elements.get(position).getObject()).setStatusB(!s);
+
+                    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                    String dat = format.format(new Date());
+
+                    values.put("date", dat);
+                    values.put("status", !s);
+                    SQLiteDatabase db2 = dbHelper.getWritableDatabase();
+                    db2.update(DbHelper.t_task, values, " id = '" + id + "'", null);
+                    permissionDialog.dismiss();
+
+                    adapter.notifyItemChanged(position);
+                    int i = 0;
+                    try {
+                        i = getPositionOfId(requireActivity(), id);
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
+
+                    cursor.close();
+
+                    if (i >= 0) {
+                        ((MainActivity) requireActivity()).notifyChanged(i);
+                    } else {
+                        ((MainActivity) requireActivity()).notifyAllChanged();
+                    }
+                });
+
+                permissionDialog.show(requireActivity().getSupportFragmentManager(), "C");
+            } else {
+                ((AwaitingElement) elements.get(position).getObject()).setStatusB(!s);
+
+                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                String dat = format.format(new Date());
+
+                values.put("date", dat);
+                values.put("status", !s);
+                SQLiteDatabase db2 = dbHelper.getWritableDatabase();
+                db2.update(DbHelper.t_task, values, " id = '" + id + "'", null);
+
+                adapter.notifyItemChanged(position);
+                int i = 0;
+                try {
+                    i = getPositionOfId(requireActivity(), id);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+
+                cursor.close();
+
+                if (i >= 0) {
+                    ((MainActivity) requireActivity()).notifyChanged(i);
+                } else {
+                    ((MainActivity) requireActivity()).notifyAllChanged();
+                }
+            }
+
         }
-        int i = 0;
-        try {
-            i = getPositionOfId(requireActivity(), id);
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-
-        cursor.close();
         adapter.notifyItemChanged(position);
-        if (i >= 0) {
-            ((MainActivity) requireActivity()).notifyChanged(i);
-        } else {
-            ((MainActivity) requireActivity()).notifyAllChanged();
-        }
 
     }
 

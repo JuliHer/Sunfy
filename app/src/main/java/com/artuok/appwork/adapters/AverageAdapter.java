@@ -5,6 +5,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -61,6 +62,7 @@ public class AverageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         TextView title;
         ProgressBar progressBar;
         CardView card;
+        ImageView imageView;
 
         public AverageViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -68,6 +70,7 @@ public class AverageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             title = itemView.findViewById(R.id.title_subject);
             progressBar = itemView.findViewById(R.id.progress_circular);
             card = itemView.findViewById(R.id.cardColor);
+            imageView = itemView.findViewById(R.id.status_subject);
 
         }
 
@@ -79,17 +82,25 @@ public class AverageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 progressBar.setProgressDrawable(mInflater.getContext().getDrawable(R.drawable.circle_progress_green));
                 progressBar.setMax(1);
                 progressBar.setProgress(1);
+                imageView.setImageDrawable(mInflater.getContext().getDrawable(R.drawable.ic_check_circle));
+                imageView.setColorFilter(mInflater.getContext().getColor(R.color.green_500));
             } else {
                 Log.d("cattoPercent", element.getProgress() + "/" + element.getMax());
 
                 int progress = 100 / element.getMax() * element.getProgress();
 
                 if (progress < 60) {
+                    imageView.setImageDrawable(mInflater.getContext().getDrawable(R.drawable.ic_x_circle));
+                    imageView.setColorFilter(mInflater.getContext().getColor(R.color.red_500));
                     progressBar.setProgressDrawable(mInflater.getContext().getDrawable(R.drawable.circle_progress_red));
-                } else if (progress < 70) {
+                } else if (progress < 80) {
                     progressBar.setProgressDrawable(mInflater.getContext().getDrawable(R.drawable.circle_progress_yellow));
+                    imageView.setImageDrawable(mInflater.getContext().getDrawable(R.drawable.ic_check_circle));
+                    imageView.setColorFilter(mInflater.getContext().getColor(R.color.yellow_700));
                 } else {
                     progressBar.setProgressDrawable(mInflater.getContext().getDrawable(R.drawable.circle_progress_green));
+                    imageView.setImageDrawable(mInflater.getContext().getDrawable(R.drawable.ic_check_circle));
+                    imageView.setColorFilter(mInflater.getContext().getColor(R.color.green_500));
                 }
 
                 progressBar.setMax(element.getMax());

@@ -3,7 +3,6 @@ package com.artuok.appwork.services;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 
 public class AlarmWorkManager extends BroadcastReceiver {
     public static final String ACTION_NOTIFY = "NOTIFY";
@@ -14,7 +13,7 @@ public class AlarmWorkManager extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        Log.d("say", "hi");
+
         Intent intent1 = new Intent(context, NotificationService.class);
         if (intent.getAction() != null) {
             switch (intent.getAction()) {

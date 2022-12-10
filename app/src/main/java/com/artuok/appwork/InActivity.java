@@ -21,6 +21,8 @@ import com.artuok.appwork.services.AlarmWorkManager;
 
 import java.util.Calendar;
 
+import kotlin.jvm.internal.Intrinsics;
+
 public class InActivity extends AppCompatActivity {
 
     public static final String CHANNEL_ID_1 = "CHANNEL_1";
@@ -35,7 +37,7 @@ public class InActivity extends AppCompatActivity {
         Preferences();
 
         createNotificationChannel();
-        restauredAlarm();
+        setAlarms();
         setAlarmSchedule();
 
         new Handler().postDelayed(this::loadMain, 500);
@@ -77,70 +79,6 @@ public class InActivity extends AppCompatActivity {
         manager.createNotificationChannel(notificationChannel2);
         manager.createNotificationChannel(notificationChannel1);
         manager.createNotificationChannel(notificationChannel3);
-    }
-
-    void cancelAlarm() {
-        AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        Intent notify = new Intent(this, AlarmWorkManager.class)
-                .setAction(AlarmWorkManager.ACTION_TIME_TO_DO_HOMEWORK);
-        PendingIntent pendingNotify = PendingIntent.getBroadcast(
-                this,
-                0, notify,
-                0);
-        manager.cancel(pendingNotify);
-    }
-
-    void setAlarm(int hour, int minute, boolean alarm) {
-        final Calendar c = Calendar.getInstance();
-        long rest = 0;
-        int hr = 0;
-        if (c.get(Calendar.HOUR_OF_DAY) >= hour) {
-            hr = 24 + hour - c.get(Calendar.HOUR_OF_DAY);
-        } else {
-            hr = hour - c.get(Calendar.HOUR_OF_DAY);
-        }
-
-        int mr = minute - c.get(Calendar.MINUTE);
-
-        rest = (hr * 60L * 60L * 1000L) + (mr * 60L * 1000L);
-
-        Calendar a = Calendar.getInstance();
-        rest += a.getTimeInMillis();
-
-        a.setTimeInMillis(rest);
-
-
-        AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-
-
-        long diff = rest - Calendar.getInstance().getTimeInMillis();
-        int days = (int) (diff / 1000 / 60 / 60 / 24);
-        int hou = (int) (diff / 1000 / 60 / 60 % 24);
-        int min = (int) (diff / 1000 / 60 % 60);
-
-        Log.d("catto", "faltan " + days + "d " + hou + "h " + min + "m ");
-
-        Intent notify = new Intent(this, AlarmWorkManager.class)
-                .setAction(AlarmWorkManager.ACTION_TIME_TO_DO_HOMEWORK);
-        notify.putExtra("time", rest);
-        if (alarm) {
-            notify.putExtra("alarm", 1);
-        }
-        PendingIntent pendingNotify = PendingIntent.getBroadcast(
-                this,
-                0, notify,
-                PendingIntent.FLAG_UPDATE_CURRENT);
-
-        manager.cancel(pendingNotify);
-        manager.setExact(AlarmManager.RTC_WAKEUP, rest, pendingNotify);
-    }
-
-    void restauredAlarm() {
-        SharedPreferences sharedPreferences = getSharedPreferences("settings", Context.MODE_PRIVATE);
-        boolean as = sharedPreferences.getBoolean("AlarmSet", false);
-        int h = Integer.parseInt(sharedPreferences.getString("timeTDH", "11:00").split(":")[0]);
-        int m = Integer.parseInt(sharedPreferences.getString("timeTDH", "11:00").split(":")[1]);
-        setAlarm(h, m, as);
     }
 
     void setAlarmSchedule() {
@@ -210,5 +148,108 @@ public class InActivity extends AppCompatActivity {
         AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         manager.cancel(pendingNotify);
         manager.setExact(AlarmManager.RTC_WAKEUP, start - (60 * 5 * 1000), pendingNotify);
+    }
+
+    public void setAlarms() {
+        int dow = 0;
+
+        int id;
+        for (id = -1; dow < 7; ++dow) {
+            int b = getAlarm(dow);
+            if (b >= 0) {
+                id = b;
+                break;
+            }
+        }
+
+        if (id >= 0) {
+            DbHelper dbHelper = new DbHelper(this);
+            SQLiteDatabase db = dbHelper.getReadableDatabase();
+            Cursor row = db.rawQuery("SELECT * FROM alarm WHERE id = '" + id + '\'', null);
+            if (row.moveToFirst()) {
+                Intrinsics.checkNotNullExpressionValue(row, "row");
+                if (row.getCount() == 1) {
+                    long rest = row.getLong(2) * (long) 1000;
+                    Calendar calendar = Calendar.getInstance();
+                    int hour = calendar.get(11);
+                    int minute = calendar.get(12);
+                    long thour = 3600L * (long) hour + 60L * (long) minute;
+                    int tdow = calendar.get(7) - 1;
+                    dow += tdow;
+                    int r = tdow > dow ? 7 - (tdow + 1) + dow + 1 : dow + 1 - (tdow + 1);
+                    long time = (long) r * 86400000L + rest - thour * (long) 1000;
+                    setNotify(row.getInt(4), time);
+                }
+            }
+        }
+
+    }
+
+    private void setNotify(int type, long diff) {
+        long start = Calendar.getInstance().getTimeInMillis() + diff;
+
+        Log.d("cattoRestSay", (diff / 1000) + "");
+        Intent notify = new Intent(this, AlarmWorkManager.class);
+        if (type == 0) {
+            notify.setAction(AlarmWorkManager.ACTION_TIME_TO_DO_HOMEWORK);
+        } else if (type == 1) {
+            notify.setAction(AlarmWorkManager.ACTION_TIME_TO_DO_HOMEWORK);
+            notify.putExtra("alarm", 1);
+        }
+
+        PendingIntent pendingNotify = PendingIntent.getBroadcast(
+                this,
+                0, notify,
+                PendingIntent.FLAG_UPDATE_CURRENT
+        );
+
+        AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        manager.cancel(pendingNotify);
+        manager.setExact(AlarmManager.RTC_WAKEUP, start, pendingNotify);
+    }
+
+    private int getAlarm(int i) {
+        DbHelper dbHelper = new DbHelper(this);
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Calendar calendar = Calendar.getInstance();
+        String query = "";
+        int dow = (calendar.get(7) - 1 + i) % 7 + 1;
+        if (dow == 1) {
+            query = "AND sunday = '1'";
+        } else if (dow == 2) {
+            query = "AND monday = '1'";
+        } else if (dow == 3) {
+            query = "AND tuesday = '1'";
+        } else if (dow == 4) {
+            query = "AND wednesday = '1'";
+        } else if (dow == 5) {
+            query = "AND thursday = '1'";
+        } else if (dow == 6) {
+            query = "AND friday = '1'";
+        } else if (dow == 7) {
+            query = "AND saturday = '1'";
+        }
+
+        Cursor row = db.rawQuery("SELECT * FROM alarm WHERE last_alarm != '" + dow + "' " + query + " ORDER BY hour ASC", (String[]) null);
+        int hour = calendar.get(11);
+        int minute = calendar.get(12);
+        long time = 3600L * (long) hour + 60L * (long) minute;
+        int id = -1;
+        if (row.moveToFirst()) {
+            do {
+                if (calendar.get(7) != dow) {
+                    id = row.getInt(0);
+                    break;
+                }
+
+                if (row.getLong(2) >= time) {
+                    id = row.getInt(0);
+                    break;
+                }
+            } while (row.moveToNext());
+        }
+
+        row.close();
+        return id;
     }
 }

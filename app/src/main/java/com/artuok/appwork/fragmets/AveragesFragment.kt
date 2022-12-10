@@ -16,11 +16,14 @@ import androidx.recyclerview.widget.RecyclerView.VERTICAL
 import com.artuok.appwork.R
 import com.artuok.appwork.adapters.AverageAdapter
 import com.artuok.appwork.db.DbHelper
+import com.artuok.appwork.fragmets.AverageAsync.ListenerOnEvent
 import com.artuok.appwork.library.LineChart
 import com.artuok.appwork.library.LineChart.LineChartData
 import com.artuok.appwork.library.LineChart.LineChartDataSet
 import com.artuok.appwork.objects.AverageElement
 import com.artuok.appwork.objects.Item
+import com.faltenreich.skeletonlayout.Skeleton
+import com.faltenreich.skeletonlayout.applySkeleton
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -34,6 +37,9 @@ class AveragesFragment : Fragment() {
     private lateinit var manager: LayoutManager
     private lateinit var recyclerView: RecyclerView
     private lateinit var elements: ArrayList<Item>
+    private lateinit var skeleton: Skeleton
+    private lateinit var task: AverageAsync
+    private var dataChanged: Boolean = false
 
 
     override fun onCreateView(
@@ -54,19 +60,50 @@ class AveragesFragment : Fragment() {
         recyclerView.layoutManager = manager
         recyclerView.setHasFixedSize(true)
         recyclerView.isNestedScrollingEnabled = false
+        recyclerView.adapter = adapter
 
-        setProgressSubject(true)
+
+        skeleton = recyclerView.applySkeleton(R.layout.skeleton_statistics_layout, 12)
+
+        val ta = requireActivity().obtainStyledAttributes(R.styleable.AppWidgetAttrs)
+        val shimmerColor = ta.getColor(R.styleable.AppWidgetAttrs_shimmerHintSkeleton, Color.GRAY)
+        val maskColor = ta.getColor(R.styleable.AppWidgetAttrs_maskHintSkeleton, Color.LTGRAY)
+
+        skeleton.maskColor = maskColor
+        skeleton.shimmerColor = shimmerColor
+
+        task = AverageAsync(object : ListenerOnEvent {
+            override fun onPreExecute() {
+                skeleton.showSkeleton()
+            }
+
+            override fun onExecute(b: Boolean) {
+                getWeeklyProgress()
+                setProgressSubject(b)
+                adapter.notifyDataSetChanged()
+            }
+
+            override fun onPostExecute(b: Boolean) {
+
+                skeleton.showOriginal()
+            }
+        })
 
 
-        val data: ArrayList<LineChartData> = ArrayList()
 
-        data.add(LineChartData("Complated Tasks this week", getLineChartDataSet(), Color.GREEN))
-        lineChart.setData(data)
-        lineChart.invalidate()
+        task.exec(true)
 
-        getWeeklyProgress()
+
 
         return root
+    }
+
+    override fun onStart() {
+
+        if (dataChanged) {
+            task.exec(false)
+        }
+        super.onStart()
     }
 
     fun getLineChartDataSet(): ArrayList<LineChartDataSet> {
@@ -118,7 +155,7 @@ class AveragesFragment : Fragment() {
 
 
             val cursor = db.rawQuery(
-                "SELECT * FROM ${DbHelper.t_task} WHERE status = '0' AND date BETWEEN '$date1' AND '$date2'",
+                "SELECT * FROM ${DbHelper.t_task} WHERE status = '0' AND end_date BETWEEN '$date1' AND '$date2'",
                 null
             )
 
@@ -176,20 +213,18 @@ class AveragesFragment : Fragment() {
             LineChartData(
                 requireActivity().getString(R.string.completed_tasks),
                 getLineChartDataSet(),
-                Color.GREEN
+                requireActivity().getColor(R.color.green_500)
             )
         )
         data.add(
             LineChartData(
                 requireActivity().getString(R.string.pending_tasks),
                 getPendingLineChartDataSet(),
-                Color.BLUE
+                requireActivity().getColor(R.color.red_500)
             )
         )
         lineChart.setData(data)
         lineChart.invalidate()
-
-        setProgressSubject(false)
     }
 
     fun getStartEndOFWeek(enterWeek: Int, enterYear: Int, start: Boolean): String {
@@ -215,7 +250,7 @@ class AveragesFragment : Fragment() {
     }
 
     fun notifyDataChanged() {
-        getWeeklyProgress()
+        task.exec(false)
     }
 
 
@@ -253,8 +288,5 @@ class AveragesFragment : Fragment() {
                 )
             } while (cursor.moveToNext())
         }
-
-
-        recyclerView.adapter = adapter
     }
 }

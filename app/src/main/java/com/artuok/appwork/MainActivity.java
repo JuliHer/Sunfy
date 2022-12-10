@@ -2,14 +2,12 @@ package com.artuok.appwork;
 
 import android.app.Activity;
 import android.app.AlarmManager;
-import android.app.Dialog;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.EditText;
 import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -23,6 +21,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
+import com.artuok.appwork.fragmets.AlarmsFragment;
 import com.artuok.appwork.fragmets.AveragesFragment;
 import com.artuok.appwork.fragmets.AwaitingFragment;
 import com.artuok.appwork.fragmets.CalendarFragment;
@@ -53,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
     CalendarFragment calendarFragment = new CalendarFragment();
     SubjectsFragment subjectsFragment = new SubjectsFragment();
     AveragesFragment averagesFragment = new AveragesFragment();
+    AlarmsFragment alarmsFragment = new AlarmsFragment();
 
 
     SettingsFragment settingsFragment = new SettingsFragment();
@@ -65,21 +65,10 @@ public class MainActivity extends AppCompatActivity {
     //floating button
     FloatingActionButton actionButton;
 
-    //creating Task
-    String subject;
-
-    //Subjects
-    String[] subjects;
-
     //Toolbar
     Toolbar toolbar;
 
     //Dialog
-    Dialog dialog;
-    int dd, mm, aaaa, hh, mn;
-    String datetime, dateText;
-    TextView date;
-    EditText title, description;
     Calendar alarmset;
 
     private static MainActivity instance;
@@ -150,9 +139,6 @@ public class MainActivity extends AppCompatActivity {
             case 3:
                 navigation.setSelectedItemId(R.id.calendar_fragment);
                 break;
-            case 2:
-                navigationView.setCheckedItem(R.id.nav_subject);
-                break;
         }
     }
 
@@ -162,7 +148,6 @@ public class MainActivity extends AppCompatActivity {
                 if (result.getResultCode() == Activity.RESULT_OK) {
                     Intent data = result.getData();
                     if (data.getIntExtra("requestCode", 0) == 3) {
-                        navigateTo(2);
                     } else if (data.getIntExtra("requestCode", 0) == 2) {
                         updateWidget();
                         notifyAllChanged();
@@ -195,6 +180,8 @@ public class MainActivity extends AppCompatActivity {
         drawerLayout.close();
         changesFromDrawer = true;
         navigation.setSelectedItemId(R.id.homefragment);
+
+
         switch (item.getItemId()) {
             case R.id.nav_subject:
                 LoadFragment(subjectsFragment);
@@ -205,6 +192,9 @@ public class MainActivity extends AppCompatActivity {
             case R.id.nav_settings:
                 LoadTextFragment(settingsFragment, MainActivity.this.getString(R.string.settings_menu));
                 return true;
+            case R.id.nav_alarms:
+                LoadFragment(alarmsFragment);
+                break;
         }
 
         return false;

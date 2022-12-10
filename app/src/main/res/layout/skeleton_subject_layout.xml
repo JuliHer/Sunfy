@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.faltenreich.skeletonlayout.SkeletonLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/background"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="4dp"
+        android:animateLayoutChanges="true"
+        android:elevation="2dp"
+        app:cardElevation="2dp"
+        app:cardCornerRadius="5dp"
+        style="@style/task_home_item">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/subject_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/subject"
+                android:layout_margin="16dp"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:alpha="0.5"
+                android:textColor="@color/black" />
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+</com.faltenreich.skeletonlayout.SkeletonLayout>

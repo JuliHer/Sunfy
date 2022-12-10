@@ -104,4 +104,7 @@
     <string name="pending_tasks">Tareas Pendientes</string>
     <string name="completed_tasks">Tareas Completadas</string>
     <string name="weekly_summary">Resumen Semanal</string>
+    <string name="tasks_alarm">Alarmas de tareas</string>
+    <string name="uncheck">Desmarcar</string>
+    <string name="uncheck_task">Cuando desmarcas una tarea, la estas eliminando de las tareas completadas</string>
 </resources>

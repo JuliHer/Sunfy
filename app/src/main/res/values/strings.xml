@@ -110,4 +110,7 @@
     <string name="pending_tasks">Pending Tasks</string>
     <string name="completed_tasks">Completed tasks</string>
     <string name="weekly_summary">Weekly Summary</string>
+    <string name="tasks_alarm">Tasks Alarms</string>
+    <string name="uncheck">Uncheck</string>
+    <string name="uncheck_task">When you uncheck a task, you are removing it from the completed tasks</string>
 </resources>

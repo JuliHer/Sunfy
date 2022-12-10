@@ -92,7 +92,7 @@ public class Calendar extends View {
         calendar = java.util.Calendar.getInstance();
         calendarR = java.util.Calendar.getInstance();
 
-        daySelected[0] = calendarR.get(java.util.Calendar.DAY_OF_MONTH) + 1;
+        daySelected[0] = calendarR.get(java.util.Calendar.DAY_OF_MONTH);
         daySelected[1] = calendarR.get(java.util.Calendar.MONTH);
         daySelected[2] = calendarR.get(java.util.Calendar.YEAR);
 
@@ -202,7 +202,7 @@ public class Calendar extends View {
             }
             drawMonths(canvas, date, getWidth() * i);
             drawWeekDays(canvas, getWidth() * i);
-            drawDay(canvas, date, getWidth() * i);
+            drawDays(canvas, date, getWidth() * i);
         }
     }
 
@@ -255,24 +255,25 @@ public class Calendar extends View {
         }
     }
 
-    private void drawDay(Canvas canvas, int[] date, int distance) {
+    private void drawDays(Canvas canvas, int[] date, int distance) {
         boolean endOfMonth = false;
+        int dayOfWeek = 0;
         int week = 0;
 
         int month = date[0];
         int year = date[1];
-        int dayOfWeek = 0;
         while ((!endOfMonth || dayOfWeek != 6) && week < 6) {
-            int dayOfCalendar = (7 * week);
+            int posOfCalendar = (7 * week);
             int spacingHeight = (mSpacingOfDays * 2) + (mSpacingOfDays / 4) + (mHeightSpacingOfDays * week);
 
             for (int i = 0; i < 7; i++) {
-                int m = getDayOfMonth(dayOfCalendar + i, date);
+                int dayOfCalendar = getDayOfMonth(posOfCalendar + i, date);
                 int spacingWidth = (mSpacingOfDays / 2) + (mSpacingOfDays * i) + offsetX + distance;
                 Rect textBounds = new Rect();
-                String txt = m + "";
+                String txt = dayOfCalendar + "";
                 mTextPaintWeekendDaysInGrid.getTextBounds(txt, 0, txt.length(), textBounds);
-                if (isInMonth(dayOfCalendar + i, date)) {
+
+                if (isInMonth(posOfCalendar + i, date)) {
                     if (mData != null && mData.size() != 0) {
                         List<TaskEvent> events = new ArrayList<>();
                         for (TaskEvent e : mData) {
@@ -280,7 +281,7 @@ public class Calendar extends View {
 
                             c.setTimeInMillis(e.getTimeInMillis());
 
-                            if (c.get(java.util.Calendar.DAY_OF_MONTH) + 1 == dayOfCalendar + i &&
+                            if (c.get(java.util.Calendar.DAY_OF_MONTH) == dayOfCalendar &&
                                     c.get(java.util.Calendar.MONTH) == month &&
                                     c.get(java.util.Calendar.YEAR) == year) {
                                 events.add(e);
@@ -302,13 +303,14 @@ public class Calendar extends View {
                         }
 
                     }
-                    if (daySelected[0] == dayOfCalendar + i &&
+
+                    if (daySelected[0] == dayOfCalendar &&
                             daySelected[1] == month &&
                             daySelected[2] == year) {
                         canvas.drawCircle(spacingWidth, spacingHeight, mSpacingOfDays * 0.25f, mPaintHighlight);
                         canvas.drawText(txt, spacingWidth, spacingHeight - textBounds.exactCenterY(), mTextPaintHighlight);
                     } else {
-                        if (calendarR.get(java.util.Calendar.DAY_OF_MONTH) + 1 == dayOfCalendar + i &&
+                        if (calendarR.get(java.util.Calendar.DAY_OF_MONTH) == dayOfCalendar &&
                                 calendarR.get(java.util.Calendar.MONTH) == month &&
                                 calendarR.get(java.util.Calendar.YEAR) == year) {
                             canvas.drawText(txt, spacingWidth, spacingHeight - textBounds.exactCenterY(), mTextPaintToday);
@@ -320,17 +322,18 @@ public class Calendar extends View {
                             }
                         }
                     }
+
                 } else {
                     canvas.drawText(txt, spacingWidth, spacingHeight - textBounds.exactCenterY(), mTextPaintOutMonth);
                 }
 
-                if (m >= getDaysInMoth(month, year) && week != 0) {
+                if (dayOfCalendar >= getDaysInMoth(month, year) && week != 0) {
                     endOfMonth = true;
-
                 }
 
                 dayOfWeek = i;
             }
+
             week++;
         }
     }
@@ -572,10 +575,10 @@ public class Calendar extends View {
                 c.set(java.util.Calendar.MONTH, month);
                 c.set(java.util.Calendar.DAY_OF_MONTH, 1);
 
-                int firstDayOfWeek = c.get(java.util.Calendar.DAY_OF_WEEK) - 2;
-                int days = (y * 7) + x - firstDayOfWeek;
+                int firstDayOfWeek = c.get(java.util.Calendar.DAY_OF_WEEK) - 1;
+                int days = (y * 7) + x + 1 - firstDayOfWeek;
 
-                daySelected[0] = days + firstDayOfWeek;
+                daySelected[0] = days;
                 daySelected[1] = month;
                 daySelected[2] = year;
 
@@ -583,6 +586,8 @@ public class Calendar extends View {
 
                 date[0] = month;
                 date[1] = year;
+
+
                 if (isInMonth(daySelected[0], date)) {
                     if (clickListener != null) {
                         clickListener.onClick(days, month, year);
