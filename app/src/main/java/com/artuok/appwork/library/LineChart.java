@@ -10,7 +10,6 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.text.TextPaint;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 
@@ -94,7 +93,6 @@ public class LineChart extends View {
     }
 
     private void drawing(Canvas canvas) {
-        Log.d("cattoPading", padding + " dd");
         setValues();
 
         if (mData == null) {

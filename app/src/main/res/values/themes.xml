@@ -28,6 +28,7 @@
         <item name="iMainColor">@color/blue_400</item>
 
         <item name="hintInputColor">@color/gray_900</item>
+        <item name="hintViewGrayColor">@color/gray_800</item>
 
         <!--calendar-->
         <item name="gridColor">@color/gray_900</item>

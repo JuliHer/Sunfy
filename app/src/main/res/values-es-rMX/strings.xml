@@ -107,4 +107,12 @@
     <string name="tasks_alarm">Alarmas de tareas</string>
     <string name="uncheck">Desmarcar</string>
     <string name="uncheck_task">Cuando desmarcas una tarea, la estas eliminando de las tareas completadas</string>
+    <string name="congratulations_1">Gracias a tu gran capacidad de análisis, has logrado completar todas tus actividades pendiente. Continuemos trabajando juntos por alcanzar nuevos logros. Parecera poco, pero gracias a tu eficiencia y buena toma de deciones puedes lograr cualquier meta que te propongas ¡Sigue asi!</string>
+    <string name="pending_tasks_alarm">Alarma de tareas pendientes</string>
+    <string name="tomorrows_Tasks">Tareas de mañana</string>
+    <string name="tomorrows_subjects">Materias de mañana</string>
+    <string name="will_end">Finalizará a las</string>
+    <string name="yht_for_tomorrow">No Tienes Tareas Para Mañana</string>
+    <string name="notifications">Notificaciones</string>
+    <string name="dismiss">rechazar</string>
 </resources>

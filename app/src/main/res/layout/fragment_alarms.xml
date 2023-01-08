@@ -20,38 +20,145 @@
             android:textColor="?subTextColor" />
 
         <LinearLayout
-            android:id="@+id/ttdh"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:paddingStart="10dp"
+            android:background="@drawable/textinput_background">
 
             <LinearLayout
-                android:layout_weight="1"
-                android:layout_width="0dp"
+                android:id="@+id/ttdh"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:paddingVertical="5dp">
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <LinearLayout
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingVertical="5dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/pending_tasks_alarm"
+                        android:maxLines="1"
+                        android:ellipsize="end"
+                        android:textSize="18sp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="D L M M J V S"
+                        android:textColor="?subTextColor" />
+                </LinearLayout>
 
                 <TextView
-                    android:layout_width="match_parent"
+                    android:id="@+id/time"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Alarm"
-                    android:textSize="18sp" />
+                    android:text="11:00 am"
+                    android:textSize="18sp"
+                    android:textColor="?subTextColor" />
+
+                <Switch
+                    android:id="@+id/turnalarm"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_marginHorizontal="5dp" />
+            </LinearLayout>
+        </LinearLayout>
+
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/notifications"
+            android:layout_marginVertical="10dp"
+            android:textStyle="bold"
+            android:textColor="?subTextColor" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="10dp"
+            android:background="@drawable/textinput_background"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:id="@+id/NDE"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <LinearLayout
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingVertical="5dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/tomorrows_Tasks"
+                        android:textSize="18sp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="D L M M J V S"
+                        android:textColor="?subTextColor" />
+                </LinearLayout>
 
                 <TextView
-                    android:layout_width="match_parent"
+                    android:id="@+id/nextDayEvents"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="D L M M J V S"
+                    android:text="10:00 pm"
+                    android:textSize="18sp"
                     android:textColor="?subTextColor" />
             </LinearLayout>
 
-            <Switch
-                android:id="@+id/turnalarm"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_marginHorizontal="10dp" />
+            <LinearLayout
+                android:id="@+id/NDS"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <LinearLayout
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingVertical="5dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/tomorrows_subjects"
+                        android:textSize="18sp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="D L M M J V S"
+                        android:textColor="?subTextColor" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/nextDaySubjects"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="10:00 pm"
+                    android:textSize="18sp"
+                    android:textColor="?subTextColor" />
+            </LinearLayout>
         </LinearLayout>
+
     </LinearLayout>
 
 

@@ -143,7 +143,7 @@ public class SubjectsFragment extends Fragment {
         }));
         DbHelper helper = new DbHelper(requireActivity().getApplicationContext());
         SQLiteDatabase db = helper.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.t_subjects + " ORDER BY name DESC", null);
+        Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.t_subjects + " ORDER BY name ASC", null);
         if (cursor.moveToFirst()) {
             do {
                 elements.add(new ItemSubjectElement(new SubjectElement(cursor.getString(1), cursor.getInt(2)), 0));

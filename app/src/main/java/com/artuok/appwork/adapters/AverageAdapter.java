@@ -1,7 +1,6 @@
 package com.artuok.appwork.adapters;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -85,7 +84,6 @@ public class AverageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 imageView.setImageDrawable(mInflater.getContext().getDrawable(R.drawable.ic_check_circle));
                 imageView.setColorFilter(mInflater.getContext().getColor(R.color.green_500));
             } else {
-                Log.d("cattoPercent", element.getProgress() + "/" + element.getMax());
 
                 int progress = 100 / element.getMax() * element.getProgress();
 

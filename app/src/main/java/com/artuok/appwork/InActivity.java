@@ -4,6 +4,7 @@ import android.app.AlarmManager;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -11,7 +12,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
@@ -28,6 +28,10 @@ public class InActivity extends AppCompatActivity {
     public static final String CHANNEL_ID_1 = "CHANNEL_1";
     public static final String CHANNEL_ID_2 = "CHANNEL_2";
     public static final String CHANNEL_ID_3 = "CHANNEL_3";
+    public static final String CHANNEL_ID_4 = "CHANNEL_4";
+    public static final String CHANNEL_ID_5 = "CHANNEL_5";
+    public static final String GROUP_EVENTS = "com.artuok.appwork.EVENTS";
+    public static final String GROUP_SUBJECTS = "com.artuok.appwork.SUBJECTS";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +41,7 @@ public class InActivity extends AppCompatActivity {
         Preferences();
 
         createNotificationChannel();
+        setAlarm();
         setAlarms();
         setAlarmSchedule();
 
@@ -73,12 +78,18 @@ public class InActivity extends AppCompatActivity {
         notificationChannel2.setDescription("Channel for remember when you need to do homework");
         NotificationChannel notificationChannel3 = new NotificationChannel(CHANNEL_ID_3, "Alarm", NotificationManager.IMPORTANCE_HIGH);
         notificationChannel3.setDescription("Alarm to do homework");
+        NotificationChannel notificationChannel4 = new NotificationChannel(CHANNEL_ID_4, "Tomorrow Events", NotificationManager.IMPORTANCE_HIGH);
+        notificationChannel4.setDescription("Events to do tomorrow");
+        NotificationChannel notificationChannel5 = new NotificationChannel(CHANNEL_ID_5, "Tomorrow SUBJECTS", NotificationManager.IMPORTANCE_HIGH);
+        notificationChannel5.setDescription("Subjects tomorrow");
 
         NotificationManager manager = getSystemService(NotificationManager.class);
 
         manager.createNotificationChannel(notificationChannel2);
         manager.createNotificationChannel(notificationChannel1);
         manager.createNotificationChannel(notificationChannel3);
+        manager.createNotificationChannel(notificationChannel4);
+        manager.createNotificationChannel(notificationChannel5);
     }
 
     void setAlarmSchedule() {
@@ -188,13 +199,14 @@ public class InActivity extends AppCompatActivity {
     private void setNotify(int type, long diff) {
         long start = Calendar.getInstance().getTimeInMillis() + diff;
 
-        Log.d("cattoRestSay", (diff / 1000) + "");
         Intent notify = new Intent(this, AlarmWorkManager.class);
         if (type == 0) {
             notify.setAction(AlarmWorkManager.ACTION_TIME_TO_DO_HOMEWORK);
         } else if (type == 1) {
             notify.setAction(AlarmWorkManager.ACTION_TIME_TO_DO_HOMEWORK);
             notify.putExtra("alarm", 1);
+        } else if (type == 2) {
+            notify.setAction(AlarmWorkManager.ACTION_TOMORROW_EVENTS);
         }
 
         PendingIntent pendingNotify = PendingIntent.getBroadcast(
@@ -251,5 +263,56 @@ public class InActivity extends AppCompatActivity {
 
         row.close();
         return id;
+    }
+
+
+    void setAlarm() {
+        DbHelper dbHelper = new DbHelper(this);
+        SQLiteDatabase dbr = dbHelper.getReadableDatabase();
+        SQLiteDatabase dbw = dbHelper.getWritableDatabase();
+        Cursor row = dbr.rawQuery(
+                "SELECT * FROM " + DbHelper.t_alarm + " WHERE title = 'TTDH' AND (alarm = '0' OR alarm = '1')",
+                null
+        );
+
+        if (row.getCount() < 1) {
+            ContentValues values = new ContentValues();
+            values.put("title", "TTDH");
+            values.put("hour", 39600L);
+            values.put("last_alarm", 1);
+            values.put("alarm", 0);
+            values.put("sunday", 1);
+            values.put("monday", 1);
+            values.put("tuesday", 1);
+            values.put("wednesday", 1);
+            values.put("thursday", 1);
+            values.put("friday", 1);
+            values.put("saturday", 1);
+
+            dbw.insert(DbHelper.t_alarm, null, values);
+        }
+
+        row.close();
+
+        row = dbr.rawQuery("SELECT * FROM " + DbHelper.t_alarm + " WHERE title = 'NDE' ", null);
+
+        if (row.getCount() < 1) {
+            ContentValues values = new ContentValues();
+            values.put("title", "NDE");
+            values.put("hour", 79200L);
+            values.put("last_alarm", 1);
+            values.put("alarm", 2);
+            values.put("sunday", 1);
+            values.put("monday", 1);
+            values.put("tuesday", 1);
+            values.put("wednesday", 1);
+            values.put("thursday", 1);
+            values.put("friday", 1);
+            values.put("saturday", 1);
+
+            dbw.insert(DbHelper.t_alarm, null, values);
+        }
+
+        row.close();
     }
 }

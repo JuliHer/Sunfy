@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.artuok.appwork.R;
+import com.artuok.appwork.objects.CountElement;
 import com.artuok.appwork.objects.Item;
 import com.artuok.appwork.objects.TasksElement;
 import com.thekhaeng.pushdownanim.PushDownAnim;
@@ -42,6 +43,9 @@ public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         if (viewType == 0) {
             View view = mInflater.inflate(R.layout.item_tasks_layout, parent, false);
             return new TasksViewHolder(view);
+        } else if (viewType == 1) {
+            View view = mInflater.inflate(R.layout.item_resume_layout, parent, false);
+            return new ResumeViewHolder(view);
         }
 
         return null;
@@ -49,9 +53,13 @@ public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        if (getItemViewType(position) == 0) {
+        int view = getItemViewType(position);
+        if (view == 0) {
             TasksElement element = (TasksElement) mData.get(position).getObject();
             ((TasksViewHolder) holder).onBindData(element);
+        } else if (view == 1) {
+            CountElement element = (CountElement) mData.get(position).getObject();
+            ((ResumeViewHolder) holder).onBindData(element);
         }
     }
 
@@ -65,6 +73,31 @@ public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         return mData.get(position).getType();
     }
 
+    class ResumeViewHolder extends RecyclerView.ViewHolder {
+
+        TextView count;
+        TextView txt;
+
+        public ResumeViewHolder(@NonNull View itemView) {
+            super(itemView);
+
+            count = itemView.findViewById(R.id.task_count);
+            txt = itemView.findViewById(R.id.pendingTaskTxt);
+        }
+
+        void onBindData(CountElement element) {
+            count.setText(element.getCount());
+
+            txt.setVisibility(View.VISIBLE);
+            if (!element.getText().equals("") && !element.getText().isEmpty()) {
+                txt.setText(element.getText());
+            } else {
+                txt.setVisibility(View.GONE);
+            }
+        }
+
+
+    }
 
     class TasksViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 

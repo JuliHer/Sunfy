@@ -17,6 +17,7 @@ import com.artuok.appwork.R;
 import com.artuok.appwork.objects.AwaitingElement;
 import com.artuok.appwork.objects.Item;
 import com.artuok.appwork.objects.StatisticsElement;
+import com.artuok.appwork.objects.TextElement;
 import com.thekhaeng.pushdownanim.PushDownAnim;
 
 import java.util.List;
@@ -43,18 +44,25 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         } else if (viewType == 1) {
             View view = mInflater.inflate(R.layout.recurrence_layout, parent, false);
             return new StatisticViewHolder(view);
+        } else if (viewType == 2) {
+            View view = mInflater.inflate(R.layout.item_text_layout, parent, false);
+            return new TextViewHolder(view);
         }
         return null;
     }
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        if (getItemViewType(position) == 0) {
+        int type = getItemViewType(position);
+        if (type == 0) {
             AwaitingElement element = (AwaitingElement) mData.get(position).getObject();
             ((AwaitingViewHolder) holder).onBindData(element);
-        } else if (getItemViewType(position) == 1) {
+        } else if (type == 1) {
             StatisticsElement element = (StatisticsElement) mData.get(position).getObject();
             ((StatisticViewHolder) holder).onBindData(element);
+        } else if (type == 2) {
+            TextElement element = (TextElement) mData.get(position).getObject();
+            ((TextViewHolder) holder).onBindData(element);
         }
     }
 
@@ -70,6 +78,22 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     @Override
     public int getItemViewType(int position) {
         return mData.get(position).getType();
+    }
+
+    class TextViewHolder extends RecyclerView.ViewHolder {
+
+        TextView textView;
+
+        public TextViewHolder(@NonNull View itemView) {
+            super(itemView);
+
+            textView = itemView.findViewById(R.id.text);
+        }
+
+        public void onBindData(TextElement element) {
+            textView.setText(element.getText());
+
+        }
     }
 
     class AwaitingViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {

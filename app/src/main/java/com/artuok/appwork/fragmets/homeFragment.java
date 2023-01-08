@@ -23,6 +23,7 @@ import com.artuok.appwork.MainActivity;
 import com.artuok.appwork.R;
 import com.artuok.appwork.adapters.TasksAdapter;
 import com.artuok.appwork.db.DbHelper;
+import com.artuok.appwork.objects.CountElement;
 import com.artuok.appwork.objects.Item;
 import com.artuok.appwork.objects.TaskElement;
 import com.artuok.appwork.objects.TasksElement;
@@ -49,6 +50,10 @@ public class homeFragment extends Fragment {
 
     //elementExp
     int posExp = -1;
+
+
+    int min = 0;
+    int total = 0;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
@@ -86,14 +91,38 @@ public class homeFragment extends Fragment {
 
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(manager);
-
+        loadCount();
         loadTasks(-1);
-
         return root;
     }
 
     void setListener() {
         listener = (view, position) -> ((MainActivity) requireActivity()).navigateTo(1);
+    }
+
+    void loadCount() {
+        DbHelper dbHelper = new DbHelper(requireActivity());
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+
+        Cursor onHold = db.rawQuery("SELECT * FROM " + DbHelper.t_task + " WHERE status = '0'", null);
+
+        int holding = onHold.getCount();
+        onHold.close();
+
+
+        String txt = "";
+        String sTxt = "";
+        if (holding == 0) {
+            txt += "Good Morning!";
+            sTxt = "";
+        } else {
+            if (holding < 10) {
+                txt += "0";
+            }
+            txt += "" + holding;
+            sTxt = requireActivity().getString(R.string.pending_tasks);
+        }
+        elements.add(new Item(new CountElement(txt, sTxt), 1));
     }
 
     void loadTasks(int pos) {
@@ -115,7 +144,6 @@ public class homeFragment extends Fragment {
                 date.setTime(today);
                 SimpleDateFormat format = new SimpleDateFormat("MMMM dd, yyyy");
                 String time = format.format(date);
-
 
                 elements.add(new Item(new TasksElement(title, time, task), 0));
             }

@@ -113,4 +113,14 @@
     <string name="tasks_alarm">Tasks Alarms</string>
     <string name="uncheck">Uncheck</string>
     <string name="uncheck_task">When you uncheck a task, you are removing it from the completed tasks</string>
+    <string name="congratulations_1">Thanks to your great analytical skills, you have managed to complete all your pending activities. Let\'s continue working together to reach new achievements. It may not seem like much, but thanks to your efficiency and good decision-making, you can achieve any goal you set for yourself. Keep it up!</string>
+    <string name="pending_tasks_alarm">Pending Tasks Alarm</string>
+    <string name="tomorrows_Tasks">Tomorrow\'s Tasks</string>
+    <string name="tomorrows_subjects">Tomorrow\'s Subjects</string>
+    <string name="will_end">Will End At</string>
+    <string name="yht_for_tomorrow">You Haven\'t Tasks For Tomorrow</string>
+    <string name="notifications">Notifications</string>
+    <string name="dismiss">Dismiss</string>
+    <string name="overdue_tasks">Overdue Tasks</string>
+    <string name="chat">Chat</string>
 </resources>

@@ -13,6 +13,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.Switch
+import android.widget.TextView
 import android.widget.TimePicker
 import androidx.fragment.app.Fragment
 import com.artuok.appwork.R
@@ -24,6 +25,9 @@ import java.util.*
 class AlarmsFragment : Fragment() {
 
     private lateinit var switch: Switch
+    private lateinit var timer: TextView
+    private lateinit var nDETimer: TextView
+    private lateinit var nDSTimer: TextView
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -32,10 +36,13 @@ class AlarmsFragment : Fragment() {
         val root = inflater.inflate(R.layout.fragment_alarms, container, false)
 
         switch = root.findViewById(R.id.turnalarm)
+        timer = root.findViewById(R.id.time)
+        nDETimer = root.findViewById(R.id.nextDayEvents)
+        nDSTimer = root.findViewById(R.id.nextDaySubjects)
+
 
         setAlarm()
         setAlarms()
-
 
         switch.setOnCheckedChangeListener() { compoundButton, b ->
             val db = DbHelper(requireActivity())
@@ -47,6 +54,58 @@ class AlarmsFragment : Fragment() {
             setAlarms()
         }
         val alarm: LinearLayout = root.findViewById(R.id.ttdh)
+        val NDE: LinearLayout = root.findViewById(R.id.NDE)
+        val NDS: LinearLayout = root.findViewById(R.id.NDS)
+
+        PushDownAnim.setPushDownAnimTo(NDS)
+            .setDurationPush(100)
+            .setScale(PushDownAnim.MODE_SCALE, 0.98f)
+            .setOnClickListener() {
+                val timepicker = TimePickerDialog(
+                    requireActivity(),
+                    { timePicker1: TimePicker?, i: Int, i1: Int ->
+                        val db = DbHelper(requireActivity())
+                        val dbw = db.writableDatabase
+                        val hour = (i * 60 * 60) + (i1 * 60)
+                        val values = ContentValues()
+                        values.put("hour", hour)
+                        values.put("last_alarm", 9)
+                        dbw.update(DbHelper.t_alarm, values, "title = 'NDS'", null)
+                        setAlarm()
+                        setAlarms()
+                    },
+                    0,
+                    0,
+                    false
+                )
+
+                timepicker.show()
+            }
+
+        PushDownAnim.setPushDownAnimTo(NDE)
+            .setDurationPush(100)
+            .setScale(PushDownAnim.MODE_SCALE, 0.98f)
+            .setOnClickListener() {
+                val timepicker = TimePickerDialog(
+                    requireActivity(),
+                    { timePicker1: TimePicker?, i: Int, i1: Int ->
+                        val db = DbHelper(requireActivity())
+                        val dbw = db.writableDatabase
+                        val hour = (i * 60 * 60) + (i1 * 60)
+                        val values = ContentValues()
+                        values.put("hour", hour)
+                        values.put("last_alarm", 9)
+                        dbw.update(DbHelper.t_alarm, values, "title = 'NDE'", null)
+                        setAlarm()
+                        setAlarms()
+                    },
+                    0,
+                    0,
+                    false
+                )
+
+                timepicker.show()
+            }
 
         PushDownAnim.setPushDownAnimTo(alarm)
             .setDurationPush(100)
@@ -62,6 +121,7 @@ class AlarmsFragment : Fragment() {
                         values.put("hour", hour)
                         values.put("last_alarm", 9)
                         dbw.update(DbHelper.t_alarm, values, "title = 'TTDH'", null)
+                        setAlarm()
                         setAlarms()
                     },
                     0,
@@ -79,7 +139,7 @@ class AlarmsFragment : Fragment() {
         val dbHelper = DbHelper(requireActivity())
         val dbr = dbHelper.readableDatabase
         val dbw = dbHelper.writableDatabase
-        val row = dbr.rawQuery(
+        var row = dbr.rawQuery(
             "SELECT * FROM ${DbHelper.t_alarm} WHERE title = 'TTDH' AND (alarm = '0' OR alarm = '1')",
             null
         )
@@ -88,7 +148,7 @@ class AlarmsFragment : Fragment() {
             val values = ContentValues()
             values.put("title", "TTDH")
             values.put("hour", 39600L)
-            values.put("last_alarm", 1)
+            values.put("last_alarm", 0)
             values.put("alarm", 0)
             values.put("sunday", 1)
             values.put("monday", 1)
@@ -103,10 +163,100 @@ class AlarmsFragment : Fragment() {
             if (row.moveToFirst()) {
                 val turn = row.getInt(4) > 0
                 switch.isChecked = turn
+                val h = row.getLong(2) / 60 / 60
+                val m = (row.getLong(2) / 60 % 60)
+
+                val min = if (m < 10) "0$m" else "$m"
+                var hour = ""
+                if (h > 12) {
+                    hour = "${h - 12}"
+                } else if (h == 0L) {
+                    hour = "12"
+                } else {
+                    hour = "$h"
+                }
+                val tm = if (h > 11) "pm" else "am"
+                timer.text = "$hour:$min $tm"
             }
         }
 
+        row.close()
 
+        row = dbr.rawQuery("SELECT * FROM ${DbHelper.t_alarm} WHERE title = 'NDE' ", null)
+
+        if (row.count < 1) {
+            val values = ContentValues()
+            values.put("title", "NDE")
+            values.put("hour", 79200L)
+            values.put("last_alarm", 0)
+            values.put("alarm", 2)
+            values.put("sunday", 1)
+            values.put("monday", 1)
+            values.put("tuesday", 1)
+            values.put("wednesday", 1)
+            values.put("thursday", 1)
+            values.put("friday", 1)
+            values.put("saturday", 1)
+
+            dbw.insert(DbHelper.t_alarm, null, values)
+        } else {
+            if (row.moveToFirst()) {
+                val h = row.getLong(2) / 60 / 60
+                val m = (row.getLong(2) / 60 % 60)
+
+                val min = if (m < 10) "0$m" else "$m"
+                var hour = ""
+                if (h > 12) {
+                    hour = "${h - 12}"
+                } else if (h == 0L) {
+                    hour = "12"
+                } else {
+                    hour = "$h"
+                }
+                val tm = if (h > 11) "pm" else "am"
+                nDETimer.text = "$hour:$min $tm"
+            }
+        }
+
+        row.close()
+
+        row = dbr.rawQuery("SELECT * FROM ${DbHelper.t_alarm} WHERE title = 'NDS' ", null)
+
+        if (row.count < 1) {
+            val values = ContentValues()
+            values.put("title", "NDS")
+            values.put("hour", 79200L)
+            values.put("last_alarm", 0)
+            values.put("alarm", 4)
+            values.put("sunday", 1)
+            values.put("monday", 1)
+            values.put("tuesday", 1)
+            values.put("wednesday", 1)
+            values.put("thursday", 1)
+            values.put("friday", 1)
+            values.put("saturday", 1)
+
+            dbw.insert(DbHelper.t_alarm, null, values)
+        } else {
+            if (row.moveToFirst()) {
+                val h = row.getLong(2) / 60 / 60
+                val m = (row.getLong(2) / 60 % 60)
+
+                val min = if (m < 10) "0$m" else "$m"
+                var hour = ""
+                if (h > 12) {
+                    hour = "${h - 12}"
+                } else if (h == 0L) {
+                    hour = "12"
+                } else {
+                    hour = "$h"
+                }
+                val tm = if (h > 11) "pm" else "am"
+                nDSTimer.text = "$hour:$min $tm"
+            }
+        }
+
+        row.close()
     }
 
     fun setAlarms() {
@@ -132,7 +282,8 @@ class AlarmsFragment : Fragment() {
                 val calendar = Calendar.getInstance()
                 val hour = calendar.get(Calendar.HOUR_OF_DAY)
                 val minute = calendar.get(Calendar.MINUTE)
-                val thour: Long = (60L * 60L * hour) + (60L * minute)
+                val second = calendar.get(Calendar.SECOND)
+                val thour: Long = (60L * 60L * hour) + (60L * minute) + second
 
                 val tdow = calendar.get(Calendar.DAY_OF_WEEK) - 1
                 dow += tdow
@@ -162,6 +313,10 @@ class AlarmsFragment : Fragment() {
         } else if (type == 1) {
             notify.action = AlarmWorkManager.ACTION_TIME_TO_DO_HOMEWORK
             notify.putExtra("alarm", 1)
+        } else if (type == 2) {
+            notify.action = AlarmWorkManager.ACTION_TOMORROW_EVENTS
+        } else if (type == 4) {
+            notify.action = AlarmWorkManager.ACTION_TOMORROW_SUBJECTS
         }
 
         val pendingNotify = PendingIntent.getBroadcast(

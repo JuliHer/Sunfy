@@ -18,14 +18,17 @@
         <item name="shimmerHintSkeleton">@color/purple_750</item>
         <item name="maskHintSkeleton">@color/purple_800</item>
 
-        <item name="backgroundDialog">@color/gray_100</item>
+        <item name="backgroundDialog">@color/gray_000</item>
         <item name="backgroundAlert">@color/gray_200</item>
         <item name="backgroundBorder">@color/white</item>
         <item name="subTextColor">@color/gray_800</item>
         <item name="iconHint">#D6BDFF</item>
         <item name="backgroundHint">@color/purple_900</item>
         <item name="iMainColor">@color/purple_200</item>
+
+
         <item name="hintInputColor">@color/gray_100</item>
+        <item name="hintViewGrayColor">@color/gray_200</item>
 
         <!--calendar-->
         <item name="gridColor">@color/gray_200</item>

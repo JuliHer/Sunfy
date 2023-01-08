@@ -12,7 +12,6 @@ import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.os.PersistableBundle
 import android.provider.MediaStore
-import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -200,8 +199,6 @@ class CreateAwaitingActivity : AppCompatActivity() {
 
             val extras = it.data?.extras
             img = extras?.get("data") as Bitmap
-
-            Log.d("catto", "camera " + img)
         }
     }
 
@@ -255,7 +252,6 @@ class CreateAwaitingActivity : AppCompatActivity() {
         } else {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         }
-        Log.d("catto", "camera l")
     }
 
     private lateinit var colorD: ImageView

@@ -32,6 +32,7 @@
         <attr name="maskHintSkeleton" format="color" />
 
         <attr name="hintInputColor" format="color" />
+        <attr name="hintViewGrayColor" format="color" />
     </declare-styleable>
 
     <declare-styleable name="CalendarWeekView">

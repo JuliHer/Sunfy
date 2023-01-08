@@ -3,7 +3,6 @@ package com.artuok.appwork.fragmets
 import android.database.DatabaseUtils
 import android.graphics.Color
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -194,7 +193,6 @@ class AveragesFragment : Fragment() {
         val end = getStartEndOFWeek(week, year, false)
 
 
-        Log.d("catto", "$start AND $end")
         var cursor = db.rawQuery(
             "SELECT * FROM ${DbHelper.t_task} WHERE status = '1' AND date BETWEEN '$start' AND '$end'",
             null

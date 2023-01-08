@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "500024642674",
+    "project_id": "diarify-ffb87",
+    "storage_bucket": "diarify-ffb87.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:500024642674:android:2a9df1746c519dd51686eb",
+        "android_client_info": {
+          "package_name": "com.artuok.appwork"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "500024642674-nd047gcntkl9sr20pgs0jmkplscfork1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC094ynaul5HggIrVm7KnwMteh4kwod6MQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "500024642674-nd047gcntkl9sr20pgs0jmkplscfork1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -24,6 +24,7 @@
     <color name="gray_300">#FF444444</color>
     <color name="gray_200">#FF222222</color>
     <color name="gray_100">#FF191919</color>
+    <color name="gray_000">#FF121212</color>
     <color name="gray_300_transparent">#66888888</color>
 
     <color name="palette_purple_100">#5929d0</color>

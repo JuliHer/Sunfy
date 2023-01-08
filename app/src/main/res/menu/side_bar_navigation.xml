@@ -6,9 +6,9 @@
         <item android:title="Extras">
             <menu>
                 <item
-                    android:id="@+id/nav_subject"
-                    android:icon="@drawable/ic_layers"
-                    android:title="@string/subjects_fragment_menu" />
+                    android:id="@+id/nav_chat"
+                    android:icon="@drawable/message_circle"
+                    android:title="@string/chat" />
                 <item
                     android:id="@+id/nav_averages"
                     android:icon="@drawable/ic_bar_chart"
