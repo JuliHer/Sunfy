@@ -3,7 +3,6 @@ package com.artuok.appwork.services;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 
 public class AlarmWorkManager extends BroadcastReceiver {
     public static final String ACTION_NOTIFY = "NOTIFY";
@@ -11,10 +10,12 @@ public class AlarmWorkManager extends BroadcastReceiver {
     public static final String ACTION_POSTPONE = "POSTPONE";
     public static final String ACTION_DISMISS = "DISMISS";
     public static final String ACTION_EVENT = "EVENT";
+    public static final String ACTION_TOMORROW_EVENTS = "TEVENTS";
+    public static final String ACTION_TOMORROW_SUBJECTS = "TSUBJECTS";
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        Log.d("say", "hi");
+
         Intent intent1 = new Intent(context, NotificationService.class);
         if (intent.getAction() != null) {
             switch (intent.getAction()) {
@@ -46,6 +47,14 @@ public class AlarmWorkManager extends BroadcastReceiver {
                     intent1.putExtra("name", intent.getStringExtra("name"));
                     intent1.putExtra("time", intent.getLongExtra("time", 0));
                     intent1.putExtra("duration", intent.getLongExtra("duration", 0));
+                    context.startForegroundService(intent1);
+                    break;
+                case ACTION_TOMORROW_EVENTS:
+                    intent1.setAction(ACTION_TOMORROW_EVENTS);
+                    context.startForegroundService(intent1);
+                    break;
+                case ACTION_TOMORROW_SUBJECTS:
+                    intent1.setAction(ACTION_TOMORROW_SUBJECTS);
                     context.startForegroundService(intent1);
                     break;
             }

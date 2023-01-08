@@ -2,15 +2,14 @@ package com.artuok.appwork;
 
 import android.app.Activity;
 import android.app.AlarmManager;
-import android.app.Dialog;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -23,9 +22,12 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
+import com.artuok.appwork.dialogs.AnnouncementDialog;
+import com.artuok.appwork.fragmets.AlarmsFragment;
 import com.artuok.appwork.fragmets.AveragesFragment;
 import com.artuok.appwork.fragmets.AwaitingFragment;
 import com.artuok.appwork.fragmets.CalendarFragment;
+import com.artuok.appwork.fragmets.ChatFragment;
 import com.artuok.appwork.fragmets.SettingsFragment;
 import com.artuok.appwork.fragmets.SubjectsFragment;
 import com.artuok.appwork.fragmets.homeFragment;
@@ -53,6 +55,8 @@ public class MainActivity extends AppCompatActivity {
     CalendarFragment calendarFragment = new CalendarFragment();
     SubjectsFragment subjectsFragment = new SubjectsFragment();
     AveragesFragment averagesFragment = new AveragesFragment();
+    AlarmsFragment alarmsFragment = new AlarmsFragment();
+    ChatFragment chatFragment = new ChatFragment();
 
 
     SettingsFragment settingsFragment = new SettingsFragment();
@@ -60,26 +64,16 @@ public class MainActivity extends AppCompatActivity {
     Fragment firstCurrentFragment = homefragment;
     Fragment secondCurrentFragment = awaitingFragment;
     Fragment thirdCurrentFragment = calendarFragment;
+    Fragment fourCurrentFragment = subjectsFragment;
 
 
     //floating button
     FloatingActionButton actionButton;
 
-    //creating Task
-    String subject;
-
-    //Subjects
-    String[] subjects;
-
     //Toolbar
     Toolbar toolbar;
 
     //Dialog
-    Dialog dialog;
-    int dd, mm, aaaa, hh, mn;
-    String datetime, dateText;
-    TextView date;
-    EditText title, description;
     Calendar alarmset;
 
     private static MainActivity instance;
@@ -107,7 +101,10 @@ public class MainActivity extends AppCompatActivity {
         toolbar.setTitle("");
         setSupportActionBar(toolbar);
         startFragment(homefragment);
-
+        toolbar.setNavigationIcon(getDrawable(R.drawable.ic_list));
+        toolbar.setNavigationOnClickListener(view -> {
+            drawerLayout.openDrawer(GravityCompat.START);
+        });
         instance = this;
 
         actionButton = findViewById(R.id.floating_button);
@@ -125,6 +122,7 @@ public class MainActivity extends AppCompatActivity {
 
         navigation.setOnItemSelectedListener(mOnNavigationItemSelectedListener);
         navigationView.setNavigationItemSelectedListener(mOnItemSelectedListener);
+
 
         if (getIntent().getExtras() != null)
             if (getIntent().getStringExtra("task").equals("do tasks"))
@@ -147,11 +145,16 @@ public class MainActivity extends AppCompatActivity {
             case 1:
                 navigation.setSelectedItemId(R.id.awaiting_fragment);
                 break;
-            case 3:
+            case 2:
                 navigation.setSelectedItemId(R.id.calendar_fragment);
                 break;
-            case 2:
-                navigationView.setCheckedItem(R.id.nav_subject);
+            case 3:
+                navigation.setSelectedItemId(R.id.nav_subject);
+                break;
+            case 4:
+                navigation.setSelectedItemId(R.id.homefragment);
+                position = 5;
+                LoadTextFragment(chatFragment, getString(R.string.chat));
                 break;
         }
     }
@@ -162,7 +165,6 @@ public class MainActivity extends AppCompatActivity {
                 if (result.getResultCode() == Activity.RESULT_OK) {
                     Intent data = result.getData();
                     if (data.getIntExtra("requestCode", 0) == 3) {
-                        navigateTo(2);
                     } else if (data.getIntExtra("requestCode", 0) == 2) {
                         updateWidget();
                         notifyAllChanged();
@@ -173,6 +175,12 @@ public class MainActivity extends AppCompatActivity {
 
     public void updateWidget() {
 
+    }
+
+    public void showAnnouncement() {
+        AnnouncementDialog dialog = new AnnouncementDialog();
+
+        dialog.show(getSupportFragmentManager(), "announcement");
     }
 
     @Override
@@ -195,15 +203,21 @@ public class MainActivity extends AppCompatActivity {
         drawerLayout.close();
         changesFromDrawer = true;
         navigation.setSelectedItemId(R.id.homefragment);
+
+
         switch (item.getItemId()) {
-            case R.id.nav_subject:
-                LoadFragment(subjectsFragment);
-                return true;
             case R.id.nav_averages:
                 LoadFragment(averagesFragment);
                 return true;
             case R.id.nav_settings:
-                LoadTextFragment(settingsFragment, MainActivity.this.getString(R.string.settings_menu));
+                LoadTextFragment(settingsFragment, getString(R.string.settings_menu));
+                return true;
+            case R.id.nav_alarms:
+                LoadFragment(alarmsFragment);
+                return true;
+            case R.id.nav_chat:
+                position = 5;
+                LoadTextFragment(chatFragment, getString(R.string.chat));
                 return true;
         }
 
@@ -211,9 +225,7 @@ public class MainActivity extends AppCompatActivity {
     };
 
     NavigationBarView.OnItemSelectedListener mOnNavigationItemSelectedListener = item -> {
-        if (!changesFromDrawer && item.getItemId() != R.id.nav_menu) {
-            navigationView.setCheckedItem(R.id.nav_subject);
-        }
+
         changesFromDrawer = false;
         switch (item.getItemId()) {
             case R.id.homefragment:
@@ -228,9 +240,10 @@ public class MainActivity extends AppCompatActivity {
                 position = 3;
                 LoadFragment(calendarFragment);
                 return true;
-            case R.id.nav_menu:
-                drawerLayout.openDrawer(GravityCompat.START);
-                return false;
+            case R.id.nav_subject:
+                position = 4;
+                LoadFragment(subjectsFragment);
+                return true;
         }
 
         return false;
@@ -247,6 +260,8 @@ public class MainActivity extends AppCompatActivity {
             secondCurrentFragment = fragment;
         } else if (position == 3) {
             thirdCurrentFragment = fragment;
+        } else if (position == 4) {
+            fourCurrentFragment = fragment;
         }
         currentFragment = fragment;
         transaction.commit();
@@ -267,17 +282,31 @@ public class MainActivity extends AppCompatActivity {
                     .add(R.id.frameLayoutMain, fragment);
         }
 
+        if (title == getString(R.string.chat)) {
+            actionButton.setImageResource(R.drawable.message_circle);
+            PushDownAnim.setPushDownAnimTo(actionButton)
+                    .setScale(PushDownAnim.MODE_SCALE, 0.98f)
+                    .setDurationPush(100)
+                    .setOnClickListener(view -> {
+                        Toast.makeText(this, "Action button", Toast.LENGTH_SHORT).show();
+                    });
+        } else {
+            actionButton.setImageResource(R.drawable.ic_baseline_add_24);
+            PushDownAnim.setPushDownAnimTo(actionButton)
+                    .setScale(PushDownAnim.MODE_SCALE, 0.98f)
+                    .setDurationPush(100)
+                    .setOnClickListener(view -> {
+                        Intent i = new Intent(this, CreateAwaitingActivity.class);
+                        i.getIntExtra("requestCode", 2);
+                        resultLauncher.launch(i);
+                    });
+        }
+
+
         currentFragment = fragment;
         transaction.commit();
-        ((TextView) toolbar.findViewById(R.id.title)).setText(title);
-        toolbar.setNavigationIcon(getDrawable(R.drawable.ic_arrow_left));
-        toolbar.setNavigationOnClickListener(view -> {
-            Fragment f = getFragmentPosition(position);
-            if (f != null) {
-                LoadFragment(f);
-            }
-        });
 
+        ((TextView) toolbar.findViewById(R.id.title)).setText(title);
     }
 
 
@@ -296,12 +325,21 @@ public class MainActivity extends AppCompatActivity {
                     .add(R.id.frameLayoutMain, fragment);
         }
 
+        actionButton.setImageResource(R.drawable.ic_baseline_add_24);
+        PushDownAnim.setPushDownAnimTo(actionButton)
+                .setScale(PushDownAnim.MODE_SCALE, 0.98f)
+                .setDurationPush(100)
+                .setOnClickListener(view -> {
+                    Intent i = new Intent(this, CreateAwaitingActivity.class);
+                    i.getIntExtra("requestCode", 2);
+
+                    resultLauncher.launch(i);
+                });
+
         currentFragment = fragment;
         transaction.commit();
 
         ((TextView) toolbar.findViewById(R.id.title)).setText(MainActivity.this.getString(R.string.app_name));
-        toolbar.setNavigationIcon(null);
-
     }
 
     Fragment getFragmentPosition(int pos) {

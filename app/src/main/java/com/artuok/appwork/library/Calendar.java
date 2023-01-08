@@ -7,6 +7,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.util.TypedValue;
@@ -18,6 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.artuok.appwork.R;
+import com.artuok.appwork.objects.PeriodElement;
 import com.artuok.appwork.objects.TaskEvent;
 
 import java.util.ArrayList;
@@ -52,6 +54,8 @@ public class Calendar extends View {
     private java.util.Calendar calendarR;
     private int month = 0;
     private int monthTemp = 0;
+    private int height = 0;
+    private int heightTemp = 0;
     private int year = 0;
 
     //Sizes
@@ -70,6 +74,7 @@ public class Calendar extends View {
 
     //Event Data
     private List<TaskEvent> mData;
+    private List<PeriodElement> mPeriods;
 
 
     public Calendar(Context context) {
@@ -92,7 +97,7 @@ public class Calendar extends View {
         calendar = java.util.Calendar.getInstance();
         calendarR = java.util.Calendar.getInstance();
 
-        daySelected[0] = calendarR.get(java.util.Calendar.DAY_OF_MONTH) + 1;
+        daySelected[0] = calendarR.get(java.util.Calendar.DAY_OF_MONTH);
         daySelected[1] = calendarR.get(java.util.Calendar.MONTH);
         daySelected[2] = calendarR.get(java.util.Calendar.YEAR);
 
@@ -100,6 +105,7 @@ public class Calendar extends View {
         year = calendar.get(java.util.Calendar.YEAR);
 
         mData = new ArrayList<>();
+        mPeriods = new ArrayList<>();
 
         //setAttrs
         mTextPaintDays = new TextPaint(Paint.ANTI_ALIAS_FLAG);
@@ -115,6 +121,13 @@ public class Calendar extends View {
         animator.addUpdateListener(valueAnimator -> {
             float p = (float) valueAnimator.getAnimatedValue();
             offsetX += (int) ((to - offsetX) * p);
+
+
+            height += (int) ((heightTemp - height) * p);
+
+            getLayoutParams().height = height;
+            requestLayout();
+
             if (offsetX == to) {
                 offsetX = 0;
                 month += monthTemp;
@@ -173,7 +186,6 @@ public class Calendar extends View {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
 
@@ -202,26 +214,87 @@ public class Calendar extends View {
             }
             drawMonths(canvas, date, getWidth() * i);
             drawWeekDays(canvas, getWidth() * i);
-            drawDay(canvas, date, getWidth() * i);
+            drawDays(canvas, date, getWidth() * i);
         }
+    }
+
+
+    private void setHeight() {
+        int month = this.month + monthTemp;
+
+        int year = month < 0 ? this.year - 1 + (month / 12) : this.year + (month / 12);
+        month = month < 0 ? 11 : month % 12;
+
+        heightTemp = mHeightSpacingOfDays * (getWeeksCountOfMonth(month, year) + 2);
     }
 
     private void setValues() {
         mSpacingOfDays = getWidth() / 7;
-        mHeightSpacingOfDays = (int) (mSpacingOfDays * 1f);
+        mHeightSpacingOfDays = (int) (mSpacingOfDays * 0.75f);
         year = calendar.get(java.util.Calendar.YEAR);
         year = month < 0 ? year - 1 + (month / 12) : year + (month / 12);
-
         month = month < 0 ? 11 : month % 12;
+
+        height = mHeightSpacingOfDays * (getWeeksCountOfMonth(month, year) + 2);
+        getLayoutParams().height = height;
+        requestLayout();
         calendar.set(java.util.Calendar.MONTH, month);
         calendar.set(java.util.Calendar.YEAR, year);
+    }
+
+    private void setPeriods(Canvas canvas, int x, int y, int[] date) {
+        for (PeriodElement period : mPeriods) {
+            java.util.Calendar s = period.getStart();
+            s.set(java.util.Calendar.HOUR_OF_DAY, 12);
+            s.set(java.util.Calendar.MINUTE, 0);
+            java.util.Calendar e = period.getEnd();
+            e.set(java.util.Calendar.HOUR_OF_DAY, 12);
+            e.set(java.util.Calendar.MINUTE, 0);
+
+            java.util.Calendar t = java.util.Calendar.getInstance();
+            t.set(date[1], date[0], date[2]);
+            int fy = (int) (y + mHeightSpacingOfDays * 0.25f);
+
+            long today = t.getTimeInMillis();
+            long day = 86400000L;
+            if (today >= s.getTimeInMillis() && today <= e.getTimeInMillis()) {
+                mPaintHighlight.setColor(period.getColor());
+                canvas.drawCircle(x, fy, mSpacingOfDays / 27, mPaintHighlight);
+
+
+                if (t.get(java.util.Calendar.DAY_OF_MONTH) > 1) {
+                    long yesterday = today - day;
+                    if (yesterday >= s.getTimeInMillis() && yesterday <= e.getTimeInMillis()) {
+                        RectF rectF = new RectF();
+                        int weight = mSpacingOfDays / 27;
+                        rectF.set(x - (mSpacingOfDays / 2), fy - weight, x, fy + weight);
+                        canvas.drawRect(rectF, mPaintHighlight);
+                    }
+                }
+
+
+                if (t.get(java.util.Calendar.DAY_OF_MONTH) < getDaysInMoth(date[0], date[1])) {
+                    long tomorrow = today + day;
+                    if (tomorrow >= s.getTimeInMillis() && tomorrow <= e.getTimeInMillis()) {
+                        RectF rectF = new RectF();
+                        int weight = mSpacingOfDays / 27;
+                        rectF.set(x, fy - weight, x + (mSpacingOfDays / 2), fy + weight);
+                        canvas.drawRect(rectF, mPaintHighlight);
+                    }
+                }
+
+
+                mPaintHighlight.setColor(mColorHighlight);
+            }
+        }
+
     }
 
     private void drawMonths(Canvas canvas, int[] date, int distance) {
         int month = date[0];
         int year = date[1];
         int x = (mSpacingOfDays / 2) + (offsetX + distance);
-        int y = mSpacingOfDays / 2;
+        int y = mHeightSpacingOfDays / 2;
 
         Rect textBounds = new Rect();
         String txt = getMonth(month) + " " + year;
@@ -236,7 +309,7 @@ public class Calendar extends View {
     }
 
     private void drawWeekDays(Canvas canvas, int min) {
-        int y = (mSpacingOfDays / 2) + mSpacingOfDays;
+        int y = (mHeightSpacingOfDays / 2) + mHeightSpacingOfDays;
 
         for (int i = 0; i < 7; i++) {
             int x = (mSpacingOfDays * i) + (mSpacingOfDays / 2) + offsetX + min;
@@ -255,24 +328,25 @@ public class Calendar extends View {
         }
     }
 
-    private void drawDay(Canvas canvas, int[] date, int distance) {
+    private void drawDays(Canvas canvas, int[] date, int distance) {
         boolean endOfMonth = false;
+        int dayOfWeek = 0;
         int week = 0;
 
         int month = date[0];
         int year = date[1];
-        int dayOfWeek = 0;
         while ((!endOfMonth || dayOfWeek != 6) && week < 6) {
-            int dayOfCalendar = (7 * week);
-            int spacingHeight = (mSpacingOfDays * 2) + (mSpacingOfDays / 4) + (mHeightSpacingOfDays * week);
+            int posOfCalendar = (7 * week);
+            int spacingHeight = (mHeightSpacingOfDays * 2) + (mHeightSpacingOfDays / 4) + (mHeightSpacingOfDays * week);
 
             for (int i = 0; i < 7; i++) {
-                int m = getDayOfMonth(dayOfCalendar + i, date);
+                int dayOfCalendar = getDayOfMonth(posOfCalendar + i, date);
                 int spacingWidth = (mSpacingOfDays / 2) + (mSpacingOfDays * i) + offsetX + distance;
                 Rect textBounds = new Rect();
-                String txt = m + "";
+                String txt = dayOfCalendar + "";
                 mTextPaintWeekendDaysInGrid.getTextBounds(txt, 0, txt.length(), textBounds);
-                if (isInMonth(dayOfCalendar + i, date)) {
+
+                if (isInMonth(posOfCalendar + i, date)) {
                     if (mData != null && mData.size() != 0) {
                         List<TaskEvent> events = new ArrayList<>();
                         for (TaskEvent e : mData) {
@@ -280,7 +354,7 @@ public class Calendar extends View {
 
                             c.setTimeInMillis(e.getTimeInMillis());
 
-                            if (c.get(java.util.Calendar.DAY_OF_MONTH) + 1 == dayOfCalendar + i &&
+                            if (c.get(java.util.Calendar.DAY_OF_MONTH) == dayOfCalendar &&
                                     c.get(java.util.Calendar.MONTH) == month &&
                                     c.get(java.util.Calendar.YEAR) == year) {
                                 events.add(e);
@@ -293,7 +367,7 @@ public class Calendar extends View {
                                 int spacingOfTask = mSpacingOfDays / 2 / count;
                                 int spacing = (spacingOfTask * count) + (spacingOfTask * j) - ((spacingOfTask / 2) * (count - 1));
                                 int spacingx = spacingWidth - (mSpacingOfDays / 2) + spacing;
-                                int height = (int) ((mSpacingOfDays * 2) + (mSpacingOfDays * 0.75f) + (mHeightSpacingOfDays * week));
+                                int height = (int) ((mHeightSpacingOfDays * 2) + (mHeightSpacingOfDays * 0.75f) + (mHeightSpacingOfDays * week));
 
                                 mPaintHighlight.setColor(events.get(j).getColor());
                                 canvas.drawCircle(spacingx, height, mSpacingOfDays / 27, mPaintHighlight);
@@ -302,13 +376,20 @@ public class Calendar extends View {
                         }
 
                     }
-                    if (daySelected[0] == dayOfCalendar + i &&
+
+                    int[] dateDay = new int[3];
+                    dateDay[0] = date[0];
+                    dateDay[1] = date[1];
+                    dateDay[2] = dayOfCalendar;
+                    setPeriods(canvas, spacingWidth, spacingHeight, dateDay);
+
+                    if (daySelected[0] == dayOfCalendar &&
                             daySelected[1] == month &&
                             daySelected[2] == year) {
                         canvas.drawCircle(spacingWidth, spacingHeight, mSpacingOfDays * 0.25f, mPaintHighlight);
                         canvas.drawText(txt, spacingWidth, spacingHeight - textBounds.exactCenterY(), mTextPaintHighlight);
                     } else {
-                        if (calendarR.get(java.util.Calendar.DAY_OF_MONTH) + 1 == dayOfCalendar + i &&
+                        if (calendarR.get(java.util.Calendar.DAY_OF_MONTH) == dayOfCalendar &&
                                 calendarR.get(java.util.Calendar.MONTH) == month &&
                                 calendarR.get(java.util.Calendar.YEAR) == year) {
                             canvas.drawText(txt, spacingWidth, spacingHeight - textBounds.exactCenterY(), mTextPaintToday);
@@ -320,17 +401,18 @@ public class Calendar extends View {
                             }
                         }
                     }
+
                 } else {
                     canvas.drawText(txt, spacingWidth, spacingHeight - textBounds.exactCenterY(), mTextPaintOutMonth);
                 }
 
-                if (m >= getDaysInMoth(month, year) && week != 0) {
+                if (dayOfCalendar >= getDaysInMoth(month, year) && week != 0) {
                     endOfMonth = true;
-
                 }
 
                 dayOfWeek = i;
             }
+
             week++;
         }
     }
@@ -467,15 +549,14 @@ public class Calendar extends View {
         c.set(java.util.Calendar.YEAR, year);
         c.set(java.util.Calendar.DAY_OF_MONTH, 1);
 
-        int weekStart = c.get(java.util.Calendar.WEEK_OF_YEAR);
+        int DWS = c.get(java.util.Calendar.DAY_OF_WEEK) - 1;
 
         int dayOfMonth = getDaysInMoth(month, year);
-        c.set(java.util.Calendar.DAY_OF_MONTH, dayOfMonth);
-        int weekEnd = c.get(java.util.Calendar.WEEK_OF_YEAR);
+        int daysTotal = DWS + dayOfMonth;
 
-        int WIM = weekEnd - weekStart + 1;
+        double d = daysTotal / 7f;
 
-        return WIM;
+        return (int) Math.ceil(d);
     }
 
     //Convert methods
@@ -495,6 +576,11 @@ public class Calendar extends View {
 
     public void setEvents(List<TaskEvent> data) {
         this.mData = data;
+        postInvalidate();
+    }
+
+    public void setPeriods(List<PeriodElement> data) {
+        this.mPeriods = data;
         postInvalidate();
     }
 
@@ -562,9 +648,9 @@ public class Calendar extends View {
 
         @Override
         public boolean onSingleTapConfirmed(@NonNull MotionEvent e) {
-            if (e.getY() > mSpacingOfDays * 2 && e.getY() < getHeight()) {
+            if (e.getY() > mHeightSpacingOfDays * 2 && e.getY() < getHeight()) {
                 int x = (int) (e.getX() / mSpacingOfDays);
-                int y = (int) ((e.getY() - (mSpacingOfDays * 2)) / mSpacingOfDays);
+                int y = (int) ((e.getY() - (mHeightSpacingOfDays * 2)) / mHeightSpacingOfDays);
 
                 java.util.Calendar c = java.util.Calendar.getInstance();
 
@@ -572,10 +658,11 @@ public class Calendar extends View {
                 c.set(java.util.Calendar.MONTH, month);
                 c.set(java.util.Calendar.DAY_OF_MONTH, 1);
 
-                int firstDayOfWeek = c.get(java.util.Calendar.DAY_OF_WEEK) - 2;
-                int days = (y * 7) + x - firstDayOfWeek;
+                int firstDayOfWeek = c.get(java.util.Calendar.DAY_OF_WEEK) - 1;
+                int days = (y * 7) + x + 1 - firstDayOfWeek;
 
-                daySelected[0] = days + firstDayOfWeek;
+
+                daySelected[0] = days;
                 daySelected[1] = month;
                 daySelected[2] = year;
 
@@ -583,7 +670,9 @@ public class Calendar extends View {
 
                 date[0] = month;
                 date[1] = year;
-                if (isInMonth(daySelected[0], date)) {
+
+
+                if (days > 0 && days <= getDaysInMoth(month, year)) {
                     if (clickListener != null) {
                         clickListener.onClick(days, month, year);
                     }
@@ -603,6 +692,7 @@ public class Calendar extends View {
     }
 
     public void scrolling(int x) {
+        setHeight();
         int dur = 300 / getWidth() * Math.abs(offsetX);
         if (swipe != 0) {
             dur = 300 - (300 / getWidth() * Math.abs(offsetX));

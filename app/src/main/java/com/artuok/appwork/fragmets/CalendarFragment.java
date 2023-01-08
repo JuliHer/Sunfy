@@ -3,7 +3,6 @@ package com.artuok.appwork.fragmets;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Intent;
-import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
@@ -32,13 +31,16 @@ import com.artuok.appwork.adapters.BottomEventAdapter;
 import com.artuok.appwork.adapters.ScheduleAdapter;
 import com.artuok.appwork.db.DbHelper;
 import com.artuok.appwork.library.CalendarWeekView;
+import com.artuok.appwork.objects.Item;
 import com.artuok.appwork.objects.TaskEvent;
-import com.google.android.material.bottomsheet.BottomSheetBehavior;
-import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.artuok.appwork.objects.TextElement;
 import com.thekhaeng.pushdownanim.PushDownAnim;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 public class CalendarFragment extends Fragment {
@@ -48,7 +50,10 @@ public class CalendarFragment extends Fragment {
     com.artuok.appwork.library.Calendar calendarV;
 
     TextView schedule, calendar;
-    List<TaskEvent> element;
+    List<Item> element;
+
+    RecyclerView recyclerView;
+    BottomEventAdapter adapter;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -61,6 +66,16 @@ public class CalendarFragment extends Fragment {
         calendarV = root.findViewById(R.id.n_calendar);
         schedule = root.findViewById(R.id.schedule);
         calendar = root.findViewById(R.id.calendar);
+        recyclerView = root.findViewById(R.id.recyclerdate);
+
+        LinearLayoutManager manager = new LinearLayoutManager(requireActivity(), RecyclerView.VERTICAL, false);
+        recyclerView.setLayoutManager(manager);
+        recyclerView.setHasFixedSize(true);
+        Calendar t = Calendar.getInstance();
+        adapter = new BottomEventAdapter(requireActivity(), element);
+
+        loadEvents(t.get(Calendar.DAY_OF_MONTH), t.get(Calendar.MONTH), t.get(Calendar.YEAR));
+        recyclerView.setAdapter(adapter);
 
         PushDownAnim.setPushDownAnimTo(schedule)
                 .setDurationPush(100)
@@ -85,7 +100,10 @@ public class CalendarFragment extends Fragment {
         long time = (c.get(Calendar.HOUR_OF_DAY) * 60 * 60) + (c.get(Calendar.MINUTE) * 60);
         weekView.setViewRegisterListener(() -> weekView.scrollAt(time));
 
-        calendarV.addOnDateClickListener(this::showEvents);
+        calendarV.addOnDateClickListener((d, m, y) -> {
+            loadEvents(d, m, y);
+            adapter.notifyDataSetChanged();
+        });
         weekView.setDateListener(c1 -> showSubjectInfo(c1.getEvent().getTitle()));
         weekView.setSelectListener(this::startCreateActivity);
 
@@ -189,37 +207,6 @@ public class CalendarFragment extends Fragment {
         c.close();
     }
 
-    public void showEvents(int dd, int mm, int yyyy) {
-        BottomSheetDialog dialog = new BottomSheetDialog(requireActivity());
-        BottomSheetBehavior<View> behavior;
-        View bottomSheet = LayoutInflater.from(requireActivity()).inflate(R.layout.event_bottom_sheet_layout, null);
-        dialog.setContentView(bottomSheet);
-
-
-        behavior = BottomSheetBehavior.from((View) bottomSheet.getParent());
-
-        behavior.setState(BottomSheetBehavior.STATE_HALF_EXPANDED);
-        LinearLayoutManager manager = new LinearLayoutManager(requireActivity(), LinearLayoutManager.VERTICAL, false);
-        BottomEventAdapter adapter = new BottomEventAdapter(requireActivity(), element);
-
-        LinearLayout layout = dialog.findViewById(R.id.bottom_sheet_layout);
-        RecyclerView recyclerView = dialog.findViewById(R.id.recycler);
-
-        recyclerView.setLayoutManager(manager);
-
-        element.clear();
-        loadEvents(dd, mm, yyyy);
-
-
-        if (element.size() != 0) {
-            dialog.show();
-            recyclerView.setAdapter(adapter);
-
-            assert layout != null;
-            layout.setMinimumHeight(Resources.getSystem().getDisplayMetrics().heightPixels / 2);
-        }
-    }
-
     public void loadEvents(int dd, int mm, int yyyy) {
         DbHelper dbHelper = new DbHelper(requireActivity().getApplicationContext());
         SQLiteDatabase db = dbHelper.getReadableDatabase();
@@ -228,8 +215,25 @@ public class CalendarFragment extends Fragment {
         String d = dd < 10 ? "0" + dd : "" + dd;
 
         String date = yyyy + "-" + m + "-" + d + " 00:00:00";
-        String dated = yyyy + "-" + m + "-" + d + " 33:59:59";
-        Cursor c = db.rawQuery("SELECT * FROM " + DbHelper.t_task + " WHERE end_date BETWEEN '" + date + "' AND '" + dated + "'", null);
+        String dated = yyyy + "-" + m + "-" + d + " 23:59:59";
+
+        element.clear();
+
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        Date time = new Date();
+        try {
+            time = format.parse(date);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        format.applyPattern("MMMM dd, yyyy");
+
+        String dt = format.format(time);
+
+        element.add(new Item(new TextElement(dt), 1));
+
+        Cursor c = db.rawQuery("SELECT * FROM " + DbHelper.t_task + " WHERE end_date BETWEEN '" + date + "' AND '" + dated + "' ORDER BY end_date ASC", null);
         if (c.moveToFirst()) {
             do {
                 String ti = c.getString(5);
@@ -257,8 +261,7 @@ public class CalendarFragment extends Fragment {
                 if (b.moveToFirst()) {
                     color = b.getInt(0);
                 }
-                element.add(new TaskEvent(ti, "", tim, color));
-
+                element.add(new Item(new TaskEvent(ti, "", tim, color), 0));
                 b.close();
             } while (c.moveToNext());
         }
@@ -303,6 +306,7 @@ public class CalendarFragment extends Fragment {
                 .setScale(PushDownAnim.MODE_SCALE, 0.95f)
                 .setOnClickListener(view -> {
                     dialog.dismiss();
+
                 });
 
         RecyclerView r = dialog.findViewById(R.id.recycler);

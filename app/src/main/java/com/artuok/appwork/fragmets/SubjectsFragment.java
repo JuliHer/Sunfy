@@ -8,6 +8,7 @@ import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -35,6 +36,8 @@ import com.artuok.appwork.dialogs.PermissionDialog;
 import com.artuok.appwork.objects.ColorSelectElement;
 import com.artuok.appwork.objects.ItemSubjectElement;
 import com.artuok.appwork.objects.SubjectElement;
+import com.faltenreich.skeletonlayout.Skeleton;
+import com.faltenreich.skeletonlayout.SkeletonLayoutUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,6 +50,8 @@ public class SubjectsFragment extends Fragment {
     private LinearLayoutManager manager;
     private List<ItemSubjectElement> elements;
     private SubjectAdapter.SubjectClickListener listener;
+
+    private Skeleton skeleton;
 
     ImageView colorD;
     int color = 0;
@@ -65,19 +70,21 @@ public class SubjectsFragment extends Fragment {
 
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(manager);
+        recyclerView.setAdapter(adapter);
 
+        skeleton = SkeletonLayoutUtils.applySkeleton(recyclerView, R.layout.skeleton_subject_layout, 12);
 
-        loadSubjects(true);
+        TypedArray ta = requireActivity().obtainStyledAttributes(R.styleable.AppWidgetAttrs);
+        int shimmerColor = ta.getColor(R.styleable.AppWidgetAttrs_shimmerSkeleton, Color.GRAY);
+        int maskColor = ta.getColor(R.styleable.AppWidgetAttrs_maskSkeleton, Color.LTGRAY);
+
+        skeleton.setMaskColor(maskColor);
+        skeleton.setShimmerColor(shimmerColor);
+
+        new TaskAsinc().execute(true);
 
         return root;
     }
-
-
-
-
-
-
-
 
     public void showSubjectCreator() {
         final Dialog dialog = new Dialog(requireContext());
@@ -126,28 +133,24 @@ public class SubjectsFragment extends Fragment {
         values.put("color", color);
 
         db.insert(DbHelper.t_subjects, null, values);
-        loadSubjects(false);
+        new TaskAsinc().execute(false);
     }
 
-    void loadSubjects(boolean first) {
+    void loadSubjects() {
         elements.clear();
         elements.add(new ItemSubjectElement(1, (view, position) -> {
             showSubjectCreator();
         }));
         DbHelper helper = new DbHelper(requireActivity().getApplicationContext());
         SQLiteDatabase db = helper.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.t_subjects + " ORDER BY name DESC", null);
+        Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.t_subjects + " ORDER BY name ASC", null);
         if (cursor.moveToFirst()) {
             do {
                 elements.add(new ItemSubjectElement(new SubjectElement(cursor.getString(1), cursor.getInt(2)), 0));
             } while (cursor.moveToNext());
         }
 
-        if (first) {
-            recyclerView.setAdapter(adapter);
-        } else {
-            adapter.notifyDataSetChanged();
-        }
+
         cursor.close();
     }
 
@@ -224,7 +227,7 @@ public class SubjectsFragment extends Fragment {
             db.delete(DbHelper.t_event, "subject = '" + idSubject + "'", null);
             db.delete(DbHelper.t_subjects, "name = " + subject, null);
             ((MainActivity) requireActivity()).notifyAllChanged();
-            loadSubjects(false);
+            new TaskAsinc().execute(false);
         }
         c.close();
     }
@@ -242,5 +245,27 @@ public class SubjectsFragment extends Fragment {
         dialog.setNegative((view, which) -> dialog.dismiss());
 
         dialog.show(requireActivity().getSupportFragmentManager(), "A");
+
+
+    }
+
+    private class TaskAsinc extends AsyncTask<Boolean, Boolean, Boolean> {
+        @Override
+        protected void onPreExecute() {
+            skeleton.showSkeleton();
+            super.onPreExecute();
+        }
+
+        @Override
+        protected Boolean doInBackground(Boolean... booleans) {
+            loadSubjects();
+            return booleans[0];
+        }
+
+        @Override
+        protected void onPostExecute(Boolean b) {
+            adapter.notifyDataSetChanged();
+            skeleton.showOriginal();
+        }
     }
 }

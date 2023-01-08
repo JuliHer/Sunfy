@@ -17,13 +17,35 @@
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
-            <ProgressBar
-                android:id="@+id/progress_circular"
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="80dp"
-                android:layout_height="80dp"
-                android:indeterminateOnly="false"
-                android:progressDrawable="@drawable/circle_progress_yellow"
-                android:progress="60" />
+                android:layout_height="80dp">
+
+                <ProgressBar
+                    android:id="@+id/progress_circular"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:indeterminateOnly="false"
+                    android:progress="60"
+                    android:progressDrawable="@drawable/circle_progress_yellow"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <ImageView
+                    android:id="@+id/status_subject"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/ic_check_circle"
+                    android:padding="22dp"
+                    app:tint="?subTextColor"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
 
             <androidx.cardview.widget.CardView
                 android:id="@+id/cardColor"

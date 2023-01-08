@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -56,6 +57,7 @@ public class PermissionDialog extends DialogFragment {
         title.setText(titleDialog);
         text.setText(textDialog);
 
+
         ImageView draw = root.findViewById(R.id.drawable_dialog);
         draw.setImageDrawable(requireActivity().getDrawable(drawable));
 
@@ -70,6 +72,14 @@ public class PermissionDialog extends DialogFragment {
 
         return builder.create();
 
+    }
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View root = super.onCreateView(inflater, container, savedInstanceState);
+        getDialog().getWindow().setBackgroundDrawableResource(R.drawable.dialog_background);
+        return root;
     }
 
     public interface onResponseListener {

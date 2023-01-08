@@ -10,7 +10,6 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.text.TextPaint;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 
@@ -76,7 +75,7 @@ public class LineChart extends View {
         hintColor = ta.getColor(R.styleable.LineChart_hintColors, Color.GRAY);
         mTextHintColor = ta.getColor(R.styleable.LineChart_textValuesColor, Color.GRAY);
         mTextTitleColor = ta.getColor(R.styleable.LineChart_textTitleColor, Color.GRAY);
-        padding = ta.getColor(R.styleable.LineChart_padding, 0);
+        padding = ta.getDimensionPixelSize(R.styleable.LineChart_padding, 0);
         int textTitleSize = ta.getDimensionPixelSize(R.styleable.LineChart_textTitleSize, convertToSpToPx(16));
         int textValuesSize = ta.getDimensionPixelSize(R.styleable.LineChart_textValuesSize, convertToSpToPx(12));
 
@@ -95,50 +94,48 @@ public class LineChart extends View {
 
     private void drawing(Canvas canvas) {
         setValues();
+
         if (mData == null) {
             drawNoDataSet(canvas);
         } else {
-            heightValues = drawLines(canvas, mData);
-            drawValues(canvas);
+            heightValues = drawValues(canvas, mData);
+            drawLines(canvas);
             drawEvents(canvas);
         }
 
     }
 
     private void drawNoDataSet(Canvas canvas) {
-        int x = width / 2;
-        int y = height / 2;
+        int x = (width + padding) / 2;
+        int y = (height + padding) / 2;
 
         Rect textBounds = new Rect();
         String txt = "No Data Available";
-        mTextHintPaint.getTextBounds(txt, 0, txt.length(), textBounds);
+        mTextTitlePaint.getTextBounds(txt, 0, txt.length(), textBounds);
         y = (int) (y - textBounds.exactCenterY());
+        x = (int) (x - textBounds.exactCenterX());
 
-        canvas.drawText(txt, x, y, mTextHintPaint);
+        canvas.drawText(txt, x, y, mTextTitlePaint);
     }
 
     private void setValues() {
-        Log.d("cattoPading", padding + " dd");
-        height = getHeight() - (padding * 2);
-        width = getWidth() - (padding * 2);
+        height = getHeight() - padding;
+        width = getWidth() - padding;
         if (mData != null) {
             if (mData.size() > 0) {
-                xSizes = width / (getMaxX() - 1);
-                ySizes = height / getMaxY();
+                xSizes = ((width - padding)) / (getMaxX() - 1);
             }
         }
+
     }
 
-    private void drawValues(Canvas canvas) {
-
+    private void drawLines(Canvas canvas) {
         LineChartData d = getMaxLCDX();
-
         Rect txtBounds = new Rect();
         String text = d.getData().get(d.getData().size() - 1).getXS();
         mTextHintPaint.getTextBounds(text, 0, text.length(), txtBounds);
 
-
-        int interpolate = (getWidth() - txtBounds.width()) / (getMaxX() - 1);
+        int interpolate = ((width - padding) - txtBounds.width()) / (getMaxX() - 1);
 
         int heightMX = 0;
         for (int i = 0; i < getMaxX(); i++) {
@@ -150,52 +147,52 @@ public class LineChart extends View {
         }
 
         heightMX += convertToDpToPx(5);
-        for (int i = 0; i < getMaxX(); i++) {
 
-            int y = padding + height - heightValues - convertToDpToPx(5);
+        for (int i = 0; i < getMaxX(); i++) {
+            int y = height - heightValues - convertToDpToPx(5);
+            int x = padding + ((interpolate) * i);
+
             Rect textBounds = new Rect();
             String txt = d.getData().get(i).getXS();
             mTextHintPaint.getTextBounds(txt, 0, txt.length(), textBounds);
-            int x = (interpolate) * i;
+
             y = (int) (y - textBounds.exactCenterY());
 
             canvas.drawText(txt, x, y, mTextHintPaint);
 
-            int fx = (int) (x + txtBounds.exactCenterX());
-            RectF rectF = new RectF(fx, 0, fx + convertToDpToPx(1), y - heightMX - convertToDpToPx(4));
+            int fx = padding + (xSizes * i);
+            RectF rectF = new RectF(fx, padding, fx + convertToDpToPx(1), y - heightMX - convertToDpToPx(4));
             canvas.drawRect(rectF, hintPaint);
         }
-        xSizes = interpolate;
-        int posY = padding + height - heightValues - heightMX - convertToDpToPx(5);
-        heightWorkZone = posY;
 
-        RectF rectF = new RectF(0, posY, width, posY + convertToDpToPx(2));
+        int posY = height - heightValues - heightMX - convertToDpToPx(5);
+        RectF rectF = new RectF(padding, posY, width, posY + convertToDpToPx(2));
         canvas.drawRect(rectF, hintPaint);
+        ySizes = interpolate;
+        heightWorkZone = posY;
     }
 
     private void drawEvents(Canvas canvas) {
-        int point = heightWorkZone / getMaxY();
         LineChartData da = getMaxLCDX();
+        int point = (heightWorkZone - padding) / getMaxY();
+
 
         Rect txtBounds = new Rect();
         String text = da.getData().get(da.getData().size() - 1).getXS();
         mTextHintPaint.getTextBounds(text, 0, text.length(), txtBounds);
         for (LineChartData data : mData) {
             int color = data.getColor();
-
             Paint bcolor = new Paint(Paint.ANTI_ALIAS_FLAG);
             bcolor.setColor(color);
             int pos = 0;
             Path a = new Path();
             Path bg = new Path();
-
-
             int lx = 0;
             int ly = 0;
             int startx = 0;
             int finalx = 0;
             for (LineChartDataSet d : data.getData()) {
-                int x = (int) ((xSizes * pos) + txtBounds.exactCenterX());
+                int x = padding + (xSizes * pos);
                 int y = heightWorkZone - (point * d.getY());
 
                 if (pos == 0) {
@@ -225,9 +222,7 @@ public class LineChart extends View {
 
 
             canvas.clipPath(bg);
-
             canvas.drawRect(0, 0, width, height, bgPaint);
-
 
             canvas.restore();
 
@@ -239,7 +234,7 @@ public class LineChart extends View {
             canvas.drawPath(a, pincel);
             pos = 0;
             for (LineChartDataSet d : data.getData()) {
-                int x = (int) ((xSizes * pos) + txtBounds.exactCenterX());
+                int x = padding + (xSizes * pos);
                 int y = heightWorkZone - (point * d.getY());
 
                 canvas.drawCircle(x, y, convertToDpToPx(5), bcolor);
@@ -249,19 +244,21 @@ public class LineChart extends View {
         }
     }
 
-    private int drawLines(Canvas canvas, ArrayList<LineChartData> data) {
+    private int drawValues(Canvas canvas, ArrayList<LineChartData> data) {
         int x = padding;
-        int y = padding + height;
+        int y = height;
 
         int drawed = 0;
 
         int heightMx = 0;
+        int heightMn = 1000;
 
         for (LineChartData d : data) {
             Rect textBounds = new Rect();
             String txt = d.getTitle();
             mTextTitlePaint.getTextBounds(txt, 0, txt.length(), textBounds);
             heightMx = Math.max(heightMx, textBounds.height());
+            heightMn = Math.min(heightMx, textBounds.height());
         }
 
         for (LineChartData d : data) {
@@ -276,7 +273,7 @@ public class LineChart extends View {
             Paint circle = new Paint(Paint.ANTI_ALIAS_FLAG);
             circle.setColor(d.getColor());
 
-            canvas.drawCircle(x + (heightMx / 2), (fy + textBounds.exactCenterY()), (heightMx / 2), circle);
+            canvas.drawCircle(x + (heightMx / 2), (fy + textBounds.exactCenterY()), (heightMn / 2), circle);
 
             canvas.drawText(txt, fx, fy, mTextTitlePaint);
             drawed++;

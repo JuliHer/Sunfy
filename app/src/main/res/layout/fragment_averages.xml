@@ -120,7 +120,8 @@
                         android:id="@+id/line_chart"
                         android:layout_width="match_parent"
                         android:layout_height="200dp"
-                        android:padding="5dp" />
+                        app:padding="15dp"
+                        style="@style/AveragesLineChart" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 

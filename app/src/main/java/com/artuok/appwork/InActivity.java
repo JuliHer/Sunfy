@@ -4,6 +4,7 @@ import android.app.AlarmManager;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -11,7 +12,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
@@ -21,11 +21,17 @@ import com.artuok.appwork.services.AlarmWorkManager;
 
 import java.util.Calendar;
 
+import kotlin.jvm.internal.Intrinsics;
+
 public class InActivity extends AppCompatActivity {
 
     public static final String CHANNEL_ID_1 = "CHANNEL_1";
     public static final String CHANNEL_ID_2 = "CHANNEL_2";
     public static final String CHANNEL_ID_3 = "CHANNEL_3";
+    public static final String CHANNEL_ID_4 = "CHANNEL_4";
+    public static final String CHANNEL_ID_5 = "CHANNEL_5";
+    public static final String GROUP_EVENTS = "com.artuok.appwork.EVENTS";
+    public static final String GROUP_SUBJECTS = "com.artuok.appwork.SUBJECTS";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,7 +41,8 @@ public class InActivity extends AppCompatActivity {
         Preferences();
 
         createNotificationChannel();
-        restauredAlarm();
+        setAlarm();
+        setAlarms();
         setAlarmSchedule();
 
         new Handler().postDelayed(this::loadMain, 500);
@@ -71,76 +78,18 @@ public class InActivity extends AppCompatActivity {
         notificationChannel2.setDescription("Channel for remember when you need to do homework");
         NotificationChannel notificationChannel3 = new NotificationChannel(CHANNEL_ID_3, "Alarm", NotificationManager.IMPORTANCE_HIGH);
         notificationChannel3.setDescription("Alarm to do homework");
+        NotificationChannel notificationChannel4 = new NotificationChannel(CHANNEL_ID_4, "Tomorrow Events", NotificationManager.IMPORTANCE_HIGH);
+        notificationChannel4.setDescription("Events to do tomorrow");
+        NotificationChannel notificationChannel5 = new NotificationChannel(CHANNEL_ID_5, "Tomorrow SUBJECTS", NotificationManager.IMPORTANCE_HIGH);
+        notificationChannel5.setDescription("Subjects tomorrow");
 
         NotificationManager manager = getSystemService(NotificationManager.class);
 
         manager.createNotificationChannel(notificationChannel2);
         manager.createNotificationChannel(notificationChannel1);
         manager.createNotificationChannel(notificationChannel3);
-    }
-
-    void cancelAlarm() {
-        AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        Intent notify = new Intent(this, AlarmWorkManager.class)
-                .setAction(AlarmWorkManager.ACTION_TIME_TO_DO_HOMEWORK);
-        PendingIntent pendingNotify = PendingIntent.getBroadcast(
-                this,
-                0, notify,
-                0);
-        manager.cancel(pendingNotify);
-    }
-
-    void setAlarm(int hour, int minute, boolean alarm) {
-        final Calendar c = Calendar.getInstance();
-        long rest = 0;
-        int hr = 0;
-        if (c.get(Calendar.HOUR_OF_DAY) >= hour) {
-            hr = 24 + hour - c.get(Calendar.HOUR_OF_DAY);
-        } else {
-            hr = hour - c.get(Calendar.HOUR_OF_DAY);
-        }
-
-        int mr = minute - c.get(Calendar.MINUTE);
-
-        rest = (hr * 60L * 60L * 1000L) + (mr * 60L * 1000L);
-
-        Calendar a = Calendar.getInstance();
-        rest += a.getTimeInMillis();
-
-        a.setTimeInMillis(rest);
-
-
-        AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-
-
-        long diff = rest - Calendar.getInstance().getTimeInMillis();
-        int days = (int) (diff / 1000 / 60 / 60 / 24);
-        int hou = (int) (diff / 1000 / 60 / 60 % 24);
-        int min = (int) (diff / 1000 / 60 % 60);
-
-        Log.d("catto", "faltan " + days + "d " + hou + "h " + min + "m ");
-
-        Intent notify = new Intent(this, AlarmWorkManager.class)
-                .setAction(AlarmWorkManager.ACTION_TIME_TO_DO_HOMEWORK);
-        notify.putExtra("time", rest);
-        if (alarm) {
-            notify.putExtra("alarm", 1);
-        }
-        PendingIntent pendingNotify = PendingIntent.getBroadcast(
-                this,
-                0, notify,
-                PendingIntent.FLAG_UPDATE_CURRENT);
-
-        manager.cancel(pendingNotify);
-        manager.setExact(AlarmManager.RTC_WAKEUP, rest, pendingNotify);
-    }
-
-    void restauredAlarm() {
-        SharedPreferences sharedPreferences = getSharedPreferences("settings", Context.MODE_PRIVATE);
-        boolean as = sharedPreferences.getBoolean("AlarmSet", false);
-        int h = Integer.parseInt(sharedPreferences.getString("timeTDH", "11:00").split(":")[0]);
-        int m = Integer.parseInt(sharedPreferences.getString("timeTDH", "11:00").split(":")[1]);
-        setAlarm(h, m, as);
+        manager.createNotificationChannel(notificationChannel4);
+        manager.createNotificationChannel(notificationChannel5);
     }
 
     void setAlarmSchedule() {
@@ -210,5 +159,160 @@ public class InActivity extends AppCompatActivity {
         AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         manager.cancel(pendingNotify);
         manager.setExact(AlarmManager.RTC_WAKEUP, start - (60 * 5 * 1000), pendingNotify);
+    }
+
+    public void setAlarms() {
+        int dow = 0;
+
+        int id;
+        for (id = -1; dow < 7; ++dow) {
+            int b = getAlarm(dow);
+            if (b >= 0) {
+                id = b;
+                break;
+            }
+        }
+
+        if (id >= 0) {
+            DbHelper dbHelper = new DbHelper(this);
+            SQLiteDatabase db = dbHelper.getReadableDatabase();
+            Cursor row = db.rawQuery("SELECT * FROM alarm WHERE id = '" + id + '\'', null);
+            if (row.moveToFirst()) {
+                Intrinsics.checkNotNullExpressionValue(row, "row");
+                if (row.getCount() == 1) {
+                    long rest = row.getLong(2) * (long) 1000;
+                    Calendar calendar = Calendar.getInstance();
+                    int hour = calendar.get(11);
+                    int minute = calendar.get(12);
+                    long thour = 3600L * (long) hour + 60L * (long) minute;
+                    int tdow = calendar.get(7) - 1;
+                    dow += tdow;
+                    int r = tdow > dow ? 7 - (tdow + 1) + dow + 1 : dow + 1 - (tdow + 1);
+                    long time = (long) r * 86400000L + rest - thour * (long) 1000;
+                    setNotify(row.getInt(4), time);
+                }
+            }
+        }
+
+    }
+
+    private void setNotify(int type, long diff) {
+        long start = Calendar.getInstance().getTimeInMillis() + diff;
+
+        Intent notify = new Intent(this, AlarmWorkManager.class);
+        if (type == 0) {
+            notify.setAction(AlarmWorkManager.ACTION_TIME_TO_DO_HOMEWORK);
+        } else if (type == 1) {
+            notify.setAction(AlarmWorkManager.ACTION_TIME_TO_DO_HOMEWORK);
+            notify.putExtra("alarm", 1);
+        } else if (type == 2) {
+            notify.setAction(AlarmWorkManager.ACTION_TOMORROW_EVENTS);
+        }
+
+        PendingIntent pendingNotify = PendingIntent.getBroadcast(
+                this,
+                0, notify,
+                PendingIntent.FLAG_UPDATE_CURRENT
+        );
+
+        AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        manager.cancel(pendingNotify);
+        manager.setExact(AlarmManager.RTC_WAKEUP, start, pendingNotify);
+    }
+
+    private int getAlarm(int i) {
+        DbHelper dbHelper = new DbHelper(this);
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Calendar calendar = Calendar.getInstance();
+        String query = "";
+        int dow = (calendar.get(7) - 1 + i) % 7 + 1;
+        if (dow == 1) {
+            query = "AND sunday = '1'";
+        } else if (dow == 2) {
+            query = "AND monday = '1'";
+        } else if (dow == 3) {
+            query = "AND tuesday = '1'";
+        } else if (dow == 4) {
+            query = "AND wednesday = '1'";
+        } else if (dow == 5) {
+            query = "AND thursday = '1'";
+        } else if (dow == 6) {
+            query = "AND friday = '1'";
+        } else if (dow == 7) {
+            query = "AND saturday = '1'";
+        }
+
+        Cursor row = db.rawQuery("SELECT * FROM alarm WHERE last_alarm != '" + dow + "' " + query + " ORDER BY hour ASC", (String[]) null);
+        int hour = calendar.get(11);
+        int minute = calendar.get(12);
+        long time = 3600L * (long) hour + 60L * (long) minute;
+        int id = -1;
+        if (row.moveToFirst()) {
+            do {
+                if (calendar.get(7) != dow) {
+                    id = row.getInt(0);
+                    break;
+                }
+
+                if (row.getLong(2) >= time) {
+                    id = row.getInt(0);
+                    break;
+                }
+            } while (row.moveToNext());
+        }
+
+        row.close();
+        return id;
+    }
+
+
+    void setAlarm() {
+        DbHelper dbHelper = new DbHelper(this);
+        SQLiteDatabase dbr = dbHelper.getReadableDatabase();
+        SQLiteDatabase dbw = dbHelper.getWritableDatabase();
+        Cursor row = dbr.rawQuery(
+                "SELECT * FROM " + DbHelper.t_alarm + " WHERE title = 'TTDH' AND (alarm = '0' OR alarm = '1')",
+                null
+        );
+
+        if (row.getCount() < 1) {
+            ContentValues values = new ContentValues();
+            values.put("title", "TTDH");
+            values.put("hour", 39600L);
+            values.put("last_alarm", 1);
+            values.put("alarm", 0);
+            values.put("sunday", 1);
+            values.put("monday", 1);
+            values.put("tuesday", 1);
+            values.put("wednesday", 1);
+            values.put("thursday", 1);
+            values.put("friday", 1);
+            values.put("saturday", 1);
+
+            dbw.insert(DbHelper.t_alarm, null, values);
+        }
+
+        row.close();
+
+        row = dbr.rawQuery("SELECT * FROM " + DbHelper.t_alarm + " WHERE title = 'NDE' ", null);
+
+        if (row.getCount() < 1) {
+            ContentValues values = new ContentValues();
+            values.put("title", "NDE");
+            values.put("hour", 79200L);
+            values.put("last_alarm", 1);
+            values.put("alarm", 2);
+            values.put("sunday", 1);
+            values.put("monday", 1);
+            values.put("tuesday", 1);
+            values.put("wednesday", 1);
+            values.put("thursday", 1);
+            values.put("friday", 1);
+            values.put("saturday", 1);
+
+            dbw.insert(DbHelper.t_alarm, null, values);
+        }
+
+        row.close();
     }
 }

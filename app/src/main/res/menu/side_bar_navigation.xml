@@ -3,14 +3,22 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:showIn="navigation_view">
     <group android:checkableBehavior="single">
-        <item
-            android:id="@+id/nav_subject"
-            android:icon="@drawable/ic_layers"
-            android:title="@string/subjects_fragment_menu" />
-        <item
-            android:id="@+id/nav_averages"
-            android:icon="@drawable/ic_bar_chart"
-            android:title="@string/average_fragment_menu" />
+        <item android:title="Extras">
+            <menu>
+                <item
+                    android:id="@+id/nav_chat"
+                    android:icon="@drawable/message_circle"
+                    android:title="@string/chat" />
+                <item
+                    android:id="@+id/nav_averages"
+                    android:icon="@drawable/ic_bar_chart"
+                    android:title="@string/average_fragment_menu" />
+                <item
+                    android:id="@+id/nav_alarms"
+                    android:icon="@drawable/ic_clock"
+                    android:title="Alarms" />
+            </menu>
+        </item>
 
 
         <item android:title="@string/settings_menu">

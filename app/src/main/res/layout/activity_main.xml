@@ -68,6 +68,5 @@
         app:menu="@menu/side_bar_navigation"
         app:itemTextColor="@drawable/selected_navigationview_color"
         app:itemIconTint="@drawable/selected_navigationview_color"
-
         android:background="?cardBackgroundColorTask" />
 </androidx.drawerlayout.widget.DrawerLayout>

@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Canvas;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -25,8 +26,11 @@ import com.artuok.appwork.MainActivity;
 import com.artuok.appwork.R;
 import com.artuok.appwork.adapters.AwaitingAdapter;
 import com.artuok.appwork.db.DbHelper;
+import com.artuok.appwork.dialogs.AnnouncementDialog;
+import com.artuok.appwork.dialogs.PermissionDialog;
 import com.artuok.appwork.objects.AwaitingElement;
 import com.artuok.appwork.objects.Item;
+import com.artuok.appwork.objects.TextElement;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -64,6 +68,7 @@ public class AwaitingFragment extends Fragment {
                     removeTask(position);
                     break;
                 case ItemTouchHelper.RIGHT:
+
                     checkTask(position);
                     break;
             }
@@ -126,7 +131,6 @@ public class AwaitingFragment extends Fragment {
             if (elements.get(p).getType() == 0) {
 
             }
-
         };
     }
 
@@ -147,6 +151,8 @@ public class AwaitingFragment extends Fragment {
         String d = cursor.getCount() + "";
         String l = lose.getCount() + "";
         String h = requireActivity().getString(R.string.on_hold_string) + ": " + hold.getCount() + "";
+
+
         done.setText(d);
         onHold.setText(h);
         this.lose.setText(l);
@@ -154,6 +160,26 @@ public class AwaitingFragment extends Fragment {
         cursor.close();
         hold.close();
         lose.close();
+    }
+
+    public void showCongratulations() {
+        MediaPlayer mp = MediaPlayer.create(requireActivity(), R.raw.completed);
+        mp.start();
+
+        AnnouncementDialog dialog = new AnnouncementDialog();
+        dialog.setTitle(getString(R.string.completed_tasks));
+        dialog.setText(getString(R.string.congratulations_1));
+        dialog.setDrawable(R.drawable.ic_check_circle);
+        dialog.setBackgroundCOlor(requireActivity().getColor(R.color.blue_400));
+        dialog.setOnPositiveClickListener(requireActivity().getString(R.string.Accept_M), view -> {
+            dialog.dismiss();
+        });
+
+        dialog.setOnNegativeClickListener(requireActivity().getString(R.string.dismiss), view -> {
+            dialog.dismiss();
+        });
+
+        dialog.show(requireActivity().getSupportFragmentManager(), "Congratulations to user");
     }
 
     public void NotifyChanged() {
@@ -165,6 +191,7 @@ public class AwaitingFragment extends Fragment {
     }
 
     void loadAwaitings(boolean first) {
+
         DbHelper dbHelper = new DbHelper(requireActivity().getApplicationContext());
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         Calendar ti = Calendar.getInstance();
@@ -173,7 +200,9 @@ public class AwaitingFragment extends Fragment {
 
         Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.t_task + " WHERE status = '0' AND end_date > '" + min + "' ORDER BY end_date ASC", null);
 
+
         if (cursor.moveToFirst()) {
+            elements.add(new Item(new TextElement(requireActivity().getString(R.string.pending_activities)), 2));
             do {
                 Calendar c = Calendar.getInstance();
                 boolean e = true;
@@ -229,7 +258,9 @@ public class AwaitingFragment extends Fragment {
                 elements.add(new Item(eb, 0));
             } while (cursor.moveToNext());
         }
+
         loadLate();
+
         loadDone();
         cursor.close();
         if (first) {
@@ -254,6 +285,7 @@ public class AwaitingFragment extends Fragment {
         Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.t_task + " WHERE status = '0' AND end_date <= '" + min + "' ORDER BY end_date ASC", null);
 
         if (cursor.moveToFirst()) {
+            elements.add(new Item(new TextElement(requireActivity().getString(R.string.overdue_tasks)), 2));
             do {
                 Calendar c = Calendar.getInstance();
                 boolean e = true;
@@ -316,9 +348,10 @@ public class AwaitingFragment extends Fragment {
     void loadDone() {
         DbHelper dbHelper = new DbHelper(requireActivity().getApplicationContext());
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.t_task + " WHERE status = '1' ORDER BY end_date ASC", null);
+        Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.t_task + " WHERE status = '1' ORDER BY end_date DESC", null);
 
         if (cursor.moveToFirst()) {
+            elements.add(new Item(new TextElement(requireActivity().getString(R.string.completed_tasks)), 2));
             do {
                 Calendar c = Calendar.getInstance();
                 boolean e = true;
@@ -401,7 +434,7 @@ public class AwaitingFragment extends Fragment {
         adapter.notifyItemRemoved(position);
 
         if (i >= 0) {
-            ((MainActivity) requireActivity()).notifyChanged(i);
+            ((MainActivity) requireActivity()).notifyChanged(i + 1);
         } else {
             ((MainActivity) requireActivity()).notifyAllChanged();
         }
@@ -413,33 +446,88 @@ public class AwaitingFragment extends Fragment {
         int id = ((AwaitingElement) elements.get(position).getObject()).getId();
 
         Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.t_task + " WHERE id = '" + id + "'", null);
+        boolean sa = false;
         if (cursor.moveToFirst() && cursor.getCount() == 1) {
             boolean s = cursor.getInt(6) > 0;
+            sa = s;
             ContentValues values = new ContentValues();
-            ((AwaitingElement) elements.get(position).getObject()).setStatusB(!s);
+            if (s) {
+                PermissionDialog permissionDialog = new PermissionDialog();
 
-            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            String dat = format.format(new Date());
 
-            values.put("date", dat);
-            values.put("status", !s);
-            SQLiteDatabase db2 = dbHelper.getWritableDatabase();
-            db2.update(DbHelper.t_task, values, " id = '" + id + "'", null);
+                permissionDialog.setTitleDialog(requireActivity().getString(R.string.uncheck));
+                permissionDialog.setTextDialog(requireActivity().getString(R.string.uncheck_task));
+                permissionDialog.setDrawable(R.drawable.ic_check_circle);
+                permissionDialog.setNegative((view, which) -> {
+                    permissionDialog.dismiss();
+                    cursor.close();
+                });
+
+                permissionDialog.setPositive((view, which) -> {
+                    ((AwaitingElement) elements.get(position).getObject()).setStatusB(!s);
+
+                    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                    String dat = format.format(new Date());
+
+                    values.put("date", dat);
+                    values.put("status", !s);
+                    SQLiteDatabase db2 = dbHelper.getWritableDatabase();
+                    db2.update(DbHelper.t_task, values, " id = '" + id + "'", null);
+                    permissionDialog.dismiss();
+
+                    adapter.notifyItemChanged(position);
+                    int i = 0;
+                    try {
+                        i = getPositionOfId(requireActivity(), id);
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
+
+                    cursor.close();
+
+                    if (i >= 0) {
+                        ((MainActivity) requireActivity()).notifyChanged(i + 1);
+                    } else {
+                        ((MainActivity) requireActivity()).notifyAllChanged();
+                    }
+                });
+
+                permissionDialog.show(requireActivity().getSupportFragmentManager(), "C");
+            } else {
+                ((AwaitingElement) elements.get(position).getObject()).setStatusB(!s);
+
+                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                String dat = format.format(new Date());
+
+                values.put("date", dat);
+                values.put("status", !s);
+                SQLiteDatabase db2 = dbHelper.getWritableDatabase();
+                db2.update(DbHelper.t_task, values, " id = '" + id + "'", null);
+
+                adapter.notifyItemChanged(position);
+                int i = 0;
+                try {
+                    i = getPositionOfId(requireActivity(), id);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+
+                cursor.close();
+
+                if (i >= 0) {
+                    ((MainActivity) requireActivity()).notifyChanged(i + 1);
+                } else {
+                    ((MainActivity) requireActivity()).notifyAllChanged();
+                }
+                Cursor pendingTasks = db.rawQuery("SELECT * FROM " + DbHelper.t_task + " WHERE status = '0'", null);
+                if (pendingTasks.getCount() < 1) {
+                    showCongratulations();
+                }
+            }
         }
-        int i = 0;
-        try {
-            i = getPositionOfId(requireActivity(), id);
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
 
-        cursor.close();
+
         adapter.notifyItemChanged(position);
-        if (i >= 0) {
-            ((MainActivity) requireActivity()).notifyChanged(i);
-        } else {
-            ((MainActivity) requireActivity()).notifyAllChanged();
-        }
 
     }
 

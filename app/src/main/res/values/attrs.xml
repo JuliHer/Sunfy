@@ -5,6 +5,7 @@
         <attr name="appWidgetRadius" format="dimension" />
         <attr name="apptintIconCOlor" format="color" />
         <attr name="backgroundDialog" format="color" />
+        <attr name="backgroundAlert" format="color" />
         <attr name="backgroundBorder" format="color" />
         <attr name="subTextColor" format="color" />
 
@@ -24,6 +25,14 @@
         <attr name="palette_purple" format="color" />
         <attr name="cardBackgroundColorTask" format="color" />
         <attr name="imageBackground" format="reference" />
+
+        <attr name="shimmerSkeleton" format="color" />
+        <attr name="maskSkeleton" format="color" />
+        <attr name="shimmerHintSkeleton" format="color" />
+        <attr name="maskHintSkeleton" format="color" />
+
+        <attr name="hintInputColor" format="color" />
+        <attr name="hintViewGrayColor" format="color" />
     </declare-styleable>
 
     <declare-styleable name="CalendarWeekView">

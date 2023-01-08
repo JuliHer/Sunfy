@@ -45,11 +45,11 @@ public class AlarmActivity extends AppCompatActivity {
     Handler postpone;
     LinearLayout linearLayout1;
 
+    int height = 0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ringing);
-        Preferences();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
             setShowWhenLocked(true);
             setTurnScreenOn(true);
@@ -62,11 +62,12 @@ public class AlarmActivity extends AppCompatActivity {
                     WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         }
 
+
         linearLayout1 = findViewById(R.id.time_context);
         fhour = findViewById(R.id.time_clock);
         TextView info = findViewById(R.id.info);
         setPendents(info);
-        ConstraintLayout akc = findViewById(R.id.akc);
+        LinearLayout akc = findViewById(R.id.akc);
 
         ViewGroup.MarginLayoutParams a = (ViewGroup.MarginLayoutParams) akc.getLayoutParams();
         a.setMargins(a.leftMargin, statusBarHeight() + a.topMargin, a.rightMargin, a.bottomMargin);
@@ -115,14 +116,7 @@ public class AlarmActivity extends AppCompatActivity {
                     MoreFiveMinutes();
                     finish();
                 });
-        AppCompatButton buttonDH = findViewById(R.id.do_homeworks);
-        PushDownAnim.setPushDownAnimTo(buttonDH)
-                .setScale(PushDownAnim.MODE_SCALE, 0.98f)
-                .setDurationPush(100)
-                .setOnClickListener(view -> {
-                    cancelVibration();
-                    doMyHomework(linearLayout1);
-                });
+
         AppCompatButton buttonOK = findViewById(R.id.ok);
         PushDownAnim.setPushDownAnimTo(buttonOK)
                 .setScale(PushDownAnim.MODE_SCALE, 0.98f)
@@ -140,9 +134,12 @@ public class AlarmActivity extends AppCompatActivity {
             }
         }, 60000);
 
+
+        ConstraintLayout swip = findViewById(R.id.swipper);
         registerReceiver(receiver, new IntentFilter(Intent.ACTION_TIME_TICK));
         vibrate();
     }
+
 
     @Override
     protected void onResume() {
