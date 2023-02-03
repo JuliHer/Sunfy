@@ -19,38 +19,44 @@
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:clipToPadding="false"
+        app:layout_constraintBottom_toTopOf="@+id/linearLayout2"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/toolbar2" />
+        app:layout_constraintTop_toBottomOf="@+id/toolbar2"
+        app:stackFromEnd="true" />
 
     <LinearLayout
+        android:id="@+id/linearLayout2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:padding="10dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        android:padding="10dp"
-        android:gravity="center_vertical">
+        app:layout_constraintStart_toStartOf="parent">
 
         <EditText
-            android:layout_weight="1"
+            android:id="@+id/textInput"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:hint="Mensaje"
             android:layout_margin="5dp"
+            android:layout_weight="1"
+            android:background="@drawable/textinput_background"
+            android:hint="Mensaje"
+            android:maxLines="3"
             android:paddingHorizontal="10dp"
-            android:paddingVertical="6dp"
-            android:background="@drawable/textinput_background" />
+            android:paddingVertical="6dp" />
 
         <androidx.appcompat.widget.AppCompatImageButton
-            android:layout_marginStart="10dp"
-            android:background="@drawable/send_button"
+            android:id="@+id/sendMessage"
             android:layout_width="50dip"
             android:layout_height="50dip"
-            android:scaleType="center"
-            android:padding="5dp"
+            android:layout_marginStart="10dp"
+            android:background="@drawable/send_button"
             android:cropToPadding="false"
+            android:padding="5dp"
+            android:scaleType="center"
             android:src="@drawable/ic_baseline_send_24"
 
 

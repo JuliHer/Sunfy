@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:background="?iMainColor">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Verify"
+            android:textSize="18sp"
+            android:textColor="@color/white"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="170dp"
+        android:gravity="center"
+        android:padding="16dp"
+        android:orientation="vertical"
+        android:background="?backgroundDialog">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Write the code you received in sms"
+            android:layout_marginBottom="5dp"
+            android:layout_marginHorizontal="5dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/codeHiden"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:digits="0123456789"
+                android:maxLength="6"
+                android:hint="X X X X X X"
+                android:background="@drawable/textinput_background"
+                android:layout_marginHorizontal="5dp"
+                android:textAlignment="center"
+                android:paddingVertical="10dp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/timeout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAlignment="textEnd"
+            android:text="2:48"
+            android:layout_marginHorizontal="5dp"
+            android:textColor="?iMainColor" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="end"
+            android:layout_marginTop="15dp">
+
+            <TextView
+                android:id="@+id/positive"
+                android:paddingVertical="10dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/Accept_M"
+                android:background="?backgroundDialog"
+                android:textColor="?iMainColor" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

@@ -64,24 +64,31 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     class ChatViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-        TextView name, content;
+        TextView name, content, inviteBtn;
         ImageView perfilPhoto;
 
         public ChatViewHolder(@NonNull View itemView) {
             super(itemView);
             name = itemView.findViewById(R.id.chat_name);
             content = itemView.findViewById(R.id.chat_content);
-            PushDownAnim.setPushDownAnimTo(itemView)
+            inviteBtn = itemView.findViewById(R.id.inviteBtn);
+            PushDownAnim.setPushDownAnimTo(inviteBtn)
                     .setDurationPush(100)
-                    .setScale(PushDownAnim.MODE_SCALE, 0.98f)
-                    .setOnClickListener(this);
+                    .setScale(PushDownAnim.MODE_SCALE, 0.98f);
+
+            itemView.setOnClickListener(this);
         }
 
         void onBindData(ChatElement element) {
+            inviteBtn.setVisibility(View.GONE);
             String chat_name = element.getName();
-            String chat_number = element.getNumber();
+            String chat_number = element.getDesc();
             name.setText(chat_name);
             content.setText(chat_number);
+
+            if (!element.isLog()) {
+                inviteBtn.setVisibility(View.VISIBLE);
+            }
         }
 
         @Override

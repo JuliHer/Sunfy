@@ -145,7 +145,7 @@ public class homeFragment extends Fragment {
                 SimpleDateFormat format = new SimpleDateFormat("MMMM dd, yyyy");
                 String time = format.format(date);
 
-                elements.add(new Item(new TasksElement(title, time, task), 0));
+                elements.add(new Item(new TasksElement(title, time, i, task), 0));
             }
         } else {
             long today = d + (day * pos);

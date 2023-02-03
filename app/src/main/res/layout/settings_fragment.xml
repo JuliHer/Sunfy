@@ -60,6 +60,29 @@
         android:padding="5dp">
 
         <LinearLayout
+            android:id="@+id/deleteconversations"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/message_circle"
+                android:padding="16dp"
+                style="@style/drawabe"
+                app:tint="@color/red_500" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Delete conversations"
+                android:textSize="16sp"
+                android:textColor="@color/red_500" />
+        </LinearLayout>
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
@@ -80,6 +103,29 @@
                 android:textSize="16sp"
                 android:textColor="@color/red_500" />
         </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/closephonesession"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_trash"
+            android:padding="16dp"
+            style="@style/drawabe"
+            app:tint="@color/red_500" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Close Phone Session"
+            android:textSize="16sp"
+            android:textColor="@color/red_500" />
     </LinearLayout>
 
     <LinearLayout

@@ -132,12 +132,14 @@ public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         }
 
         void onBindData(TasksElement element) {
+            display_card.setVisibility(View.VISIBLE);
             date_title.setText(element.getTitle());
             date_txt.setText(element.getDate());
 
+
             if (element.getData().size() == 0 &&
-                    !element.getTitle().equals(mInflater.getContext().getString(R.string.today)) &&
-                    !element.getTitle().equals(mInflater.getContext().getString(R.string.tomorrow))) {
+                    element.getDay() != 0 &&
+                    element.getDay() != 1) {
                 display_card.setVisibility(View.GONE);
 
             } else {

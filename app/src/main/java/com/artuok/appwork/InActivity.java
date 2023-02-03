@@ -62,6 +62,7 @@ public class InActivity extends AppCompatActivity {
 
     void Preferences() {
         SharedPreferences sharedPreferences = getSharedPreferences("settings", MODE_PRIVATE);
+
         boolean b = sharedPreferences.getBoolean("DarkMode", false);
 
         if (b) {

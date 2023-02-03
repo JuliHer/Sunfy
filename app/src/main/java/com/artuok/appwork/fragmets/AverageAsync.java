@@ -5,15 +5,21 @@ import android.os.AsyncTask;
 public class AverageAsync {
 
     private ListenerOnEvent executeListeners;
+    private TaskAsync task;
 
     public AverageAsync(ListenerOnEvent executeListeners) {
+        task = new TaskAsync();
         this.executeListeners = executeListeners;
     }
 
     public void exec(boolean b) {
-        TaskAsync task = new TaskAsync();
+        if (task != null) {
+            task.execute(b);
+        }
+    }
 
-        task.execute(b);
+    public void stop(boolean mayInterruptIfRunning) {
+        task.cancel(mayInterruptIfRunning);
     }
 
     private class TaskAsync extends AsyncTask<Boolean, Boolean, Boolean> {

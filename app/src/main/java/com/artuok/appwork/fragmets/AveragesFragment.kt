@@ -65,8 +65,8 @@ class AveragesFragment : Fragment() {
         skeleton = recyclerView.applySkeleton(R.layout.skeleton_statistics_layout, 12)
 
         val ta = requireActivity().obtainStyledAttributes(R.styleable.AppWidgetAttrs)
-        val shimmerColor = ta.getColor(R.styleable.AppWidgetAttrs_shimmerHintSkeleton, Color.GRAY)
-        val maskColor = ta.getColor(R.styleable.AppWidgetAttrs_maskHintSkeleton, Color.LTGRAY)
+        val shimmerColor = ta.getColor(R.styleable.AppWidgetAttrs_shimmerSkeleton, Color.GRAY)
+        val maskColor = ta.getColor(R.styleable.AppWidgetAttrs_maskSkeleton, Color.LTGRAY)
 
         skeleton.maskColor = maskColor
         skeleton.shimmerColor = shimmerColor

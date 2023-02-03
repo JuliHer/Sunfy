@@ -1,10 +1,10 @@
 package com.artuok.appwork;
 
+import android.Manifest;
 import android.app.Activity;
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -17,12 +17,14 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.artuok.appwork.dialogs.AnnouncementDialog;
+import com.artuok.appwork.dialogs.PermissionDialog;
 import com.artuok.appwork.fragmets.AlarmsFragment;
 import com.artuok.appwork.fragmets.AveragesFragment;
 import com.artuok.appwork.fragmets.AwaitingFragment;
@@ -31,7 +33,6 @@ import com.artuok.appwork.fragmets.ChatFragment;
 import com.artuok.appwork.fragmets.SettingsFragment;
 import com.artuok.appwork.fragmets.SubjectsFragment;
 import com.artuok.appwork.fragmets.homeFragment;
-import com.artuok.appwork.services.AlarmWorkManager;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationBarView;
@@ -39,7 +40,6 @@ import com.google.android.material.navigation.NavigationView;
 import com.thekhaeng.pushdownanim.PushDownAnim;
 
 import java.util.Calendar;
-import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -77,14 +77,6 @@ public class MainActivity extends AppCompatActivity {
     Calendar alarmset;
 
     private static MainActivity instance;
-
-    private final ActivityResultLauncher<String> requestPermissionsLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
-        if (isGranted) {
-
-        } else {
-
-        }
-    });
 
     int position = 1;
 
@@ -288,7 +280,21 @@ public class MainActivity extends AppCompatActivity {
                     .setScale(PushDownAnim.MODE_SCALE, 0.98f)
                     .setDurationPush(100)
                     .setOnClickListener(view -> {
-                        Toast.makeText(this, "Action button", Toast.LENGTH_SHORT).show();
+                        SharedPreferences sharedPreferences = getSharedPreferences("chat", MODE_PRIVATE);
+                        boolean b = sharedPreferences.getBoolean("logged", false);
+                        if (b) {
+                            Intent i = new Intent(this, SelectActivity.class);
+                            if (ContextCompat.checkSelfPermission(this,
+                                    Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
+                                startActivity(i);
+                            } else if (shouldShowRequestPermissionRationale(Manifest.permission.READ_CONTACTS)) {
+                                showOnContextUI();
+                            } else {
+                                requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS);
+                            }
+                        } else {
+                            Toast.makeText(this, "Login to be able to chat", Toast.LENGTH_SHORT).show();
+                        }
                     });
         } else {
             actionButton.setImageResource(R.drawable.ic_baseline_add_24);
@@ -342,22 +348,6 @@ public class MainActivity extends AppCompatActivity {
         ((TextView) toolbar.findViewById(R.id.title)).setText(MainActivity.this.getString(R.string.app_name));
     }
 
-    Fragment getFragmentPosition(int pos) {
-
-        switch (pos) {
-            case 1:
-                return homefragment;
-            case 2:
-                return awaitingFragment;
-            case 3:
-                return subjectsFragment;
-            case 4:
-                return calendarFragment;
-        }
-
-        return null;
-    }
-
     public void notifyAllChanged() {
         if (homefragment.isAdded()) {
             homefragment.NotifyDataAdd();
@@ -399,25 +389,27 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    void setAlarmAt(String name, String description, Calendar c, boolean Alarm) {
-        AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+    private void showOnContextUI() {
+        PermissionDialog dialog = new PermissionDialog();
+        dialog.setTitleDialog(getString(R.string.required_permissions));
+        dialog.setTextDialog(getString(R.string.permissions_read_contacts_description));
+        dialog.setPositive((view, which) -> requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS));
 
-        int AlarmType = Alarm ? AlarmManager.RTC_WAKEUP : AlarmManager.RTC;
+        dialog.setNegative((view, which) -> {
+            dialog.dismiss();
+        });
 
-        Intent notify = new Intent(this, AlarmWorkManager.class).setAction(AlarmWorkManager.ACTION_NOTIFY);
-        notify.putExtra("title", name);
-        notify.putExtra("desc", description);
-
-        Random random = new Random();
-        int r = random.nextInt();
-        while (r == 0 || r == 1) {
-            r = random.nextInt();
-        }
-        PendingIntent pendingNotify = PendingIntent.getBroadcast(this, r, notify, 0);
-
-        alarmManager.setExact(AlarmType, c.getTimeInMillis(), pendingNotify);
+        dialog.setDrawable(R.drawable.users);
+        dialog.show(getSupportFragmentManager(), "permissions");
     }
 
+    private ActivityResultLauncher<String> requestPermissionLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(),
+            isGranted -> {
+                if (isGranted) {
+                    Intent i = new Intent(this, SelectActivity.class);
+                    startActivity(i);
+                }
+            });
 
     public static MainActivity getInstance() {
         return instance;

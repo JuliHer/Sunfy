@@ -76,6 +76,7 @@
     <string name="notify_with_an_alarm">Notify with an alarm</string>
     <string name="required_permissions">Required permissions</string>
     <string name="permissions_description">This app needs permissions for some features to work properly</string>
+    <string name="permissions_read_contacts_description">The application needs permissions to read contacts to be able to use the application\'s chat</string>
     <string name="permissions_denied">Permissions Denied</string>
     <string name="permissions_denied_description">Permissions were denied, so the feature is not available</string>
     <string name="congratulations">CONGRATULATIONS!</string>
@@ -123,4 +124,5 @@
     <string name="dismiss">Dismiss</string>
     <string name="overdue_tasks">Overdue Tasks</string>
     <string name="chat">Chat</string>
+    <string name="resend">Resend</string>
 </resources>

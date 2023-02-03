@@ -8,11 +8,17 @@ public class TasksElement {
     String date;
     String dateTime;
     List<TaskElement> data;
+    int day;
 
-    public TasksElement(String title, String date, List<TaskElement> data) {
+    public TasksElement(String title, String date, int day, List<TaskElement> data) {
         this.title = title;
         this.date = date;
         this.data = data;
+        this.day = day;
+    }
+
+    public int getDay() {
+        return day;
     }
 
     public String getDateTime() {

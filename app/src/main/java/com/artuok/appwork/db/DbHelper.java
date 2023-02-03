@@ -40,10 +40,6 @@ public class DbHelper extends SQLiteOpenHelper {
                 "duration LONG NOT NULL," +
                 "type INTEGER NOT NULL," +
                 "subject INTEGER NOT NULL)");
-    }
-
-    @Override
-    public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
         sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS " + t_alarm + "(" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "title TEXT NOT NULL," +
@@ -57,6 +53,11 @@ public class DbHelper extends SQLiteOpenHelper {
                 "thursday INTEGER NOT NULL," +
                 "friday INTEGER NOT NULL," +
                 "saturday INTEGER NOT NULL)");
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
+
 
         onCreate(sqLiteDatabase);
     }

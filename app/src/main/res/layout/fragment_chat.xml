@@ -1,14 +1,94 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".fragmets.ChatFragment">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recycler_chats"
+    <LinearLayout
+        android:id="@+id/chatRecycler"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingBottom="65dp"
-        android:clipToPadding="false" />
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_chats"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingBottom="65dp"
+            android:clipToPadding="false" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/login"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center">
+
+        <ImageView
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:src="@drawable/smartphone"
+            app:tint="?subTextColor" />
+
+        <TextView
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:text="Register with your phone number to be able to chat"
+            android:textAlignment="center"
+            android:textAllCaps="true" />
+
+        <TextView
+            android:id="@+id/loginButon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Log In"
+            android:textSize="18sp"
+            android:textAllCaps="true"
+            android:background="@drawable/button"
+            android:textColor="@color/white"
+            android:backgroundTint="?iMainColor"
+            android:paddingHorizontal="20dp"
+            android:paddingVertical="8dp"
+            android:layout_marginTop="10dp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/contactsPermissions"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:src="@drawable/users"
+            app:tint="?subTextColor" />
+
+        <TextView
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:text="Allows the reading of contacts to be able to use the chat"
+            android:textAlignment="center"
+            android:textAllCaps="true" />
+
+        <TextView
+            android:id="@+id/contactAllowPermissions"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Allow"
+            android:textSize="18sp"
+            android:textAllCaps="true"
+            android:background="@drawable/button"
+            android:textColor="@color/white"
+            android:backgroundTint="?iMainColor"
+            android:paddingHorizontal="20dp"
+            android:paddingVertical="8dp"
+            android:layout_marginTop="10dp" />
+    </LinearLayout>
 </FrameLayout>
