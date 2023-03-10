@@ -7,11 +7,14 @@ import android.database.sqlite.SQLiteOpenHelper;
 import androidx.annotation.Nullable;
 
 public class DbChat extends SQLiteOpenHelper {
-    private static final int DatabaseVersion = 12;
+    private static final int DatabaseVersion = 17;
     private static final String DatabaseName = "Chat";
     public static final String T_CHATS_OPEN = "open";
     public static final String T_CHATS_LOGGED = "LOGGED";
     public static final String T_CHATS_MSG = "MSG";
+    public static final String T_CHATS_EVENT = "EVENT";
+
+
 
 
     public DbChat(@Nullable Context context) {
@@ -35,11 +38,13 @@ public class DbChat extends SQLiteOpenHelper {
                 "regionISO TEXT NOT NULL," +
                 "chatId TEXT NOT NULL," +
                 "isLog INTEGER NOT NULL," +
-                "img TEXT NOT NULL," +
+                "img TEXT," +
+                "publicKey TEXT NOT NULL," +
+                "userId TEXT NOT NULL," +
                 "UNIQUE(phone))");
         sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS " + T_CHATS_MSG + "(" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                "MSG TEXT NOT NULL," +
+                "MSG TEXT," +
                 "me int NOT NULL," +
                 "timeSend TEXT NOT NULL," +
                 "name TEXT NOT NULL," +
@@ -47,12 +52,23 @@ public class DbChat extends SQLiteOpenHelper {
                 "number TEXT NOT NULL," +
                 "mid TEXT NOT NULL," +
                 "status INTEGER NOT NULL," +
+                "reply TEXT," +
+                "publicKey TEXT NOT NULL," +
+                "user TEXT," +
                 "UNIQUE(mid))");
+        sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS " + T_CHATS_EVENT+ "(" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "chat TEXT NOT NULL," +
+                "date LONG NOT NULL," +
+                "end_date LONG NOT NULL," +
+                "message LONG NOT NULL," +
+                "description VARCHAR(500)," +
+                "user TEXT NOT NULL,"+
+                "added INTEGER NOT NULL)");
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
-        sqLiteDatabase.execSQL("DROP TABLE " + T_CHATS_LOGGED);
         onCreate(sqLiteDatabase);
     }
 }

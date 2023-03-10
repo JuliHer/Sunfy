@@ -14,31 +14,34 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
-
             <TextView
                 android:id="@+id/calendar"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/calendar"
-                android:background="@drawable/button"
-                android:backgroundTint="?hintInputColor"
-                android:paddingVertical="4dp"
-                android:paddingHorizontal="8dp"
-                android:textColor="?subTextColor"
-                android:textStyle="bold"
+                android:background="@drawable/popup_buttons_active"
+                android:paddingVertical="8dp"
+                android:paddingHorizontal="16dp"
+                android:textColor="@color/white"
+                android:fontFamily="@font/poppins"
+                android:includeFontPadding="false"
+                android:textFontWeight="500"
                 android:layout_marginVertical="8dp"
-                android:layout_marginStart="8dp" />
+                android:layout_marginStart="8dp"
+                />
             <TextView
                 android:id="@+id/schedule"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/schedule"
-                android:background="@drawable/button"
-                android:backgroundTint="?hintInputColor"
-                android:paddingVertical="4dp"
-                android:paddingHorizontal="8dp"
+                android:background="@drawable/popup_buttons"
+
+                android:paddingVertical="8dp"
+                android:paddingHorizontal="16dp"
                 android:textColor="?subTextColor"
-                android:textStyle="bold"
+                android:fontFamily="@font/poppins"
+                android:includeFontPadding="false"
+                android:textFontWeight="500"
                 android:layout_marginVertical="8dp"
                 android:layout_marginStart="8dp" />
         </LinearLayout>
@@ -68,7 +71,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:background="@drawable/dialog_bg"
-                android:backgroundTint="?hintInputColor" />
+                android:backgroundTint="?hintInputColor"
+                android:paddingBottom="60dp"
+                android:clipToPadding="false"
+                />
         </LinearLayout>
 
     </LinearLayout>

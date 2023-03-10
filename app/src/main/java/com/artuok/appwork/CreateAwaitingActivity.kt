@@ -1,17 +1,26 @@
 package com.artuok.appwork
 
+import android.Manifest
 import android.app.DatePickerDialog
 import android.app.Dialog
 import android.app.TimePickerDialog
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.ContentValues
+import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.res.TypedArray
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.net.Uri
 import android.os.Bundle
 import android.os.PersistableBundle
 import android.provider.MediaStore
+import android.util.Base64
+import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -22,31 +31,52 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.cardview.widget.CardView
+import androidx.core.content.FileProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.artuok.appwork.adapters.ColorSelectAdapter
+import com.artuok.appwork.adapters.ImageAdapter
 import com.artuok.appwork.adapters.SubjectAdapter
 import com.artuok.appwork.db.DbHelper
-import com.artuok.appwork.fragmets.homeFragment
+import com.artuok.appwork.dialogs.PermissionDialog
 import com.artuok.appwork.objects.ColorSelectElement
 import com.artuok.appwork.objects.ItemSubjectElement
 import com.artuok.appwork.objects.SubjectElement
+import com.artuok.appwork.widgets.TodayTaskWidget
+import com.google.firebase.auth.FirebaseAuth
 import com.thekhaeng.pushdownanim.PushDownAnim
+import java.io.BufferedInputStream
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileOutputStream
 import java.util.*
 
 
 class CreateAwaitingActivity : AppCompatActivity() {
     private lateinit var activity: EditText
     private lateinit var chooseSubject: TextView
-    private lateinit var datePicker: TextView
+    private lateinit var datetext: TextView
+    private lateinit var timeText: TextView
+    private lateinit var datePicker: LinearLayout
     private lateinit var cameraPicker: CardView
     private lateinit var imgPreview: ImageView
     private lateinit var img: Bitmap;
+    private val auth = FirebaseAuth.getInstance()
 
-    private var subject: String = ""
-    private var datetime: String = ""
+    private var subject: Int = 0
+    private var datetime: Long = 0
+    private var dateMilis: Long = 0
+    private var timeMilis: Long = 0
     private lateinit var dateText: String
 
+    private lateinit var adapter : ImageAdapter
+    private lateinit var recyclerView : RecyclerView
+    private val returnIntent = Intent()
+
+    private var tempImage = ""
+
+    private val images : ArrayList<String> = ArrayList()
+    private val hashimages : ArrayList<String> = ArrayList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,12 +85,40 @@ class CreateAwaitingActivity : AppCompatActivity() {
         activity = findViewById(R.id.description_task)
         chooseSubject = findViewById(R.id.choose_subject)
         datePicker = findViewById(R.id.datepicker)
+        datetext = findViewById(R.id.datetext)
+        timeText = findViewById(R.id.timetext)
         cameraPicker = findViewById(R.id.camera)
+        recyclerView = findViewById(R.id.imagesRecycler)
+
+        adapter = ImageAdapter(this, images) { view, pos ->
+            images.removeAt(pos)
+            deleteFileInDevices(hashimages[pos])
+            hashimages.removeAt(pos)
+            adapter.notifyDataSetChanged()
+
+            if(images.size >= 5){
+                cameraPicker.visibility = View.GONE
+            }else{
+                cameraPicker.visibility = View.VISIBLE
+            }
+
+            resave()
+        }
+        val manager = LinearLayoutManager(this, RecyclerView.HORIZONTAL, false)
+
+        recyclerView.layoutManager = manager
+        recyclerView.setHasFixedSize(true)
+        recyclerView.isNestedScrollingEnabled = false
+        recyclerView.adapter = adapter
 
         preferences()
 
-        cameraPicker.setOnClickListener {
+        //if(verifyIfManageIfAndroidAcces()){
+        //    cameraPicker.visibility = View.GONE
+        //}
 
+        cameraPicker.setOnClickListener {
+            openSelectImage()
         }
 
         chooseSubject.setOnClickListener {
@@ -72,9 +130,8 @@ class CreateAwaitingActivity : AppCompatActivity() {
         val cancel: ImageView = findViewById(R.id.cancel_awaiting)
         val accept: Button = findViewById(R.id.accept_awaiting)
 
-        datePicker.setOnClickListener {
+        datetext.setOnClickListener {
             val calendar = Calendar.getInstance()
-
             val dd = calendar[Calendar.DAY_OF_MONTH]
             val mm = calendar[Calendar.MONTH]
             val aaaa = calendar[Calendar.YEAR]
@@ -82,27 +139,35 @@ class CreateAwaitingActivity : AppCompatActivity() {
             val timePicker = TimePickerDialog(this@CreateAwaitingActivity, { timePicker1: TimePicker?, i: Int, i1: Int ->
                 val a = if (i1 < 10) "0$i1" else i1.toString() + ""
                 val e = if (i < 10) "0$i" else i.toString() + ""
-                datetime += " $e:$a:00"
-                if (i > 12) {
-                    val b = i - 12
-                    dateText += " $b:$a PM"
-                } else {
-                    dateText += " $i:$a AM"
-                }
-                datePicker.setText(dateText)
-            }, 0, 0, false)
+                timeMilis = ((i*60*60)+(i1*60)) * 1000L
+                datetime = dateMilis + timeMilis
 
+                val s = if (i >= 12) {
+                    val b = if(i == 12){
+                        i
+                    }else{
+                        i - 12
+                    }
+
+                    "$b:$a p. m."
+                } else {
+                    "$i:$a a. m."
+                }
+
+                timeText.text = s
+            }, 12, 0, false)
 
             val datePicker = DatePickerDialog(this@CreateAwaitingActivity, { datePicker1: DatePicker?, i: Int, i1: Int, i2: Int ->
                 val m = i1 + 1
-                val e = if (m < 10) "0$m" else m.toString() + ""
-                val a = if (i2 < 10) "0$i2" else i2.toString() + ""
-                datetime = "$i-$e-$a"
-                val c = Calendar.getInstance()
-                c[i, i1, i2, 12, 0] = 0
-                val day = c[Calendar.DAY_OF_WEEK]
-                dateText = homeFragment.getDayOfWeek(this, day) + " " + i2 + ", " + homeFragment.getMonthMinor(this, i1) + " " + i
+                val e = if (m < 10) "0$m" else m.toString()
+                val a = if (i2 < 10) "0$i2" else i2.toString()
 
+                val c = Calendar.getInstance()
+                c.set(i, i1, i2, 0, 0, 0)
+                dateMilis = c.timeInMillis
+                datetime = dateMilis + timeMilis
+
+                datetext.text = "$a/$e/$i"
                 timePicker.show()
             }, dd, mm, aaaa)
 
@@ -113,25 +178,267 @@ class CreateAwaitingActivity : AppCompatActivity() {
 
             datePicker.datePicker.minDate = c.timeInMillis
             datePicker.show()
+
+        }
+
+        timeText.setOnClickListener {
+            val timePicker = TimePickerDialog(this@CreateAwaitingActivity, { timePicker1: TimePicker?, i: Int, i1: Int ->
+                val a = if (i1 < 10) "0$i1" else i1.toString() + ""
+                val e = if (i < 10) "0$i" else i.toString() + ""
+                timeMilis = ((i*60*60)+(i1*60)) * 1000L
+                datetime = dateMilis + timeMilis
+
+                val s = if (i >= 12) {
+                    val b = if(i == 12){
+                        i
+                    }else{
+                        i - 12
+                    }
+
+                    "$b:$a p. m."
+                } else {
+                    "$i:$a a. m."
+                }
+
+                timeText.text = s
+            }, 12, 0, false)
+
+            timePicker.show()
         }
 
         PushDownAnim.setPushDownAnimTo(cancel)
                 .setScale(PushDownAnim.MODE_SCALE, 0.95f)
                 .setDurationPush(100)
-                .setOnClickListener { view: View? -> finish() }
+                .setOnClickListener { finish() }
         PushDownAnim.setPushDownAnimTo(accept)
                 .setScale(PushDownAnim.MODE_SCALE, 0.95f)
                 .setDurationPush(100)
-                .setOnClickListener { view: View? ->
-                    if (!datetime.isEmpty()) {
-                        if (!subject.isEmpty()) {
-                            insertAwaiting("", datetime, subject, activity.text.toString())
+                .setOnClickListener {
+                    datetime = dateMilis + timeMilis
+                    if (datetime > 0) {
+                        if (subject > 0) {
+                            val l = insertAwaiting(activity.text.toString(), datetime, subject)
+
+                            if(images.size != 0)
+                                saveImagesInDevice(images, l)
+
+                            updateWidget()
+                            returnIntent.putExtra("requestCode", 2)
+                            setResult(RESULT_OK, returnIntent)
                             finish()
                         } else {
                             Toast.makeText(this@CreateAwaitingActivity, getString(R.string.select_subject), Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
+        getImages()
+    }
+
+    private fun updateWidget(){
+        val i = Intent(this, TodayTaskWidget::class.java)
+        i.action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+
+        val ids = AppWidgetManager.getInstance(this).getAppWidgetIds(ComponentName(this, TodayTaskWidget::class.java))
+        i.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+        sendBroadcast(i)
+    }
+
+    private fun openSelectImage(){
+        //if(!verifyIfManageIfAndroidAcces()) {
+            val dialog = Dialog(this)
+            dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+            dialog.setContentView(R.layout.bottom_selectimage_layout)
+
+            val openCamera = dialog.findViewById<LinearLayout>(R.id.captureImage)
+            val openGallery = dialog.findViewById<LinearLayout>(R.id.obtainImage)
+
+            openCamera.setOnClickListener {
+                if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    == PackageManager.PERMISSION_GRANTED
+                ) {
+                    openCamera()
+                } else if (shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                    showInContextUI(0)
+                } else {
+                    requestPermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                }
+                dialog.dismiss()
+            }
+
+            openGallery.setOnClickListener {
+                if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
+                    == PackageManager.PERMISSION_GRANTED
+                ) {
+                    getPictureGallery()
+                } else if (shouldShowRequestPermissionRationale(Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                    showInContextUI(1)
+                } else {
+                    requestPermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
+                }
+                dialog.dismiss()
+            }
+
+
+            dialog.show()
+            dialog.window!!.setLayout(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            dialog.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            dialog.window!!.attributes.windowAnimations = R.style.DialogAnimation
+            dialog.window!!.setGravity(Gravity.BOTTOM)
+        //}
+    }
+
+    private fun showInContextUI(i : Int) {
+
+        val dialog = PermissionDialog()
+        dialog.setTitleDialog(getString(R.string.required_permissions))
+        dialog.setDrawable(R.drawable.smartphone)
+
+        if(i == 0){
+            dialog.setTextDialog(getString(R.string.permissions_wres))
+            dialog.setPositive { it, i ->
+                requestPermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            }
+        }else if(i == 1){
+            dialog.setTextDialog(getString(R.string.permissions_wres))
+            dialog.setPositive { it, i ->
+                requestPermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
+            }
+        }else if( i== 2){
+            dialog.setDrawable(R.drawable.camera)
+            dialog.setTextDialog(getString(R.string.permissions_camera))
+            dialog.setPositive { it, i ->
+                requestPermissionLauncher.launch(Manifest.permission.CAMERA)
+            }
+        }else if( i == 3){
+            dialog.setTextDialog(getString(R.string.permissions_wres))
+            dialog.setPositive { it, i ->
+                requestPermissionLauncher.launch(Manifest.permission.MANAGE_EXTERNAL_STORAGE)
+            }
+        }
+
+
+        dialog.setNegative { view, which ->
+            dialog.dismiss()
+        }
+
+        dialog.show(supportFragmentManager, "permissions")
+    }
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean? ->
+        if (isGranted == true) {
+
+        }
+    }
+
+    private fun saveImagesInDevice(images: ArrayList<String>, id : Long) {
+        var i = 0
+        for (image in images){
+            val encodeByte: ByteArray = Base64.decode(image, Base64.DEFAULT)
+
+            try {
+                val map = BitmapFactory.decodeByteArray(encodeByte, 0, encodeByte.size)
+                saveImageInDevice(map, id, i)
+            } catch (e: java.lang.Exception) {
+                e.printStackTrace()
+            }
+
+            i++
+        }
+
+        deleteImages()
+    }
+
+    private fun deleteFileInDevices(path : String) : Boolean{
+        val file = File(path)
+
+        if(file.exists())
+            file.delete()
+        else
+            return false
+
+        return true
+    }
+
+    private fun saveImageInDevice(image: Bitmap, id : Long, img: Int) {
+        val root = getExternalFilesDir("Media")
+        val appname = getString(R.string.app_name)
+        val myDir = File(root, "$appname Images")
+        if(!myDir.exists()){
+            myDir.mkdirs()
+        }
+
+        val c = Calendar.getInstance()
+
+        val y = c.get(Calendar.YEAR)
+        val m = c.get(Calendar.MONTH)
+        val d = c.get(Calendar.DAY_OF_MONTH)
+
+
+        val mo = if(m+1 < 10) "0${m+1}" else "${m+1}"
+        val da = if(d < 10) "0$d" else "$d"
+
+        var i = 0
+
+        var si = "$i"
+
+        val t = "0000".substring(0, 4-si.length) + si
+
+        var fname = "${appname.uppercase()}-$y$mo$da-IMG$t.jpg"
+
+
+        var file = File(myDir, fname)
+
+        Log.d("CattoPath", file.path)
+        while(file.exists()){
+            si = "$i"
+            val t = "0000".substring(0, 4-si.length) + si
+            fname = "${appname.uppercase()}-$y$mo$da-IMG$t.jpg"
+            file = File(myDir, fname)
+            i++
+        }
+
+        if(file.exists())
+            file.delete()
+        try {
+            val out = FileOutputStream(file)
+            image.compress(Bitmap.CompressFormat.JPEG, 100, out)
+            out.flush()
+            out.close()
+
+            saveImageInDataBase(id, file)
+        }catch (e : Exception){
+            e.printStackTrace()
+        }
+    }
+
+    fun saveImageInDataBase(id : Long, file : File){
+        val dbHelper = DbHelper(this)
+        val db = dbHelper.writableDatabase
+        val cv = ContentValues()
+
+        val time = Calendar.getInstance().timeInMillis
+
+        cv.put("awaiting", id)
+        cv.put("name", file.name)
+        cv.put("path", file.path)
+        cv.put("timestamp", time)
+
+        db.insert(DbHelper.T_PHOTOS, null, cv)
+    }
+
+
+    override fun onResume() {
+        super.onResume()
+        adapter.notifyDataSetChanged()
+
+        if(images.size >= 5){
+            cameraPicker.visibility = View.GONE
+        }
     }
 
     private fun getDeadline() {
@@ -139,68 +446,286 @@ class CreateAwaitingActivity : AppCompatActivity() {
             val deadline = intent.extras!!.getLong("deadline", 0)
             val c = Calendar.getInstance()
             c.timeInMillis = deadline + 43200000
-            val d =
-                c[Calendar.YEAR].toString() + "-" + (c[Calendar.MONTH] + 1) + "-" + c[Calendar.DAY_OF_MONTH] + " 12:00:00"
+            val d = c.timeInMillis
 
-            datetime = d;
-            val dow = c[Calendar.DAY_OF_WEEK]
-            dateText = homeFragment.getDayOfWeek(
-                this@CreateAwaitingActivity,
-                dow
-            ) + " " + c[Calendar.DAY_OF_MONTH] + ", " +
-                    homeFragment.getMonthMinor(this, c[Calendar.MONTH]) +
-                    " " + c[Calendar.YEAR] + " 12:00 PM"
-            datePicker.text = dateText
+            datetime = d
+            val dd = c[Calendar.DAY_OF_MONTH]
+            val mm = c[Calendar.MONTH]+1
+            val aaaa = c[Calendar.YEAR]
+            val hh = c[Calendar.HOUR_OF_DAY]
+            val MM = if(c[Calendar.MINUTE] < 10) "0${c[Calendar.MINUTE]}" else "${c[Calendar.MINUTE]}"
+            val mmm = if(c[Calendar.MONTH]+1 < 10) "0${c[Calendar.MONTH]+1}" else "${c[Calendar.MONTH]+1}"
+            val tm = if(c[Calendar.AM_PM] == Calendar.AM) "a. m." else "p. m."
+
+
+            val hhh = if(hh > 12){
+                hh - 12
+            }else{
+                hh
+            }
+            datetext.text = "$dd/$mmm/$aaaa"
+            timeText.text = "$hhh:$MM $tm"
         }
     }
 
-    private fun insertAwaiting(name: String, date: String, subject: String, description: String) {
+    private fun insertAwaiting(name: String, date: Long, subject: Int): Long {
         val dbHelper = DbHelper(this@CreateAwaitingActivity)
         val db = dbHelper.writableDatabase
+        val now = Calendar.getInstance().timeInMillis
         val values = ContentValues()
-        val c = Calendar.getInstance()
-        val now = c[Calendar.YEAR].toString() + "-" + (c[Calendar.MONTH] + 1) + "-" + c[Calendar.DAY_OF_MONTH] + " " + c[Calendar.HOUR_OF_DAY] + ":" + c[Calendar.MINUTE] + ":" + c[Calendar.SECOND]
         values.put("date", now)
-        values.put("title", name)
         values.put("end_date", date)
         values.put("subject", subject)
-        values.put("description", description)
+        values.put("description", name)
         values.put("status", false)
-        db.insert(DbHelper.t_task, null, values)
 
-        val returnIntent = Intent()
-        returnIntent.putExtra("requestCode", 2)
-        setResult(RESULT_OK, returnIntent)
+        if(isLogin()){
+            values.put("user", auth.currentUser?.uid)
+            Log.d("CattoUser", auth.currentUser?.uid+"")
+        }else{
+            values.put("user", "noUser")
+        }
+
+        return db.insert(DbHelper.T_TASK, null, values)
+    }
+
+    private fun isLogin() : Boolean{
+        val s = getSharedPreferences("chat", Context.MODE_PRIVATE)
+
+        return s.getBoolean("logged", false)
+    }
+
+    private fun getPictureGallery(){
+        saveImages()
+        val i = Intent(Intent.ACTION_GET_CONTENT)
+        i.type = "image/*"
+        resultForGalleryPicture.launch(i)
     }
 
     private fun openCamera() {
-        resultLauncher.launch(Intent(MediaStore.ACTION_IMAGE_CAPTURE))
+        if(checkSelfPermission(Manifest.permission.CAMERA)
+            == PackageManager.PERMISSION_GRANTED){
+            saveImages()
+
+                val i = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+                i.putExtra(MediaStore.EXTRA_OUTPUT, getOutputFile())
+                resultLauncher.launch(i)
+        }else if(shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)){
+            showInContextUI(2)
+        }else{
+            requestPermissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }
+
+    private fun getOutputFile(): Uri{
+        val root = getExternalFilesDir("Media")
+        val appname = getString(R.string.app_name)
+        val myDir = File(root, "$appname Temp")
+        if(!myDir.exists()){
+            val m = myDir.mkdirs()
+            if(m){
+                val nomedia = File(myDir, ".nomedia")
+                try{
+                    nomedia.createNewFile()
+                }catch (e : Exception){
+                    e.printStackTrace()
+                }
+            }
+        }
+
+        val fname = "TEMP-"
+        val file = File.createTempFile(fname, "-${appname.uppercase()}.jpg", myDir)
+        tempImage = file.path
+        saveTempImg(tempImage)
+        return FileProvider.getUriForFile(this, "com.artuok.android.fileprovider", file)
+    }
+
+    fun verifyIfManageIfAndroidAcces() : Boolean{
+        if(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R){
+            return true
+        }
+
+        return false
     }
 
     override fun onSaveInstanceState(outState: Bundle, outPersistentState: PersistableBundle) {
         super.onSaveInstanceState(outState, outPersistentState)
-        outState.putString("subject", subject)
-        outState.putString("date", datetime)
+        outState.putInt("subject", subject)
+        outState.putLong("date", datetime)
         outState.putString("activity", activity.getText().toString())
         outState.putString("dateText", dateText)
         outState.putParcelable("img", img)
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
+    private fun galleryaddPic(path : String){
+        val mediaScanIntent = Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE)
+        val f = File(path)
+        val contentUri = Uri.fromFile(f)
+        mediaScanIntent.setData(contentUri)
+        sendBroadcast(mediaScanIntent)
     }
 
+    private var resultForGalleryPicture: ActivityResultLauncher<Intent> = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        if (it.resultCode == RESULT_OK) {
+            val data = it.data?.data!!
+            val c = contentResolver.query(data, null, null, null, null)
+
+            if(c != null && c.moveToFirst()){
+                val s = BufferedInputStream(contentResolver.openInputStream(data))
+                img = BitmapFactory.decodeStream(s)
+            }
+
+            val stream = ByteArrayOutputStream()
+            img.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+            val by = stream.toByteArray()
+            val s = Base64.encodeToString(by, Base64.DEFAULT)
+
+            saveTempImg("")
+            saveImage(s, tempImage)
+            getImages()
+
+        }
+    }
 
     private var resultLauncher: ActivityResultLauncher<Intent> = registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
     ) {
-        if (it.resultCode == RESULT_OK) {
 
-            val extras = it.data?.extras
-            img = extras?.get("data") as Bitmap
+        if (it.resultCode == RESULT_OK) {
+            if(tempImage == ""){
+                tempImage = getTempImg()
+            }
+            img = BitmapFactory.decodeFile(tempImage)
+            val stream = ByteArrayOutputStream()
+
+            img.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+            val by = stream.toByteArray()
+            val s = Base64.encodeToString(by, Base64.DEFAULT)
+
+            saveTempImg("")
+            saveImage(s, tempImage)
+            getImages()
         }
     }
+    fun getTempImg(): String {
+        val sr = getSharedPreferences("images", Context.MODE_PRIVATE)
+
+        return sr.getString("TempImg", "")!!
+    }
+
+    fun saveTempImg(temp : String){
+        val sr = getSharedPreferences("images", Context.MODE_PRIVATE)
+        val se = sr.edit()
+
+        se.putString("TempImg", temp)
+
+        se.apply()
+    }
+
+    fun resave(){
+        val sr = getSharedPreferences("images", Context.MODE_PRIVATE)
+        val se = sr.edit()
+
+        var i = 0
+        for (x in images){
+            val name = "Images$i"
+            se.putString(name, x)
+            i++
+        }
+
+        for(x in i until 4){
+            val name = "Images$x"
+            se.putString(name, "")
+        }
+
+        se.apply()
+    }
+
+    private fun saveImage(s : String, temp : String){
+        val sr = getSharedPreferences("images", Context.MODE_PRIVATE)
+        val se = sr.edit()
+        se.putString("Images0", s)
+        se.putString("ImagesTemp0", temp)
+        se.apply()
+    }
+
+    private fun saveImages(){
+        val sr = getSharedPreferences("images", Context.MODE_PRIVATE)
+        val se = sr.edit()
+
+        var i = 1
+        for (x in images){
+            val name = "Images$i"
+            se.putString(name, x)
+            val tmpname = "ImagesTemp$i"
+            se.putString(tmpname, hashimages[i-1])
+            i++
+        }
+
+        for(x in i until 4){
+            val name = "Images$x"
+            se.putString(name, "")
+            val tmpname = "ImagesTemp$i"
+            se.putString(tmpname, "")
+        }
+
+        se.apply()
+    }
+
+    private fun deleteImages(){
+        val sr = getSharedPreferences("images", Context.MODE_PRIVATE)
+        val se = sr.edit()
+
+        var i = 0
+        for (x in images){
+            val name = "Images$i"
+            se.putString(name, "")
+            val tmpName = "ImagesTemp$i"
+            se.putString(tmpName, "")
+            deleteFileInDevices(hashimages[i])
+            i++
+        }
+
+        for(x in i until 4){
+            val name = "Images$x"
+            se.putString(name, "")
+            val tmpName = "ImagesTemp$x"
+            se.putString(tmpName, "")
+        }
+
+        se.apply()
+    }
+
+    private fun getImages(){
+        val sr = getSharedPreferences("images", Context.MODE_PRIVATE)
+        var data = sr.getString("Images0", "")!!
+        var temp = sr.getString("ImagesTemp0", "")!!
+
+        if(data != ""){
+            if(!images.contains(data)){
+                images.add(data)
+                hashimages.add(temp)
+            }
+        }
+        var i = 1
+        while(data != ""){
+            data = sr.getString("Images$i", "")!!
+            temp = sr.getString("ImagesTemp$i", "")!!
+
+            if(data != "") {
+                if(!images.contains(data)){
+                    images.add(data)
+                    hashimages.add(temp)
+                }
+            }
+            i++
+        }
+        adapter.notifyDataSetChanged()
+    }
+
+
 
 
     private fun setSelectSubject(a: TextView) {
@@ -215,9 +740,10 @@ class CreateAwaitingActivity : AppCompatActivity() {
         val manager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
         val elements: List<ItemSubjectElement> = getSubjects()
         val adapter = SubjectAdapter(this, elements) { view: View?, position: Int ->
-            subject = (elements[position].getObject() as SubjectElement).name
+            subject = (elements[position].getObject() as SubjectElement).id
+            val subjectText = (elements[position].getObject() as SubjectElement).name
             subjectDialog.dismiss()
-            a.setText(subject)
+            a.text = subjectText
         }
         val add = subjectDialog.findViewById<LinearLayout>(R.id.add_subject)
         add.setOnClickListener { view: View? ->
@@ -234,10 +760,10 @@ class CreateAwaitingActivity : AppCompatActivity() {
         val dbHelper = DbHelper(this)
         val db = dbHelper.readableDatabase
         val elements: MutableList<ItemSubjectElement> = ArrayList()
-        val cursor = db.rawQuery("SELECT * FROM " + DbHelper.t_subjects + " ORDER BY name DESC", null)
+        val cursor = db.rawQuery("SELECT * FROM ${DbHelper.t_subjects} ORDER BY name DESC", null)
         if (cursor.moveToFirst()) {
             do {
-                elements.add(ItemSubjectElement(SubjectElement(cursor.getString(1), cursor.getInt(2)), 2))
+                elements.add(ItemSubjectElement(SubjectElement(cursor.getInt(0), cursor.getString(1), cursor.getInt(2)), 2))
             } while (cursor.moveToNext())
         }
         cursor.close()
@@ -262,21 +788,20 @@ class CreateAwaitingActivity : AppCompatActivity() {
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         dialog.setContentView(R.layout.bottom_subject_creator_layout)
         val title = dialog.findViewById<TextView>(R.id.title_subject)
-        val cancel = dialog.findViewById<Button>(R.id.cancel_subject)
         val accept = dialog.findViewById<Button>(R.id.accept_subject)
         colorD = dialog.findViewById<ImageView>(R.id.color_select)
         val ta: TypedArray =
-            getTheme().obtainStyledAttributes(R.styleable.AppWidgetAttrs)
-        color = ta.getColor(R.styleable.AppWidgetAttrs_palette_yellow, 0)
+            getTheme().obtainStyledAttributes(R.styleable.AppCustomAttrs)
+        color = ta.getColor(R.styleable.AppCustomAttrs_palette_yellow, 0)
         colorD.setColorFilter(color)
         ta.recycle()
         val color = dialog.findViewById<LinearLayout>(R.id.color_picker)
         color.setOnClickListener { view: View? -> showColorPicker() }
-        cancel.setOnClickListener { view: View? -> dialog.dismiss() }
         accept.setOnClickListener { view: View? ->
             if (!title.text.toString().isEmpty() || title.text.toString() != "") {
                 dialog.dismiss()
                 insertSubject(title.text.toString())
+                returnIntent.putExtra("requestCode2", 8)
             } else {
                 Toast.makeText(this, R.string.name_is_empty, Toast.LENGTH_SHORT).show()
             }
@@ -423,4 +948,6 @@ class CreateAwaitingActivity : AppCompatActivity() {
         e.add(ColorSelectElement("brown", Color.parseColor("#795547"), Color.parseColor("#4a2c21")))
         return e
     }
+
+
 }

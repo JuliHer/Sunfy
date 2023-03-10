@@ -77,6 +77,13 @@ public class BottomEventAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
         void onBindData(TextElement element) {
             textView.setText(element.getText());
+            if(element.getTextSize() != -1){
+                textView.setTextSize(element.getTextSize());
+            }
+
+            if(element.getColor() != -1){
+                textView.setTextColor(element.getColor());
+            }
         }
     }
 
@@ -112,8 +119,8 @@ public class BottomEventAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
             String time = hour + ":" + min + " ";
 
-            time += (c.get(Calendar.AM_PM) == Calendar.AM) ? "AM" : "PM";
 
+            time += (c.get(Calendar.AM_PM) == Calendar.AM) ? "a. m." : "p. m.";
             hours.setText(time);
         }
     }

@@ -7,162 +7,262 @@
     android:orientation="vertical"
     tools:context=".fragmets.SettingsFragment">
 
-    <TextView
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="16dp"
-        android:paddingStart="16dp"
-        android:text="@string/theme" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical">
-
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_droplet"
-            style="@style/drawabe"
-            android:padding="16dp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/dark_theme"
-            android:textSize="16sp" />
-
-        <Switch
-            android:id="@+id/change_theme"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            tools:ignore="UseSwitchCompatOrMaterialXml" />
-    </LinearLayout>
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingTop="16dp"
-        android:paddingStart="16dp"
-        android:text="Danger zone"
-        android:textColor="@color/red_500" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@drawable/button_border"
-        android:orientation="vertical"
-        android:layout_marginBottom="10dp"
-        android:layout_marginTop="5dp"
-        android:layout_marginHorizontal="10dp"
-        android:padding="5dp">
-
-        <LinearLayout
-            android:id="@+id/deleteconversations"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/message_circle"
-                android:padding="16dp"
-                style="@style/drawabe"
-                app:tint="@color/red_500" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Delete conversations"
-                android:textSize="16sp"
-                android:textColor="@color/red_500" />
-        </LinearLayout>
-
+        android:paddingBottom="60dp"
+        android:clipToPadding="false">
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-
-            <ImageView
-                android:layout_width="wrap_content"
+            android:orientation="vertical">
+            <LinearLayout
+                android:id="@+id/loginSetting"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:src="@drawable/ic_trash"
-                android:padding="16dp"
-                style="@style/drawabe"
-                app:tint="@color/red_500" />
+                android:gravity="center_vertical"
+                android:background="@drawable/button_bg_transparent">
+                <de.hdodenhof.circleimageview.CircleImageView
+                    android:id="@+id/photo"
+                    android:layout_width="45dp"
+                    android:layout_height="45dp"
+                    android:layout_margin="10dp"
+                    android:src="@mipmap/usericon"/>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/you"
+                        android:textStyle="bold"
+                        android:textSize="17sp"/>
+                    <TextView
+                        android:id="@+id/login"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/Log_In"
+                        android:textColor="?subTextColor"
+                        android:textSize="13sp"/>
+                </LinearLayout>
+
+            </LinearLayout>
 
             <TextView
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Delete All"
-                android:textSize="16sp"
+                android:paddingTop="16dp"
+                android:paddingStart="16dp"
+                android:text="@string/theme"
+                android:textStyle="bold"
+                android:textColor="?subTextColor"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_droplet"
+                    style="@style/drawabe"
+                    android:padding="16dp"
+                    app:tint="?subTextColor" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/dark_theme"
+                    android:textSize="16sp" />
+
+                <Switch
+                    android:id="@+id/change_theme"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="16dp"
+
+                    tools:ignore="UseSwitchCompatOrMaterialXml" />
+            </LinearLayout>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="16dp"
+                android:paddingStart="16dp"
+                android:text="@string/data_saver_mode"
+                android:textStyle="bold"
+                android:textColor="?subTextColor"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_signal"
+                    android:padding="16dp"
+                    app:tint="?subTextColor" />
+
+                <LinearLayout
+                    android:layout_weight="1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingTop="16dp">
+                    <TextView
+
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/use_wifi"
+                        android:textSize="16sp" />
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/active_wifi_saver"
+                        android:textSize="12sp"
+                        android:textColor="?subTextColor"
+                        />
+                </LinearLayout>
+
+
+                <Switch
+                    android:id="@+id/saver_mode"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="16dp"
+                    tools:ignore="UseSwitchCompatOrMaterialXml" />
+            </LinearLayout>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="16dp"
+                android:paddingStart="16dp"
+                android:text="@string/danger_zone"
                 android:textColor="@color/red_500" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/button_border"
+                android:orientation="vertical"
+                android:layout_marginBottom="10dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginHorizontal="10dp"
+                android:padding="5dp">
+
+                <LinearLayout
+                    android:id="@+id/deleteconversations"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/message_circle"
+                        android:padding="16dp"
+                        style="@style/drawabe"
+                        app:tint="@color/red_500" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/del_conv"
+                        android:textSize="16sp"
+                        android:textColor="@color/red_500" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/ic_trash"
+                        android:padding="16dp"
+                        style="@style/drawabe"
+                        app:tint="@color/red_500" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/del_all"
+                        android:textSize="16sp"
+                        android:textColor="@color/red_500" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/closephonesession"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/log_out"
+                    android:padding="16dp"
+                    style="@style/drawabe"
+                    app:tint="@color/red_500" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/log_out"
+                    android:textSize="16sp"
+                    android:textColor="@color/red_500" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/version"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_info"
+                    android:padding="16dp"
+                    style="@style/drawabe"
+                    app:tint="?subTextColor"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/version"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/version_code"
+                    android:textAlignment="textEnd"
+                    android:paddingEnd="32dp"
+                    style="@style/subtext" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="11sp"
+                android:text="@string/made_by_artwork_studios"
+                android:textColor="?subTextColor"
+                android:padding="16dp" />
         </LinearLayout>
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/closephonesession"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical">
-
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_trash"
-            android:padding="16dp"
-            style="@style/drawabe"
-            app:tint="@color/red_500" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Close Phone Session"
-            android:textSize="16sp"
-            android:textColor="@color/red_500" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/version"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical">
-
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_info"
-            android:padding="16dp"
-            style="@style/drawabe" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/version"
-            android:textSize="16sp" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="v1.0.0"
-            android:textAlignment="textEnd"
-            android:paddingEnd="32dp"
-            style="@style/subtext" />
-    </LinearLayout>
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textSize="11sp"
-        android:text="@string/made_by_artwork_studios"
-        android:textColor="?subTextColor"
-        android:padding="16dp" />
+    </androidx.core.widget.NestedScrollView>
 
 </LinearLayout>

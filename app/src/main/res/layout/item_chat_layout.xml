@@ -9,21 +9,23 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:cardBackgroundColor="@android:color/transparent"
-        android:background="?android:attr/selectableItemBackground"
         app:cardElevation="0dp"
-        android:layout_marginBottom="15dp">
+        >
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_gravity="center_vertical">
+            android:layout_gravity="center_vertical"
+            android:paddingTop="15dp"
+            android:paddingBottom="15dp"
+            android:background="@drawable/button_bg_transparent">
 
             <de.hdodenhof.circleimageview.CircleImageView
                 android:layout_width="60dp"
                 android:layout_height="match_parent"
                 android:layout_marginHorizontal="10dp"
-                android:src="@mipmap/wallpaper_black" />
+                android:src="@mipmap/usericon" />
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -32,25 +34,62 @@
                 android:orientation="vertical"
                 android:gravity="center_vertical">
 
-                <TextView
-                    android:id="@+id/chat_name"
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Name"
-                    android:textSize="15sp"
-                    android:maxLines="1"
-                    android:ellipsize="end"
-                    android:textStyle="bold" />
+                    android:layout_height="wrap_content">
+                    <TextView
+                        android:id="@+id/chat_name"
+                        android:layout_weight="1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Name"
+                        android:textSize="15sp"
+                        android:maxLines="1"
+                        android:ellipsize="end"
+                        android:textStyle="bold" />
+                    <TextView
+                        android:id="@+id/timestamp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="1:30 PM"
+                        android:textColor="?subTextColor"
+                        android:layout_marginEnd="10dp"/>
+                </LinearLayout>
 
-                <TextView
-                    android:id="@+id/chat_content"
+
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:ellipsize="end"
-                    android:maxLines="1"
-                    android:text="Content"
-                    android:textColor="?subTextColor"
-                    android:textSize="18sp" />
+                    android:paddingEnd="10dp">
+                    <ImageView
+                        android:id="@+id/content_icon"
+                        android:layout_width="21dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_book"
+                        app:tint="?subTextColor"
+                        android:padding="3dp"
+                        android:paddingStart="0dp"
+                        android:visibility="gone"/>
+                    <TextView
+                        android:layout_weight="1"
+                        android:id="@+id/chat_content"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:text="Task"
+                        android:textColor="?subTextColor"
+                        android:textSize="18sp" />
+                    <ImageView
+                        android:id="@+id/status_icon"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_check_circle"
+                        app:tint="?subTextColor"
+                        android:padding="3dp"
+                        android:visibility="gone"/>
+                </LinearLayout>
+
             </LinearLayout>
 
             <TextView

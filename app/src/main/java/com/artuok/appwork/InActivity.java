@@ -1,5 +1,9 @@
 package com.artuok.appwork;
 
+import static com.artuok.appwork.services.NotificationService.TimeToDoHomework;
+import static com.artuok.appwork.services.NotificationService.TomorrowEvent;
+import static com.artuok.appwork.services.NotificationService.TomorrowSubjects;
+
 import android.app.AlarmManager;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -19,9 +23,9 @@ import androidx.appcompat.app.AppCompatDelegate;
 import com.artuok.appwork.db.DbHelper;
 import com.artuok.appwork.services.AlarmWorkManager;
 
+import java.util.ArrayList;
 import java.util.Calendar;
-
-import kotlin.jvm.internal.Intrinsics;
+import java.util.List;
 
 public class InActivity extends AppCompatActivity {
 
@@ -42,9 +46,8 @@ public class InActivity extends AppCompatActivity {
 
         createNotificationChannel();
         setAlarm();
-        setAlarms();
+        activateAlarms();
         setAlarmSchedule();
-
         new Handler().postDelayed(this::loadMain, 500);
     }
 
@@ -156,162 +159,136 @@ public class InActivity extends AppCompatActivity {
         PendingIntent pendingNotify = PendingIntent.getBroadcast(
                 this,
                 1, notify,
-                PendingIntent.FLAG_UPDATE_CURRENT);
+                PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
         AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         manager.cancel(pendingNotify);
         manager.setExact(AlarmManager.RTC_WAKEUP, start - (60 * 5 * 1000), pendingNotify);
     }
 
-    public void setAlarms() {
-        int dow = 0;
+    private int nextAlarm() {
+        DbHelper dbHelper = new DbHelper(this);
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Cursor row = db.rawQuery("SELECT * FROM " + DbHelper.t_alarm + " ORDER BY hour ASC", null);
 
-        int id;
-        for (id = -1; dow < 7; ++dow) {
-            int b = getAlarm(dow);
-            if (b >= 0) {
-                id = b;
-                break;
-            }
-        }
+        Calendar today = Calendar.getInstance();
 
-        if (id >= 0) {
-            DbHelper dbHelper = new DbHelper(this);
-            SQLiteDatabase db = dbHelper.getReadableDatabase();
-            Cursor row = db.rawQuery("SELECT * FROM alarm WHERE id = '" + id + '\'', null);
-            if (row.moveToFirst()) {
-                Intrinsics.checkNotNullExpressionValue(row, "row");
-                if (row.getCount() == 1) {
-                    long rest = row.getLong(2) * (long) 1000;
-                    Calendar calendar = Calendar.getInstance();
-                    int hour = calendar.get(11);
-                    int minute = calendar.get(12);
-                    long thour = 3600L * (long) hour + 60L * (long) minute;
-                    int tdow = calendar.get(7) - 1;
-                    dow += tdow;
-                    int r = tdow > dow ? 7 - (tdow + 1) + dow + 1 : dow + 1 - (tdow + 1);
-                    long time = (long) r * 86400000L + rest - thour * (long) 1000;
-                    setNotify(row.getInt(4), time);
+        long hour = (today.get(Calendar.HOUR_OF_DAY) * 60 * 60) + (today.get(Calendar.MINUTE) * 60) + (today.get(Calendar.SECOND));
+
+        int id = -1;
+        int idt = 0;
+
+        if(row.moveToFirst()){
+            idt = row.getInt(0);
+            do {
+                long l = row.getLong(2);
+
+                if(l > hour){
+                    id = row.getInt(0);
+                    return id;
                 }
-            }
+            }while (row.moveToNext());
         }
 
+        row.close();
+        return idt;
     }
 
-    private void setNotify(int type, long diff) {
-        long start = Calendar.getInstance().getTimeInMillis() + diff;
+    private void activateAlarms(){
+        int id = nextAlarm();
+        DbHelper dbHelper = new DbHelper(this);
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Cursor row = db.rawQuery("SELECT * FROM "+DbHelper.t_alarm+" WHERE id = '"+id+"'", null);
+
+        if(row.moveToFirst()){
+            long hour = row.getLong(2) * 1000;
+            Calendar calendar = Calendar.getInstance();
+            int hourd = calendar.get(Calendar.HOUR_OF_DAY);
+            int minute = calendar.get(Calendar.MINUTE);
+            int second = calendar.get(Calendar.SECOND);
+            long thour = (((60L * 60L * hourd) + (60L * minute) + second)*1000) + calendar.get(Calendar.MILLISECOND);
+
+            long time = hour <= thour ?
+                    hour + 86400000L - thour
+                    :
+                    hour - thour
+                    ;
+
+            setTimeOut(row.getString(1), time);
+        }
+        row.close();
+    }
+
+    private void setTimeOut(String type, Long diff){
+        long start = Calendar.getInstance().getTimeInMillis()+ diff;
 
         Intent notify = new Intent(this, AlarmWorkManager.class);
-        if (type == 0) {
-            notify.setAction(AlarmWorkManager.ACTION_TIME_TO_DO_HOMEWORK);
-        } else if (type == 1) {
-            notify.setAction(AlarmWorkManager.ACTION_TIME_TO_DO_HOMEWORK);
-            notify.putExtra("alarm", 1);
-        } else if (type == 2) {
-            notify.setAction(AlarmWorkManager.ACTION_TOMORROW_EVENTS);
+
+        switch (type) {
+            case TomorrowEvent:
+                notify.setAction(AlarmWorkManager.ACTION_TOMORROW_EVENTS);
+                break;
+            case TomorrowSubjects:
+                notify.setAction(AlarmWorkManager.ACTION_TOMORROW_SUBJECTS);
+                break;
+            default:
+                notify.setAction(AlarmWorkManager.ACTION_TIME_TO_DO_HOMEWORK);
+                break;
         }
 
-        PendingIntent pendingNotify = PendingIntent.getBroadcast(
-                this,
-                0, notify,
-                PendingIntent.FLAG_UPDATE_CURRENT
-        );
 
-        AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        PendingIntent pendingNotify = PendingIntent.getBroadcast(this, 0, notify, PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
+
+        AlarmManager manager = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
         manager.cancel(pendingNotify);
         manager.setExact(AlarmManager.RTC_WAKEUP, start, pendingNotify);
     }
 
-    private int getAlarm(int i) {
-        DbHelper dbHelper = new DbHelper(this);
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Calendar calendar = Calendar.getInstance();
-        String query = "";
-        int dow = (calendar.get(7) - 1 + i) % 7 + 1;
-        if (dow == 1) {
-            query = "AND sunday = '1'";
-        } else if (dow == 2) {
-            query = "AND monday = '1'";
-        } else if (dow == 3) {
-            query = "AND tuesday = '1'";
-        } else if (dow == 4) {
-            query = "AND wednesday = '1'";
-        } else if (dow == 5) {
-            query = "AND thursday = '1'";
-        } else if (dow == 6) {
-            query = "AND friday = '1'";
-        } else if (dow == 7) {
-            query = "AND saturday = '1'";
-        }
-
-        Cursor row = db.rawQuery("SELECT * FROM alarm WHERE last_alarm != '" + dow + "' " + query + " ORDER BY hour ASC", (String[]) null);
-        int hour = calendar.get(11);
-        int minute = calendar.get(12);
-        long time = 3600L * (long) hour + 60L * (long) minute;
-        int id = -1;
-        if (row.moveToFirst()) {
-            do {
-                if (calendar.get(7) != dow) {
-                    id = row.getInt(0);
-                    break;
-                }
-
-                if (row.getLong(2) >= time) {
-                    id = row.getInt(0);
-                    break;
-                }
-            } while (row.moveToNext());
-        }
-
-        row.close();
-        return id;
-    }
-
-
-    void setAlarm() {
-        DbHelper dbHelper = new DbHelper(this);
+    private void setAlarm() {
+        DbHelper dbHelper =  new DbHelper(this);
         SQLiteDatabase dbr = dbHelper.getReadableDatabase();
         SQLiteDatabase dbw = dbHelper.getWritableDatabase();
         Cursor row = dbr.rawQuery(
-                "SELECT * FROM " + DbHelper.t_alarm + " WHERE title = 'TTDH' AND (alarm = '0' OR alarm = '1')",
+                "SELECT * FROM "+DbHelper.t_alarm,
                 null
         );
 
-        if (row.getCount() < 1) {
-            ContentValues values = new ContentValues();
-            values.put("title", "TTDH");
-            values.put("hour", 39600L);
-            values.put("last_alarm", 1);
-            values.put("alarm", 0);
-            values.put("sunday", 1);
-            values.put("monday", 1);
-            values.put("tuesday", 1);
-            values.put("wednesday", 1);
-            values.put("thursday", 1);
-            values.put("friday", 1);
-            values.put("saturday", 1);
+        List<String> alarms = new ArrayList();
 
-            dbw.insert(DbHelper.t_alarm, null, values);
+        if(row.moveToFirst()){
+            do {
+                String alarm = row.getString(1);
+                alarms.add(alarm);
+            }while (row.moveToNext());
         }
 
-        row.close();
+        if(!alarms.contains(TimeToDoHomework)){
+            ContentValues cv = new ContentValues();
+            cv.put("title", TimeToDoHomework);
+            cv.put("hour", 39600);
+            cv.put("last_alarm", 9);
+            cv.put("alarm", 0);
 
-        row = dbr.rawQuery("SELECT * FROM " + DbHelper.t_alarm + " WHERE title = 'NDE' ", null);
+            dbw.insert(DbHelper.t_alarm, null, cv);
+        }
 
-        if (row.getCount() < 1) {
-            ContentValues values = new ContentValues();
-            values.put("title", "NDE");
-            values.put("hour", 79200L);
-            values.put("last_alarm", 1);
-            values.put("alarm", 2);
-            values.put("sunday", 1);
-            values.put("monday", 1);
-            values.put("tuesday", 1);
-            values.put("wednesday", 1);
-            values.put("thursday", 1);
-            values.put("friday", 1);
-            values.put("saturday", 1);
+        if(!alarms.contains(TomorrowSubjects)){
+            ContentValues cv = new ContentValues();
+            cv.put("title", TomorrowSubjects);
+            cv.put("hour", 57600);
+            cv.put("last_alarm", 9);
+            cv.put("alarm", 0);
 
-            dbw.insert(DbHelper.t_alarm, null, values);
+            dbw.insert(DbHelper.t_alarm, null, cv);
+        }
+
+        if(!alarms.contains(TomorrowEvent)){
+            ContentValues cv = new ContentValues();
+            cv.put("title", TomorrowEvent);
+            cv.put("hour", 64800);
+            cv.put("last_alarm", 9);
+            cv.put("alarm", 0);
+
+            dbw.insert(DbHelper.t_alarm, null, cv);
         }
 
         row.close();

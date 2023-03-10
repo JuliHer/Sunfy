@@ -6,14 +6,107 @@
     android:layout_height="match_parent"
     tools:context=".ChatActivity">
 
-    <include
+    <LinearLayout
         android:id="@+id/toolbar2"
-        layout="@layout/toolbar"
-        style="@style/drawabe"
+        android:layout_width="match_parent"
+        android:layout_height="55dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        android:gravity="center_vertical"
+        android:background="?backgroundDialog">
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
 
+            <LinearLayout
+                android:id="@+id/linearLayout4"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <LinearLayout
+                    android:id="@+id/back_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5dp"
+                    android:background="@drawable/background_button"
+                    android:padding="3dp">
+
+                    <TextView
+                        android:layout_width="25dp"
+                        android:layout_height="25dp"
+                        android:layout_gravity="center_vertical"
+                        android:background="@drawable/ic_arrow_left" />
+
+                    <de.hdodenhof.circleimageview.CircleImageView
+                        android:layout_width="35dp"
+                        android:layout_height="35dp"
+                        android:src="@mipmap/usericon" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/username"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:fontFamily="@font/poppins"
+                    android:includeFontPadding="false"
+                    android:maxLines="1"
+                    android:text="Mi Niña Bonita"
+                    android:textFontWeight="500"
+                    android:textSize="18sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/selectLayout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="?hintInputColor"
+                app:layout_constraintBottom_toBottomOf="@+id/linearLayout4"
+                app:layout_constraintEnd_toEndOf="@+id/linearLayout4"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                android:gravity="center_vertical"
+                android:visibility="gone"
+                >
+                <ImageView
+                    android:id="@+id/finish_select_mode"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:padding="13dp"
+                    android:src="@drawable/ic_arrow_left"
+                    app:tint="?backgroundBorder" />
+                <TextView
+                    android:layout_weight="1"
+                    android:id="@+id/select_count"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="Selected 0"
+                    android:fontFamily="@font/poppins"
+                    android:includeFontPadding="false"
+                    android:textSize="18sp"/>
+                <ImageView
+                    android:id="@+id/delete_button"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:src="@drawable/ic_trash"
+                    app:tint="?backgroundBorder"
+                    android:padding="13dp"/>
+                <ImageView
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:src="@drawable/star"
+                    app:tint="?backgroundBorder"
+                    android:padding="13dp"/>
+            </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
@@ -31,35 +124,93 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
-        android:padding="10dp"
+        android:paddingBottom="10dp"
+        android:paddingTop="2dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
-        <EditText
-            android:id="@+id/textInput"
+        <LinearLayout
+            android:layout_weight="1"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:orientation="vertical"
             android:layout_margin="5dp"
-            android:layout_weight="1"
-            android:background="@drawable/textinput_background"
-            android:hint="Mensaje"
-            android:maxLines="3"
-            android:paddingHorizontal="10dp"
-            android:paddingVertical="6dp" />
+            android:padding="5dp"
+            android:background="@drawable/textinput_background">
+            <androidx.cardview.widget.CardView
+                android:id="@+id/reply_layout"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                app:cardBackgroundColor="@color/black_transparent"
+                app:cardElevation="0dp"
+                app:cardCornerRadius="2dp">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    >
+                    <LinearLayout
+                        android:layout_weight="1"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="5dp"
+                        android:orientation="vertical">
+                        <TextView
+                            android:id="@+id/reply_name"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="They"
+                            android:textColor="?colorThird"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:includeFontPadding="false"/>
+                        <TextView
+                            android:id="@+id/message_replyed"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Replyed Message"
+                            android:textColor="?subTextColor"
+                            android:maxLines="1"
+                            android:ellipsize="end"
+                            android:textSize="13sp"/>
+                    </LinearLayout>
+                    <TextView
+                        android:id="@+id/close_reply"
+                        android:layout_width="25dp"
+                        android:layout_height="25dp"
+                        android:layout_margin="5dp"
+                        android:background="@drawable/x"
+                        android:backgroundTint="?subTextColor"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+            <EditText
+                android:id="@+id/textInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/transparent_background"
+                android:hint="Mensaje"
+                android:text=""
+                android:maxLines="3"
+                android:paddingHorizontal="5dp"
+                android:paddingVertical="6dp"
+                android:singleLine="false"
+                android:inputType="textMultiLine|textCapSentences"/>
+        </LinearLayout>
 
-        <androidx.appcompat.widget.AppCompatImageButton
+
+        <ImageView
             android:id="@+id/sendMessage"
             android:layout_width="50dip"
             android:layout_height="50dip"
-            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
+            android:layout_marginStart="5dp"
             android:background="@drawable/send_button"
             android:cropToPadding="false"
-            android:padding="5dp"
+            android:paddingTop="3dp"
+            android:paddingEnd="3dp"
             android:scaleType="center"
-            android:src="@drawable/ic_baseline_send_24"
-
-
-            app:tint="@color/white" />
+            android:src="@drawable/send"
+            app:tint="@color/white"/>
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

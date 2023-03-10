@@ -21,7 +21,7 @@
                 android:layout_width="50dp"
                 android:layout_height="50dp"
                 android:layout_marginHorizontal="10dp"
-                android:src="@mipmap/wallpaper_black" />
+                android:src="@mipmap/usericon" />
 
             <LinearLayout
                 android:layout_width="0dp"

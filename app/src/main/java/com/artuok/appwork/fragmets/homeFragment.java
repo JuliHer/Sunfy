@@ -23,7 +23,6 @@ import com.artuok.appwork.MainActivity;
 import com.artuok.appwork.R;
 import com.artuok.appwork.adapters.TasksAdapter;
 import com.artuok.appwork.db.DbHelper;
-import com.artuok.appwork.objects.CountElement;
 import com.artuok.appwork.objects.Item;
 import com.artuok.appwork.objects.TaskElement;
 import com.artuok.appwork.objects.TasksElement;
@@ -104,7 +103,7 @@ public class homeFragment extends Fragment {
         DbHelper dbHelper = new DbHelper(requireActivity());
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
-        Cursor onHold = db.rawQuery("SELECT * FROM " + DbHelper.t_task + " WHERE status = '0'", null);
+        Cursor onHold = db.rawQuery("SELECT * FROM " + DbHelper.T_TASK + " WHERE status = '0'", null);
 
         int holding = onHold.getCount();
         onHold.close();
@@ -122,7 +121,6 @@ public class homeFragment extends Fragment {
             txt += "" + holding;
             sTxt = requireActivity().getString(R.string.pending_tasks);
         }
-        elements.add(new Item(new CountElement(txt, sTxt), 1));
     }
 
     void loadTasks(int pos) {
@@ -179,54 +177,32 @@ public class homeFragment extends Fragment {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
         List<TaskElement> tasks = new ArrayList<>();
+        Calendar c = Calendar.getInstance();
+        c.setTimeInMillis(aday);
+        int y = c.get(Calendar.YEAR);
+        int mm = c.get(Calendar.MONTH);
+        int dd = c.get(Calendar.DAY_OF_MONTH);
 
-        Date datet = new Date();
-        datet.setTime(aday);
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd 00:00:00");
-        String td = format.format(datet);
+        c.set(y, mm, dd, 0, 0, 0);
+        long td = c.getTimeInMillis();
+        c.set(y, mm, dd, 23, 59, 59);
+        long tm = c.getTimeInMillis();
 
-        long tomorrow = aday + 86400000;
-        datet.setTime(tomorrow);
-        String tm = format.format(datet);
-
-        Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.t_task + " WHERE end_date BETWEEN '" + td + "' AND '" + tm + "' ORDER BY end_date ASC", null);
+        Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.T_TASK + " WHERE end_date BETWEEN '" + td + "' AND '" + tm + "' ORDER BY end_date ASC", null);
         if (cursor.moveToFirst()) {
             do {
-                boolean check = Integer.parseInt(cursor.getString(6)) > 0;
-                String title = cursor.getString(5);
-                String[] t = cursor.getString(3).split(" ");
-
-                String[] date = t[0].split("-");
-                int year = Integer.parseInt(date[0]);
-                int month = Integer.parseInt(date[1]);
-                int day = Integer.parseInt(date[2]);
-                String[] timed = t[1].split(":");
-                int hour = Integer.parseInt(timed[0]);
-                int minute = Integer.parseInt(timed[1]);
-
+                boolean check = Integer.parseInt(cursor.getString(5)) > 0;
+                String title = cursor.getString(4);
+                long t = cursor.getLong(2);
                 Calendar m = Calendar.getInstance();
-                m.set(year, (month - 1), day, hour, minute, 0);
+                m.setTimeInMillis(t);
+                int minute = m.get(Calendar.MINUTE);
+                int hour = m.get(Calendar.HOUR) == 0 ? 12 : m.get(Calendar.HOUR);
 
-                String time = "";
                 String mn = minute < 10 ? "0" + minute : "" + minute;
-                if (hour > 12) {
-                    hour = hour - 12;
-                    time += hour + ":" + mn + " PM";
-                } else {
 
-                    int fh = hour;
-                    if (hour == 0) {
-                        fh = 12;
-                    }
-                    time += fh + ":" + mn;
-
-                    if (hour == 12) {
-                        time += " PM";
-                    } else {
-                        time += " AM";
-                    }
-                }
-
+                String time = hour +":"+mn;
+                time += m.get(Calendar.AM_PM) == Calendar.AM ?  " a. m." : " p. m.";
 
                 tasks.add(new TaskElement(check, title, time, m.getTimeInMillis()));
             } while (cursor.moveToNext());

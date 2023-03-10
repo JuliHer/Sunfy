@@ -14,13 +14,25 @@
         android:orientation="horizontal"
         android:paddingVertical="4dp">
 
+
         <ImageView
             android:id="@+id/create_back"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_margin="10dp"
+            android:padding="8dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:src="@drawable/ic_arrow_left"
             app:tint="?backgroundBorder" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/schedule"
+            android:layout_marginStart="5dp"
+            android:textSize="18sp"
+            android:maxLines="1"
+            android:fontFamily="@font/poppins"
+            android:textFontWeight="500"
+            android:includeFontPadding="false"
+            android:ellipsize="end"/>
 
         <View
             android:layout_weight="1"

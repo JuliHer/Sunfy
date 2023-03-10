@@ -258,7 +258,7 @@ public class AlarmActivity extends AppCompatActivity {
     void setPendents(TextView a) {
         DbHelper dbHelper = new DbHelper(this);
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor p = db.rawQuery("SELECT * FROM " + DbHelper.t_task + " WHERE status = '0'", null);
+        Cursor p = db.rawQuery("SELECT * FROM " + DbHelper.T_TASK + " WHERE status = '0'", null);
 
         int count = p.getCount();
         String g = "";

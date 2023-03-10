@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical">
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardBackgroundColor="@android:color/transparent"
+        app:cardElevation="0dp"
+        >
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_gravity="center_vertical"
+            android:paddingTop="15dp"
+            android:paddingBottom="15dp"
+            android:background="@drawable/button_bg_transparent">
+            <LinearLayout
+                android:layout_width="60dp"
+                android:layout_height="match_parent"
+                android:layout_marginHorizontal="10dp"
+                android:gravity="center">
+                <com.artuok.appwork.library.AspectRatioView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    app:orientationRatio="horizontal"
+                    app:aspectRatio="1:1"
+                    app:cardCornerRadius="15dp">
+                    <ImageView
+                        android:id="@+id/chat_icon"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:src="@mipmap/groupicon" />
+                </com.artuok.appwork.library.AspectRatioView>
+
+            </LinearLayout>
+
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center_vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <TextView
+                        android:id="@+id/chat_name"
+                        android:layout_weight="1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Name"
+                        android:textSize="15sp"
+                        android:maxLines="1"
+                        android:ellipsize="end"
+                        android:textStyle="bold" />
+                    <TextView
+                        android:id="@+id/timestamp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="1:30 PM"
+                        android:textColor="?subTextColor"
+                        android:layout_marginEnd="10dp"/>
+                </LinearLayout>
+
+
+                <TextView
+                    android:id="@+id/chat_content"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="Content"
+                    android:textColor="?subTextColor"
+                    android:textSize="18sp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/inviteBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="INVITE"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="5dp"
+                android:textStyle="bold"
+                android:textColor="?iMainColor"
+                android:layout_marginEnd="10dp"
+                android:layout_gravity="center_vertical" />
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+</LinearLayout>

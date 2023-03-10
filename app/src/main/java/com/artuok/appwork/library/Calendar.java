@@ -131,6 +131,7 @@ public class Calendar extends View {
             if (offsetX == to) {
                 offsetX = 0;
                 month += monthTemp;
+                setValues();
             }
             postInvalidate();
         });
@@ -178,7 +179,6 @@ public class Calendar extends View {
         mTextPaintHighlight.setTextAlign(Paint.Align.CENTER);
         mTextPaintMonth.setFakeBoldText(true);
         mTextPaintOutMonth.setTextAlign(Paint.Align.CENTER);
-
         ta.recycle();
     }
 
@@ -187,6 +187,7 @@ public class Calendar extends View {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+
     }
 
     @Override
@@ -196,7 +197,9 @@ public class Calendar extends View {
 
     private void drawing(Canvas canvas) {
 
-        setValues();
+        if(mSpacingOfDays == 0){
+            setValues();
+        }
 
         int[] date = new int[2];
 
@@ -260,8 +263,6 @@ public class Calendar extends View {
             if (today >= s.getTimeInMillis() && today <= e.getTimeInMillis()) {
                 mPaintHighlight.setColor(period.getColor());
                 canvas.drawCircle(x, fy, mSpacingOfDays / 27, mPaintHighlight);
-
-
                 if (t.get(java.util.Calendar.DAY_OF_MONTH) > 1) {
                     long yesterday = today - day;
                     if (yesterday >= s.getTimeInMillis() && yesterday <= e.getTimeInMillis()) {
@@ -677,7 +678,6 @@ public class Calendar extends View {
                         clickListener.onClick(days, month, year);
                     }
                 }
-
 
                 postInvalidate();
             }

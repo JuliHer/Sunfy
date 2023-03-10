@@ -102,7 +102,7 @@ public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     class TasksViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         RecyclerView recyclerView;
-        TextView date_title, date_txt;
+        TextView date_title, date_txt, date;
         CardView display_card;
         LinearLayout linearLayout, addTask;
 
@@ -117,6 +117,7 @@ public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             display_card = itemView.findViewById(R.id.display_card);
             linearLayout = itemView.findViewById(R.id.empty_tasks);
             addTask = itemView.findViewById(R.id.add_task);
+            date = itemView.findViewById(R.id.date);
             PushDownAnim.setPushDownAnimTo(addTask)
                     .setScale(PushDownAnim.MODE_SCALE, 0.95f)
                     .setDurationPush(100)
@@ -135,16 +136,19 @@ public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             display_card.setVisibility(View.VISIBLE);
             date_title.setText(element.getTitle());
             date_txt.setText(element.getDate());
-
+            linearLayout.setVisibility(View.GONE);
+            date.setText(element.getTitle());
 
             if (element.getData().size() == 0 &&
                     element.getDay() != 0 &&
                     element.getDay() != 1) {
                 display_card.setVisibility(View.GONE);
-
+                date.setVisibility(View.VISIBLE);
             } else {
                 TaskAdapter adapter = new TaskAdapter(mInflater.getContext(), element.getData());
                 recyclerView.setAdapter(adapter);
+                display_card.setVisibility(View.VISIBLE);
+                date.setVisibility(View.GONE);
             }
 
             if (element.getData().size() == 0) {

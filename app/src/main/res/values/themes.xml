@@ -24,8 +24,13 @@
         <item name="backgroundBorder">@color/black</item>
         <item name="subTextColor">@color/gray_400</item>
         <item name="iconHint">#092B42</item>
+
         <item name="backgroundHint">@color/bluew_100</item>
         <item name="iMainColor">@color/blue_400</item>
+        <item name="colorThird">@color/red_500</item>
+        <item name="MainColor">@color/green_500</item>
+        <item name="borderLighting">@color/blue_500</item>
+        <item name="backgroundLighting">@color/light_blue_200</item>
 
         <item name="hintInputColor">@color/gray_900</item>
         <item name="hintViewGrayColor">@color/gray_800</item>
@@ -129,22 +134,10 @@
         <item name="background">@color/blue_500</item>
     </style>
 
-    <style name="Theme.AppWork.AppWidgetContainerParent" parent="@android:style/Theme.DeviceDefault">
-        <item name="appWidgetRadius">8dp</item>
-        <item name="appWidgetPadding">4dp</item>
-        <item name="appWidgetInnerRadius">4dp</item>
-    </style>
 
     <style name="IconColor">
         <item name="android:tint">@color/blue_400</item>
         <item name="android:textColor">@color/black</item>
-    </style>
-
-    <style name="Theme.AppWork.AppWidgetContainer" parent="Theme.AppWork.AppWidgetContainerParent">
-        <item name="android:colorBackground">#FFFF</item>
-        <item name="appWidgetRadius">15dp</item>
-        <item name="appWidgetPadding">2dp</item>
-        <item name="appWidgetInnerRadius">15dp</item>
     </style>
 
     <style name="Calendar">
@@ -162,5 +155,25 @@
     <style name="AveragesLineChart">
         <item name="hintColors">@color/gray_800</item>
         <item name="textValuesColor">@color/gray_600</item>
+    </style>
+
+    <style name="AudioBarStyle" parent="@android:style/Widget.SeekBar">
+        <item name="android:indeterminateOnly">false</item>
+        <item name="android:minHeight">3dp</item>
+        <item name="android:maxHeight">3dp</item>
+    </style>
+
+    <style name="Theme.AppWork.AppWidgetContainerParent" parent="@android:style/Theme.DeviceDefault">
+        <!-- Radius of the outer bound of widgets to make the rounded corners -->
+        <item name="appWidgetRadius">8dp</item>
+        <!--
+        Radius of the inner view's bound of widgets to make the rounded corners.
+        It needs to be 8dp or less than the value of appWidgetRadius
+        -->
+        <item name="appWidgetInnerRadius">8dp</item>
+    </style>
+
+    <style name="Theme.AppWork.AppWidgetContainer" parent="Theme.AppWork.AppWidgetContainerParent">
+        <item name="appWidgetPadding">0dp</item>
     </style>
 </resources>

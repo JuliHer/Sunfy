@@ -8,7 +8,7 @@
                 <item
                     android:id="@+id/nav_chat"
                     android:icon="@drawable/message_circle"
-                    android:title="@string/chat" />
+                    android:title="@string/chat"/>
                 <item
                     android:id="@+id/nav_averages"
                     android:icon="@drawable/ic_bar_chart"
@@ -16,7 +16,7 @@
                 <item
                     android:id="@+id/nav_alarms"
                     android:icon="@drawable/ic_clock"
-                    android:title="Alarms" />
+                    android:title="@string/alarms" />
             </menu>
         </item>
 

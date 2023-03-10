@@ -10,36 +10,64 @@
         android:layout_height="wrap_content"
         app:cardBackgroundColor="?iMainColor"
         android:layout_marginHorizontal="10dp"
-        android:layout_marginVertical="2dp"
+        android:layout_marginVertical="1dp"
         android:elevation="0dp"
         app:cardElevation="2dp"
         app:cardCornerRadius="10dp"
-        android:layout_gravity="end">
+        android:layout_gravity="end"
+        android:animateLayoutChanges="true">
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingHorizontal="10dp"
+            android:paddingHorizontal="5dp"
             android:paddingVertical="5dp">
-
-            <TextView
-                android:id="@+id/mainMessage"
+            <com.artuok.appwork.library.MsgFlexboxLayout
+                android:id="@+id/msg_layout"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="15sp"
-                android:text="message adas adsa asd asd adsa asd  asd asd asd  asdas das asd sasd ad ad saadsa "
-                android:maxEms="15"
-                android:textColor="@color/white" />
+                app:viewMain="@+id/mainMessage"
+                app:viewSlave="@+id/timestampLayout"
+                android:layout_marginHorizontal="5dp">
+                <TextView
+                    android:id="@+id/mainMessage"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="17sp"
+                    android:text="Message youtube.com jd asd adj lsdj klssss ak hajdaksdh askd  k j hsj jkasdh jah jasdk jsh"
+                    android:maxEms="13"
+                    android:minEms="2"
+                    android:textColor="@color/white"
+                    android:autoLink="email|phone|web"
+                    android:textColorLink="?MainColor"/>
 
-            <TextView
-                android:id="@+id/timestamp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="1:14 PM"
-                android:textSize="11sp"
-                android:layout_gravity="end"
-                android:textColor="@color/gray_800" />
+                <LinearLayout
+                    android:id="@+id/timestampLayout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:paddingStart="5dp">
+                    <TextView
+                        android:id="@+id/timestamp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="1:14 PM"
+                        android:textSize="11sp"
+                        android:layout_gravity="end"
+                        android:textColor="@color/gray_800"
+                        />
+                    <ImageView
+                        android:id="@+id/status"
+                        android:layout_width="11dp"
+                        android:layout_height="11dp"
+                        android:layout_marginStart="5dp"
+                        android:src="@drawable/ic_clock"
+                        app:tint="@color/gray_800" />
+                </LinearLayout>
+
+            </com.artuok.appwork.library.MsgFlexboxLayout>
+
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 </LinearLayout>

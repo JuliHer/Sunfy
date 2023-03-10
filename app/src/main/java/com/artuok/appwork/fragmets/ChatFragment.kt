@@ -1,19 +1,24 @@
 package com.artuok.appwork.fragmets
 
 import android.Manifest
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.os.Bundle
-import android.util.Log
+import android.os.Environment
+import android.os.Handler
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -21,6 +26,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.*
 import com.artuok.appwork.ChatActivity
+import com.artuok.appwork.MainActivity
 import com.artuok.appwork.R
 import com.artuok.appwork.adapters.ChatAdapter
 import com.artuok.appwork.db.DbChat
@@ -32,8 +38,10 @@ import com.artuok.appwork.objects.Item
 import com.faltenreich.skeletonlayout.Skeleton
 import com.faltenreich.skeletonlayout.applySkeleton
 import com.google.firebase.FirebaseException
-import com.google.firebase.FirebaseTooManyRequestsException
-import com.google.firebase.auth.*
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.PhoneAuthCredential
+import com.google.firebase.auth.PhoneAuthOptions
+import com.google.firebase.auth.PhoneAuthProvider
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -41,9 +49,12 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.FirebaseStorage
 import com.google.i18n.phonenumbers.NumberParseException
 import com.google.i18n.phonenumbers.PhoneNumberUtil
 import com.thekhaeng.pushdownanim.PushDownAnim
+import java.io.File
+import java.io.IOException
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -63,7 +74,7 @@ class ChatFragment : Fragment() {
 
     private lateinit var auth: FirebaseAuth
     private lateinit var callbacks: PhoneAuthProvider.OnVerificationStateChangedCallbacks
-    private lateinit var storedVerificationId: String
+    private var storedVerificationId: String = ""
     private lateinit var userPhoneNumber: String
     private lateinit var userCodePhoneNumber: String
     private lateinit var loginDialog: LoginDialog
@@ -81,19 +92,13 @@ class ChatFragment : Fragment() {
 
         callbacks = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
             override fun onVerificationCompleted(credential: PhoneAuthCredential) {
-                Log.d("CattoPhoneComplete", "onVerificationCompleted:$credential")
                 signInWithPhoneAuthCredential(credential)
+                loginDialog.dismiss()
             }
 
             override fun onVerificationFailed(e: FirebaseException) {
-                Log.d("CattoPhoneError", "Error: $e")
-                if (e is FirebaseAuthInvalidCredentialsException) {
-                    Log.d("CattoPhoneError", "Invalid: $e")
-                } else if (e is FirebaseTooManyRequestsException) {
-                    // The SMS quota for the project has been exceeded
-                    Log.d("CattoPhoneError", "To many request: $e")
-                }
-
+                (requireActivity() as MainActivity).showSnackbar(e.message)
+                loginDialog.dismiss()
             }
 
             override fun onCodeSent(
@@ -101,10 +106,10 @@ class ChatFragment : Fragment() {
                 p1: PhoneAuthProvider.ForceResendingToken
             ) {
 
-                Log.d("CattoPhoneCode", "onCodeSent:$verificationId")
+
                 loginDialog.dismiss()
 
-                val timeout = Calendar.getInstance().timeInMillis + 600000L
+                val timeout = Calendar.getInstance().timeInMillis + 120000L
                 val sharedPreferences: SharedPreferences =
                     requireActivity().getSharedPreferences("chat", Context.MODE_PRIVATE)
                 val editor = sharedPreferences.edit()
@@ -115,7 +120,6 @@ class ChatFragment : Fragment() {
                 editor.apply()
 
                 storedVerificationId = verificationId
-
             }
         }
 
@@ -123,12 +127,14 @@ class ChatFragment : Fragment() {
             val name = (elements[pos].`object` as ChatElement).name
             val number = (elements[pos].`object` as ChatElement).number
             val chat = (elements[pos].`object` as ChatElement).chat
+            val publicKey = (elements[pos].`object` as ChatElement).publicKey
             val intent = Intent(requireActivity(), ChatActivity::class.java)
 
             intent.putExtra("name", name)
             intent.putExtra("phone", number)
             intent.putExtra("chat", chat)
-            startActivity(intent)
+            intent.putExtra("publicKey", publicKey)
+            resultLauncher.launch(intent)
         }
 
         var manager = LinearLayoutManager(requireActivity(), VERTICAL, false)
@@ -152,9 +158,6 @@ class ChatFragment : Fragment() {
                 loginWithNumberPhone()
             }
 
-
-
-
         recycler.setHasFixedSize(true)
         recycler.layoutManager = manager
         recycler.adapter = adapter
@@ -165,9 +168,9 @@ class ChatFragment : Fragment() {
 
         skeleton = recycler.applySkeleton(R.layout.skeleton_chat_layout, 20)
 
-        val ta = requireActivity().obtainStyledAttributes(R.styleable.AppWidgetAttrs)
-        val shimmerColor = ta.getColor(R.styleable.AppWidgetAttrs_shimmerSkeleton, Color.GRAY)
-        val maskColor = ta.getColor(R.styleable.AppWidgetAttrs_maskSkeleton, Color.LTGRAY)
+        val ta = requireActivity().obtainStyledAttributes(R.styleable.AppCustomAttrs)
+        val shimmerColor = ta.getColor(R.styleable.AppCustomAttrs_shimmerSkeleton, Color.GRAY)
+        val maskColor = ta.getColor(R.styleable.AppCustomAttrs_maskSkeleton, Color.LTGRAY)
 
         skeleton.maskColor = maskColor
         skeleton.shimmerColor = shimmerColor
@@ -178,7 +181,6 @@ class ChatFragment : Fragment() {
     }
 
     private fun loginWithNumberPhone(): Boolean {
-
         val sharedPreferences: SharedPreferences =
             requireActivity().getSharedPreferences("chat", Context.MODE_PRIVATE)
         val login = sharedPreferences.getBoolean("logged", false)
@@ -213,16 +215,18 @@ class ChatFragment : Fragment() {
                             loginDialog.isCancelable = false
                             loginDialog.setWaiting(true)
                         } else {
-                            Toast.makeText(
-                                requireActivity(),
-                                "Number is not valid",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            (requireActivity() as MainActivity).showSnackbar("Number is not valid")
                         }
                     } catch (e: NumberParseException) {
                         e.printStackTrace()
                     }
                 }
+
+                loginDialog.setEnterCode { view, text, region ->
+                    verifyCode(timeRestant)
+                    loginDialog.dismiss()
+                }
+
                 loginDialog.show(requireActivity().supportFragmentManager, "Login")
             } else {
                 verifyCode(timeRestant)
@@ -235,72 +239,73 @@ class ChatFragment : Fragment() {
     private fun verifyCode(e: Long) {
         val verifyDialog = VerifyDialog()
 
-        verifyDialog.setTimeOut(e)
+        if(e == 0L){
+            verifyDialog.setTimeOut(e)
+        }
+
         verifyDialog.setOnPositiveResponeseListener { view, code ->
 
-            if (storedVerificationId.isEmpty() || storedVerificationId.equals("")) {
+            if (storedVerificationId.isEmpty() || storedVerificationId == "") {
                 val shared = requireActivity().getSharedPreferences("chat", Context.MODE_PRIVATE)
                 storedVerificationId = shared.getString("VerificationId", "")!!
             }
 
-            val credential = PhoneAuthProvider.getCredential(storedVerificationId, code)
-            auth.signInWithCredential(credential)
-                .addOnCompleteListener(requireActivity()) {
-                    if (it.isSuccessful) {
-                        val user = it.result?.user
-                        val phone = user?.phoneNumber
-                        if (phone != null) {
-                            loginUser(user!!.uid, phone)
+            if(!storedVerificationId.isEmpty() && storedVerificationId != ""){
+                val credential = PhoneAuthProvider.getCredential(storedVerificationId, code)
+                auth.signInWithCredential(credential)
+                    .addOnCompleteListener(requireActivity()) {
+                        if (it.isSuccessful) {
+                            val user = it.result?.user
+                            val phone = user?.phoneNumber
+                            if (phone != null) {
+                                loginUser(user!!.uid, phone)
+                            }
                         }
+                        verifyDialog.dismiss()
                     }
-
-                    verifyDialog.dismiss()
-                }
+            }
         }
         verifyDialog.show(requireActivity().supportFragmentManager, "verify")
 
-        verifyDialog.startTimeOut()
+        Handler().postDelayed(object : Runnable {
+            override fun run() {
+                val n = Calendar.getInstance().timeInMillis
+                if (e >= n) {
+                    verifyDialog.startTimeOut()
+                    Handler().postDelayed(this, 900)
+                }
+            }
+        }, 1000)
     }
 
-    private fun loginUser(userId: String, phoneNumber: String) {
-
-        db.collection("users").document(userId)
-            .get().addOnSuccessListener {
-                val sharedPreferences: SharedPreferences =
-                    requireActivity().getSharedPreferences("chat", Context.MODE_PRIVATE)
-                val editor = sharedPreferences.edit()
-
-                if (it != null && it.data != null && it.exists()) {
-                    editor.putBoolean("logged", true)
-                    editor.putLong("verifyTimeOut", 0)
-                } else {
-                    siginUser(userId, phoneNumber)
-                }
-                editor.putString("regionCode", userCodePhoneNumber)
-                editor.apply()
-
-                validateUserAndContacts()
-            }
+    private fun loginUser(userId: String, number : String) {
         val userBase = FirebaseDatabase.getInstance().reference.child("user").child(userId)
-        userBase.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                if (!snapshot.exists()) {
+        FirebaseDatabase.getInstance().reference.orderByChild("user").equalTo(number)
+            .addListenerForSingleValueEvent(object : ValueEventListener{
+                override fun onDataChange(snapshot: DataSnapshot) {
                     val userHash = mapOf(
                         "name" to "",
                         "phone" to auth.currentUser?.phoneNumber,
-                        "region" to userCodePhoneNumber,
-                        "user" to auth.currentUser?.uid
+                        "region" to userCodePhoneNumber
                     )
 
                     userBase.updateChildren(userHash)
+                    val sharedPreferences: SharedPreferences =
+                        requireActivity().getSharedPreferences("chat", Context.MODE_PRIVATE)
+                    val editor = sharedPreferences.edit()
+
+                    editor.putBoolean("logged", true)
+                    editor.putLong("verifyTimeOut", 0)
+                    editor.putString("regionCode", userCodePhoneNumber)
+                    editor.apply()
+                    validateUserAndContacts()
                 }
-            }
 
-            override fun onCancelled(error: DatabaseError) {
+                override fun onCancelled(error: DatabaseError) {
 
-            }
+                }
 
-        })
+            })
     }
 
     private fun validateUserAndContacts() {
@@ -322,26 +327,6 @@ class ChatFragment : Fragment() {
         }
     }
 
-    private fun siginUser(userId: String, phoneNo: String) {
-        val hashMap = hashMapOf(
-            "name" to "",
-            "phoneNo" to auth.currentUser?.phoneNumber,
-            "region" to userCodePhoneNumber
-        )
-
-
-        db.collection("users")
-            .document(userId).set(hashMap)
-            .addOnSuccessListener {
-                val sharedPreferences: SharedPreferences =
-                    requireActivity().getSharedPreferences("chat", Context.MODE_PRIVATE)
-                val editor = sharedPreferences.edit()
-                editor.putBoolean("logged", true)
-                editor.apply()
-            }
-
-    }
-
     private fun showInContextUI() {
         val dialog = PermissionDialog()
         dialog.setTitleDialog(requireActivity().getString(R.string.required_permissions))
@@ -361,7 +346,7 @@ class ChatFragment : Fragment() {
     private fun startPhoneNumberVerification(phoneNumber: String) {
         val options = PhoneAuthOptions.newBuilder(auth)
             .setPhoneNumber(phoneNumber)
-            .setTimeout(60L, TimeUnit.SECONDS)
+            .setTimeout(120L, TimeUnit.SECONDS)
             .setActivity(requireActivity())
             .setCallbacks(callbacks)
             .build()
@@ -374,8 +359,10 @@ class ChatFragment : Fragment() {
             .addOnCompleteListener {
                 if (it.isSuccessful) {
                     val user = it.result?.user
-                } else {
-
+                    val phone = user?.phoneNumber
+                    if (phone != null) {
+                        loginUser(user!!.uid, phone)
+                    }
                 }
             }
     }
@@ -384,7 +371,7 @@ class ChatFragment : Fragment() {
         val dbChat = DbChat(requireActivity())
         val db = dbChat.readableDatabase
         val query = db.rawQuery(
-            "SELECT * FROM ${DbChat.T_CHATS_MSG} GROUP BY chat ORDER BY timeSend DESC",
+            "SELECT * FROM ${DbChat.T_CHATS_MSG} GROUP BY number ORDER BY timeSend DESC",
             null
         )
 
@@ -395,14 +382,38 @@ class ChatFragment : Fragment() {
                 val msg = query.getString(1)
                 val chatNumber = query.getString(6)
                 val chatC = query.getString(5)
+                val timestamp = query.getLong(3)
+                val status = query.getInt(8)
+                val me = query.getInt(2)
 
-                val chat = ChatElement(i, name, msg, chatC, chatNumber, "", "", true)
+                val q = db.rawQuery("SELECT * FROM ${DbChat.T_CHATS_LOGGED} WHERE phone = 'chatNumber' ", null)
+
+                val chat = ChatElement(i, name, msg, chatC, chatNumber, "", true, timestamp)
+
+                if(msg == " 1"){
+                    chat.desc = getString(R.string.task)
+                    chat.contentIcon = requireActivity().getDrawable(R.drawable.ic_book)
+                }
+
+                if(me == 0){
+                    chat.status = status
+                }
+
+                if(q.moveToFirst()){
+                    val userId = q.getString(8)
+                    if(userId != "noUser"){
+                        chat.image = getImagePhoto(userId)
+                        searchImageByPhone(chatNumber, i.toLong())
+                    }
+                }
 
                 elements.add(Item(chat, 0))
             } while (query.moveToNext())
             adapter.notifyDataSetChanged()
 
         }
+
+        query.close()
     }
 
     private val requestPermissionLauncher = registerForActivityResult(
@@ -417,4 +428,138 @@ class ChatFragment : Fragment() {
         }
     }
 
+    public fun loadChatsMessage(){
+        elements.clear()
+        loadChats()
+    }
+
+    fun reloadChats(){
+        val sharedPreferences: SharedPreferences =
+            requireActivity().getSharedPreferences("chat", Context.MODE_PRIVATE)
+        val login = sharedPreferences.getBoolean("logged", false)
+        loginView.visibility = VISIBLE
+        if(login){
+            validateUserAndContacts()
+        }
+    }
+
+    public fun onDataChange(){
+        elements.clear()
+        reloadChats()
+    }
+
+    var resultLauncher = registerForActivityResult<Intent, ActivityResult>(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result: ActivityResult ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val data = result.data
+            if (data!!.getIntExtra("requestCode", 0) == 3) {
+            } else if (data.getIntExtra("requestCode", 0) == 2) {
+                loadChatsMessage()
+            }
+
+            if(data.getIntExtra("awaitingCode", 0) == 2){
+                (requireActivity() as MainActivity).notifyAllChanged()
+            }
+        }
+    }
+
+
+    private fun searchImageByPhone(p : String, n : Long){
+        val db = FirebaseDatabase.getInstance().reference.child("user")
+
+        val user = db.orderByChild("phone").equalTo(p)
+        user.addListenerForSingleValueEvent(object : ValueEventListener{
+            override fun onDataChange(snapshot: DataSnapshot) {
+                if(snapshot.exists()){
+                    for(us in snapshot.children){
+                        val key = us.key!!
+
+                        getImageAndDownload(key, n)
+
+                        return
+                    }
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+
+            }
+        })
+    }
+
+    private fun getImageAndDownload(u : String, n : Long){
+        val ref = FirebaseStorage.getInstance().reference
+
+        val image = ref.child("usericon/$u/profile-photo.jpg")
+
+        image.getFile(getOutputFile(u)).addOnSuccessListener {
+
+            val d = findById("$n")
+            (elements[d].`object` as ChatElement).image = getImagePhoto(u)
+
+            adapter.notifyDataSetChanged()
+        }
+    }
+
+    private fun findById(id : String) : Int{
+        var i = 0
+        for(x in elements){
+            if(x.type == 0){
+                val e = x.`object` as ChatElement
+                if(e.id == id){
+                    return i
+                }
+            }
+            i++
+        }
+
+        return -1
+    }
+
+    private fun getImagePhoto(u : String) : Bitmap?{
+        val root = requireActivity().getExternalFilesDir("Media")
+        val appname = getString(R.string.app_name).uppercase()
+        val myDir = File(root, ".Profiles")
+
+        var map : Bitmap? = null
+
+        if (myDir.exists())
+        {
+            val fname = "USER-$u-$appname.jpg"
+            val file = File(myDir, fname)
+            if (file.exists()) {
+                map = BitmapFactory.decodeFile(file.path)
+            }
+        }
+
+        return map
+    }
+
+    private fun getOutputFile(u : String): File {
+        val root = requireActivity().getExternalFilesDir("Media")
+        val appname = getString(R.string.app_name)
+        val myDir = File(root, ".Profiles")
+        if (!myDir.exists()) {
+            val m = myDir.mkdirs()
+            if (m) {
+                val nomedia = File(myDir, ".nomedia")
+                try {
+                    nomedia.createNewFile()
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                }
+            }
+        }
+        val fname = "${appname.uppercase()}-$u-IMG.jpg"
+        val file = File(myDir, fname)
+        try {
+            file.createNewFile()
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+
+        return file
+
+    }
 }

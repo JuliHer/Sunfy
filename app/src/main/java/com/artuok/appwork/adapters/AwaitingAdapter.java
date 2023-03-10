@@ -20,6 +20,7 @@ import com.artuok.appwork.objects.StatisticsElement;
 import com.artuok.appwork.objects.TextElement;
 import com.thekhaeng.pushdownanim.PushDownAnim;
 
+import java.util.Calendar;
 import java.util.List;
 
 public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
@@ -98,7 +99,7 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     class AwaitingViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-        TextView title, status, date;
+        TextView title, status, date, time;
 
         LinearLayout subject;
 
@@ -108,6 +109,7 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             subject = itemView.findViewById(R.id.subject_color);
             status = itemView.findViewById(R.id.status_card);
             date = itemView.findViewById(R.id.date_card);
+            time = itemView.findViewById(R.id.time);
             PushDownAnim.setPushDownAnimTo(itemView)
                     .setDurationPush(100)
                     .setScale(PushDownAnim.MODE_SCALE, 0.98f)
@@ -115,45 +117,99 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         }
 
         void onBindData(AwaitingElement element) {
-
-            String t = element.getTitle().equals("") ? element.getDescription() : element.getTitle() + ": " + element.getDescription();
+            String t = element.getTitle();
             t = t.substring(0, 1).toUpperCase() + t.substring(1).toLowerCase();
-
             title.setText(t);
             title.setPaintFlags(title.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
             subject.setBackgroundColor(element.getColorSubject());
 
-            String d = element.getStatus() + " " + mInflater.getContext().getString(R.string.day_left);
+            String d = "";
+
+            Calendar c = Calendar.getInstance();
+            c.setTimeInMillis(element.getStatus());
+
+            Calendar today = Calendar.getInstance();
+
+            long tod = today.getTimeInMillis();
+
+            long rest = (element.getStatus() - tod) / 86400000;
+
+            if(tod < element.getStatus()){
+                int toin = today.get(Calendar.DAY_OF_YEAR);
+                int awin = c.get(Calendar.DAY_OF_YEAR);
+                if(awin < toin){
+                    rest = awin + 364 - toin;
+                }else{
+                    rest = awin - toin;
+                }
+            }
+
+            int dow = c.get(Calendar.DAY_OF_WEEK);
+
+
 
             if (element.isOpen()) {
-                if (Integer.parseInt(element.getStatus()) == 1) {
+                if (rest == 1) {
                     d = mInflater.getContext().getString(R.string.tomorrow);
-                } else if (Integer.parseInt(element.getStatus()) == 0) {
+                } else if (rest == 0) {
                     d = mInflater.getContext().getString(R.string.today);
+                }
+                else if(rest < 7){
+                    if(dow == 1){
+                        d = mInflater.getContext().getString(R.string.sunday);
+                    }
+                    else if(dow == 2){
+                        d = mInflater.getContext().getString(R.string.monday);
+                    }
+                    else if(dow == 3){
+                        d = mInflater.getContext().getString(R.string.tuesday);
+                    }
+                    else if(dow == 4){
+                        d = mInflater.getContext().getString(R.string.wednesday);
+                    }
+                    else if(dow == 5){
+                        d = mInflater.getContext().getString(R.string.thursday);
+                    }
+                    else if(dow == 6){
+                        d = mInflater.getContext().getString(R.string.friday);
+                    }
+                    else if(dow == 7){
+                        d = mInflater.getContext().getString(R.string.saturday);
+                    }
+                }else{
+                    d = rest+" "+mInflater.getContext().getString(R.string.day_left);
                 }
             }
             status.setText(d);
             date.setText(element.getDate());
-            TypedArray ta = mInflater.getContext().obtainStyledAttributes(R.styleable.AppWidgetAttrs);
+            time.setText(element.getTime());
+            TypedArray ta = mInflater.getContext().obtainStyledAttributes(R.styleable.AppCustomAttrs);
 
-            int color = ta.getColor(R.styleable.AppWidgetAttrs_backgroundBorder, Color.WHITE);
+            int color = ta.getColor(R.styleable.AppCustomAttrs_backgroundBorder, Color.WHITE);
 
 
             title.setTextColor(color);
 
-            if (element.isStatusB()) {
+            TypedArray a = mInflater.getContext().obtainStyledAttributes(R.styleable.AppCustomAttrs);
+            int colorB = a.getColor(R.styleable.AppCustomAttrs_subTextColor, mInflater.getContext().getColor(R.color.yellow_700));
+            int colorT = a.getColor(R.styleable.AppCustomAttrs_backgroundDialog, Color.WHITE);
+            a.recycle();
+
+            if (element.isDone()) {
                 status.setText(R.string.done_string);
-                status.setBackgroundColor(mInflater.getContext().getColor(R.color.blue_400));
+                status.setTextColor(colorT);
+                status.setBackgroundColor(colorB);
 
                 title.setPaintFlags(title.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
 
-                color = ta.getColor(R.styleable.AppWidgetAttrs_subTextColor, Color.WHITE);
+                color = ta.getColor(R.styleable.AppCustomAttrs_subTextColor, Color.WHITE);
 
 
                 title.setTextColor(color);
             } else {
+                status.setTextColor(colorT);
                 if (element.isOpen()) {
-                    if (Integer.parseInt(element.getStatus()) > 2) {
+                    if (rest > 2) {
                         status.setBackgroundColor(mInflater.getContext().getColor(R.color.green_500));
                     } else {
                         status.setBackgroundColor(mInflater.getContext().getColor(R.color.yellow_700));
@@ -161,7 +217,7 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                     status.setText(d);
                 } else {
                     status.setText(R.string.task_is_close);
-                    status.setBackgroundColor(mInflater.getContext().getColor(R.color.red_500));
+                    status.setBackgroundColor(colorB);
                 }
             }
 

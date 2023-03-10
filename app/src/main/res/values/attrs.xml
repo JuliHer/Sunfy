@@ -1,8 +1,5 @@
 <resources>
-    <declare-styleable name="AppWidgetAttrs">
-        <attr name="appWidgetPadding" format="dimension" />
-        <attr name="appWidgetInnerRadius" format="dimension" />
-        <attr name="appWidgetRadius" format="dimension" />
+    <declare-styleable name="AppCustomAttrs">
         <attr name="apptintIconCOlor" format="color" />
         <attr name="backgroundDialog" format="color" />
         <attr name="backgroundAlert" format="color" />
@@ -17,6 +14,8 @@
         <attr name="iconHint" format="color" />
         <attr name="backgroundHint" format="color" />
         <attr name="iMainColor" format="color" />
+        <attr name="borderLighting" format="color" />
+        <attr name="backgroundLighting" format="color" />
 
         <attr name="palette_blue" format="color" />
         <attr name="palette_green" format="color" />
@@ -33,6 +32,8 @@
 
         <attr name="hintInputColor" format="color" />
         <attr name="hintViewGrayColor" format="color" />
+        <attr name="colorThird" format="color" />
+        <attr name="MainColor" format="color" />
     </declare-styleable>
 
     <declare-styleable name="CalendarWeekView">
@@ -69,5 +70,27 @@
         <attr name="textValuesSize" format="dimension" />
         <attr name="textTitleSize" format="dimension" />
         <attr name="padding" format="dimension" />
+    </declare-styleable>
+
+    <declare-styleable name="MsgFlexboxLayout">
+        <attr name="viewMain" format="reference" />
+        <attr name="viewSlave" format="reference" />
+        <attr name="maxWidth" format="dimension" />
+    </declare-styleable>
+    <declare-styleable name="AspectRatioView">
+        <attr name="aspectRatio" format="string" />
+        <attr name="orientationRatio" format="enum">
+            <enum name="horizontal" value="0" />
+            <enum name="vertical" value="1" />
+        </attr>
+    </declare-styleable>
+    <declare-styleable name="ScaleAndDropLayout">
+        <attr name="paddingCrop" format="dimension" />
+        <attr name="maxCropperSize" format="dimension" />
+    </declare-styleable>
+    <declare-styleable name="AppWidgetAttrs">
+        <attr name="appWidgetPadding" format="dimension" />
+        <attr name="appWidgetInnerRadius" format="dimension" />
+        <attr name="appWidgetRadius" format="dimension" />
     </declare-styleable>
 </resources>

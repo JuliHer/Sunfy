@@ -3,7 +3,6 @@ package com.artuok.appwork.dialogs;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,8 +22,8 @@ public class VerifyDialog extends DialogFragment {
     private OnResponseListener positive;
     private EditText codeInput;
     private TextView positiveBtn, timeOutString;
-    private Long timeOut;
-    private Long timeInMillis;
+    private long timeOut = 0;
+    private long timeInMillis = 0;
 
 
     public void setTimeOut(Long timeOut) {
@@ -32,24 +31,26 @@ public class VerifyDialog extends DialogFragment {
         this.timeInMillis = timeOut;
     }
 
+
+
     public void startTimeOut() {
-        if (timeOutString != null) {
-            new CountDownTimer(timeOut, 1000) {
-                public void onTick(long millisUntilFinished) {
-                    timeOut = timeInMillis - Calendar.getInstance().getTimeInMillis();
-                    Long seconds = timeOut / 1000;
-                    int minutes = (int) (seconds / 60 % 60);
-                    int second = (int) (seconds % 60);
+        if(timeInMillis != 0){
+            timeOutString.setVisibility(View.VISIBLE);
+        }
 
-                    String secondString = second < 10 ? "0" + second : "" + second;
-                    String timeString = minutes + ":" + secondString;
-                    timeOutString.setText(timeString);
-                }
+        timeOut = timeInMillis - Calendar.getInstance().getTimeInMillis();
+        long seconds = timeOut / 1000;
+        int minutes = (int) (seconds / 60 % 60);
+        int second = (int) (seconds % 60);
 
-                public void onFinish() {
-                    timeOutString.setText(requireActivity().getString(R.string.resend));
-                }
-            }.start();
+        String secondString = second < 10 ? "0" + second : "" + second;
+        String timeString = minutes + ":" + secondString;
+        timeOutString.setText(timeString);
+
+        if(timeOut >= 0){
+            timeOutString.setText(timeString);
+        }else if(timeOut == 0){
+            timeOutString.setText("FINISH");
         }
     }
 
@@ -85,6 +86,7 @@ public class VerifyDialog extends DialogFragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View root = super.onCreateView(inflater, container, savedInstanceState);
         getDialog().getWindow().setBackgroundDrawableResource(R.drawable.dialog_background);
+        startTimeOut();
         return root;
     }
 

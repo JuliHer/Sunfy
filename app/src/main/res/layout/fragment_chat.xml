@@ -31,28 +31,36 @@
         <ImageView
             android:layout_width="100dp"
             android:layout_height="100dp"
-            android:src="@drawable/smartphone"
-            app:tint="?subTextColor" />
+            android:src="@drawable/log_in"
+            app:tint="?backgroundBorder" />
 
         <TextView
             android:layout_width="300dp"
             android:layout_height="wrap_content"
-            android:text="Register with your phone number to be able to chat"
-            android:textAlignment="center"
-            android:textAllCaps="true" />
+            android:text="@string/Log_In"
+            android:textFontWeight="500"
+            android:fontFamily="@font/poppins"
+            android:includeFontPadding="false"
+            android:textAlignment="center" />
+        <TextView
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:textColor="?subTextColor"
+            android:text="@string/register_text"
+            android:textAlignment="center" />
 
         <TextView
             android:id="@+id/loginButon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Log In"
+            android:text="@string/Log_In"
             android:textSize="18sp"
             android:textAllCaps="true"
             android:background="@drawable/button"
             android:textColor="@color/white"
             android:backgroundTint="?iMainColor"
-            android:paddingHorizontal="20dp"
-            android:paddingVertical="8dp"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="6dp"
             android:layout_marginTop="10dp" />
     </LinearLayout>
 
@@ -68,20 +76,30 @@
             android:layout_width="100dp"
             android:layout_height="100dp"
             android:src="@drawable/users"
-            app:tint="?subTextColor" />
-
+            app:tint="?backgroundBorder" />
         <TextView
             android:layout_width="300dp"
             android:layout_height="wrap_content"
-            android:text="Allows the reading of contacts to be able to use the chat"
+            android:text="@string/permission_contacts"
+            android:fontFamily="@font/poppins"
+            android:includeFontPadding="false"
+            android:textFontWeight="500"
             android:textAlignment="center"
+            android:textAllCaps="true" />
+        <TextView
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:text="@string/permissions_read_contacts_description"
+            android:textAlignment="center"
+            android:textSize="12sp"
+            android:textColor="?subTextColor"
             android:textAllCaps="true" />
 
         <TextView
             android:id="@+id/contactAllowPermissions"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Allow"
+            android:text="@string/allow"
             android:textSize="18sp"
             android:textAllCaps="true"
             android:background="@drawable/button"
@@ -90,5 +108,25 @@
             android:paddingHorizontal="20dp"
             android:paddingVertical="8dp"
             android:layout_marginTop="10dp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/disconnect_wifi"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:visibility="gone">
+        <ImageView
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:src="@drawable/wifi_off"
+            app:tint="?backgroundBorder" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAlignment="center"
+            android:text="WiFi Disconnected"
+            android:fontFamily="@font/poppins"/>
     </LinearLayout>
 </FrameLayout>

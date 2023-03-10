@@ -76,7 +76,7 @@ public class SubjectAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         return mData.get(position).getType();
     }
 
-    class SubjectViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    class SubjectViewHolder extends RecyclerView.ViewHolder {
 
         TextView title;
         CardView backgroud;
@@ -86,9 +86,12 @@ public class SubjectAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             title = itemView.findViewById(R.id.subject_name);
             backgroud = itemView.findViewById(R.id.background);
             PushDownAnim.setPushDownAnimTo(itemView)
-                    .setScale(PushDownAnim.MODE_SCALE, 0.95f)
+                    .setScale(PushDownAnim.MODE_SCALE, 0.98f)
                     .setDurationPush(100)
-                    .setOnClickListener(this);
+                    .setOnLongClickListener(view -> {
+                        listener.onClick(view, getLayoutPosition());
+                        return true;
+                    });
         }
 
         void onBindData(SubjectElement element) {
@@ -98,10 +101,6 @@ public class SubjectAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             }
         }
 
-        @Override
-        public void onClick(View view) {
-            listener.onClick(view, getLayoutPosition());
-        }
     }
 
     class ButtonViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
