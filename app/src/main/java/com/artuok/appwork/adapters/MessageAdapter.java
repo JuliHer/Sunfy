@@ -3,6 +3,7 @@ package com.artuok.appwork.adapters;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Color;
+import android.text.format.DateFormat;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -68,9 +69,12 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         }else if (viewType == 4){
             View view = inflater.inflate(R.layout.item_myevent_message_layout, parent, false);
             return new MyEventMessageViewHolder(view);
-        }else if(viewType == 5){
+        }else if (viewType == 5) {
             View view = inflater.inflate(R.layout.item_theirevent_message_layout, parent, false);
             return new TheirEventMessageViewHolder(view);
+        } else if (viewType == 6) {
+            View view = inflater.inflate(R.layout.item_message_event_layout, parent, false);
+            return new EventMessageViewHolder(view);
         }
         return null;
     }
@@ -94,9 +98,12 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         }else if (type == 4){
             MessageElement element = (MessageElement) mData.get(position).getObject();
             ((MyEventMessageViewHolder) holder).onBindData(element);
-        }else if (type == 5){
+        }else if (type == 5) {
             MessageElement element = (MessageElement) mData.get(position).getObject();
             ((TheirEventMessageViewHolder) holder).onBindData(element);
+        } else if (type == 6) {
+            MessageElement element = (MessageElement) mData.get(position).getObject();
+            ((EventMessageViewHolder) holder).onBindData(element);
         }
 
     }
@@ -123,21 +130,18 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             time = itemView.findViewById(R.id.timestamp);
             stat = itemView.findViewById(R.id.status);
             total = itemView;
-            PushDownAnim.setPushDownAnimTo(itemView)
-                    .setDurationPush(100)
-                    .setScale(PushDownAnim.MODE_SCALE, 0.98f)
-                    .setOnClickListener(view -> {
-                        if(onClickListener != null) {
-                            onClickListener.onClick(view, getLayoutPosition());
-                        }
-                    })
-                    .setOnLongClickListener(view -> {
-                        if(onLongClickListener != null){
-                            onLongClickListener.onLong(view, getLayoutPosition());
-                            return true;
-                        }
-                        return false;
-                    });
+            itemView.setOnClickListener(view -> {
+                if (onClickListener != null) {
+                    onClickListener.onClick(view, getLayoutPosition());
+                }
+            });
+            itemView.setOnLongClickListener(view -> {
+                if (onLongClickListener != null) {
+                    onLongClickListener.onLong(view, getLayoutPosition());
+                    return true;
+                }
+                return false;
+            });
         }
 
         public void onBindData(MessageElement element) {
@@ -154,24 +158,36 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             String hour = (h % 12) + "";
             hour = (h == 12) ? "12" : hour;
 
-            String timestamp = hour + ":" + minute + " " + tm;
+            boolean hourFormat = DateFormat.is24HourFormat(inflater.getContext());
+            String timestamp = "";
+            if (!hourFormat) {
+                timestamp = hour + ":" + minute + " " + tm;
+            } else {
+                timestamp = h + ":" + minute;
+            }
 
-            if(element.getStatus() == 0){
+            stat.setColorFilter(null);
+            if (element.getStatus() == 0) {
                 stat.setImageDrawable(inflater.getContext().getDrawable(R.drawable.ic_clock));
-            }else if(element.getStatus() == 1){
+            } else if (element.getStatus() == 1) {
                 stat.setImageDrawable(inflater.getContext().getDrawable(R.drawable.check_sended));
-            }else if(element.getStatus() == 2){
+            } else if (element.getStatus() == 2) {
                 stat.setImageDrawable(inflater.getContext().getDrawable(R.drawable.ic_check_circle));
-            }else if(element.getStatus() == 3){
+            } else if (element.getStatus() == 3) {
                 stat.setImageDrawable(inflater.getContext().getDrawable(R.drawable.ic_check_circle));
-                stat.setColorFilter(inflater.getContext().getColor(R.color.green_500));
+                stat.setColorFilter(inflater.getContext().getColor(R.color.red_500));
             }
 
 
             if(mData.size() > getLayoutPosition() + 1){
-                if(((MessageElement)mData.get(getLayoutPosition() + 1).getObject()).getMine() != ((MessageElement)mData.get(getLayoutPosition()).getObject()).getMine()){
+                if (((MessageElement) mData.get(getLayoutPosition() + 1).getObject()).getMine() != ((MessageElement) mData.get(getLayoutPosition()).getObject()).getMine()) {
                     RecyclerView.LayoutParams p = (RecyclerView.LayoutParams) total.getLayoutParams();
                     p.setMargins(0, convertToDpToPx(10), 0, 0);
+                    total.setLayoutParams(p);
+                    total.requestLayout();
+                } else {
+                    RecyclerView.LayoutParams p = (RecyclerView.LayoutParams) total.getLayoutParams();
+                    p.setMargins(0, 0, 0, 0);
                     total.setLayoutParams(p);
                     total.requestLayout();
                 }
@@ -182,7 +198,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 int color = a.getColor(R.styleable.AppCustomAttrs_backgroundLighting, inflater.getContext().getColor(R.color.black_transparent_500));
                 a.recycle();
                 total.setBackgroundColor(color);
-            }else{
+            } else {
                 total.setBackgroundColor(Color.parseColor("#00000000"));
             }
 
@@ -190,29 +206,50 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         }
     }
 
+    class EventMessageViewHolder extends RecyclerView.ViewHolder {
+
+        TextView text;
+
+        public EventMessageViewHolder(@NonNull View context) {
+            super(context);
+            text = context.findViewById(R.id.text);
+        }
+
+        void onBindData(MessageElement element) {
+            text.setText(element.getMessage());
+
+            if (element.getMine() == 4) {
+                text.setTextColor(inflater.getContext().getColor(R.color.yellow_700));
+            } else {
+                TypedArray a = inflater.getContext().obtainStyledAttributes(R.styleable.AppCustomAttrs);
+                int color = a.getColor(R.styleable.AppCustomAttrs_backgroundBorder, Color.WHITE);
+                a.recycle();
+                text.setTextColor(color);
+            }
+        }
+    }
+
     class TheirMessageViewHolder extends RecyclerView.ViewHolder {
         TextView message, time;
         View total;
+
         public TheirMessageViewHolder(@NonNull View itemView) {
             super(itemView);
             message = itemView.findViewById(R.id.mainMessage);
             time = itemView.findViewById(R.id.timestamp);
             total = itemView;
-            PushDownAnim.setPushDownAnimTo(itemView)
-                    .setDurationPush(100)
-                    .setScale(PushDownAnim.MODE_SCALE, 0.98f)
-                    .setOnClickListener(view -> {
-                        if(onClickListener != null) {
-                            onClickListener.onClick(view, getLayoutPosition());
-                        }
-                    })
-                    .setOnLongClickListener(view -> {
-                        if(onLongClickListener != null){
-                            onLongClickListener.onLong(view, getLayoutPosition());
-                            return true;
-                        }
-                        return false;
-                    });
+            itemView.setOnClickListener(view -> {
+                if (onClickListener != null) {
+                    onClickListener.onClick(view, getLayoutPosition());
+                }
+            });
+            itemView.setOnLongClickListener(view -> {
+                if (onLongClickListener != null) {
+                    onLongClickListener.onLong(view, getLayoutPosition());
+                    return true;
+                }
+                return false;
+            });
         }
 
         public void onBindData(MessageElement element) {
@@ -228,12 +265,23 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             String hour = (h % 12) + "";
             hour = (h == 12) ? "12" : hour;
 
-            String timestamp = hour + ":" + minute + " " + tm;
+            boolean hourFormat = DateFormat.is24HourFormat(inflater.getContext());
+            String timestamp = "";
+            if (!hourFormat) {
+                timestamp = hour + ":" + minute + " " + tm;
+            } else {
+                timestamp = h + ":" + minute;
+            }
 
-            if(mData.size() > getLayoutPosition() + 1){
-                if(((MessageElement)mData.get(getLayoutPosition() + 1).getObject()).getMine() != ((MessageElement)mData.get(getLayoutPosition()).getObject()).getMine()){
+            if (mData.size() > getLayoutPosition() + 1) {
+                if (((MessageElement) mData.get(getLayoutPosition() + 1).getObject()).getMine() != ((MessageElement) mData.get(getLayoutPosition()).getObject()).getMine()) {
                     RecyclerView.LayoutParams p = (RecyclerView.LayoutParams) total.getLayoutParams();
                     p.setMargins(0, convertToDpToPx(10), 0, 0);
+                    total.setLayoutParams(p);
+                    total.requestLayout();
+                } else {
+                    RecyclerView.LayoutParams p = (RecyclerView.LayoutParams) total.getLayoutParams();
+                    p.setMargins(0, 0, 0, 0);
                     total.setLayoutParams(p);
                     total.requestLayout();
                 }
@@ -267,21 +315,18 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             stat = itemView.findViewById(R.id.status);
             total = itemView;
 
-            PushDownAnim.setPushDownAnimTo(itemView)
-                    .setDurationPush(100)
-                    .setScale(PushDownAnim.MODE_SCALE, 0.98f)
-                    .setOnClickListener(view -> {
-                        if(onClickListener != null) {
-                            onClickListener.onClick(view, getLayoutPosition());
-                        }
-                    })
-                    .setOnLongClickListener(view -> {
-                        if(onLongClickListener != null){
-                            onLongClickListener.onLong(view, getLayoutPosition());
-                            return true;
-                        }
-                        return false;
-                    });
+            itemView.setOnClickListener(view -> {
+                if (onClickListener != null) {
+                    onClickListener.onClick(view, getLayoutPosition());
+                }
+            });
+            itemView.setOnLongClickListener(view -> {
+                if (onLongClickListener != null) {
+                    onLongClickListener.onLong(view, getLayoutPosition());
+                    return true;
+                }
+                return false;
+            });
         }
 
         public void onBindData(MessageElement element){
@@ -299,23 +344,35 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             reply.setText(element.getMessageReplyed());
             name.setText(element.getTheirName());
 
-            String timestamp = hour + ":" + minute + " " + tm;
+            boolean hourFormat = DateFormat.is24HourFormat(inflater.getContext());
+            String timestamp = "";
+            if (!hourFormat) {
+                timestamp = hour + ":" + minute + " " + tm;
+            } else {
+                timestamp = h + ":" + minute;
+            }
 
-            if(element.getStatus() == 0){
+            stat.setColorFilter(null);
+            if (element.getStatus() == 0) {
                 stat.setImageDrawable(inflater.getContext().getDrawable(R.drawable.ic_clock));
-            }else if(element.getStatus() == 1){
+            } else if (element.getStatus() == 1) {
                 stat.setImageDrawable(inflater.getContext().getDrawable(R.drawable.check_sended));
-            }else if(element.getStatus() == 2){
+            } else if (element.getStatus() == 2) {
                 stat.setImageDrawable(inflater.getContext().getDrawable(R.drawable.ic_check_circle));
-            }else if(element.getStatus() == 3){
+            } else if (element.getStatus() == 3) {
                 stat.setImageDrawable(inflater.getContext().getDrawable(R.drawable.ic_check_circle));
-                stat.setColorFilter(inflater.getContext().getColor(R.color.green_500));
+                stat.setColorFilter(inflater.getContext().getColor(R.color.red_500));
             }
 
             if(mData.size() > getLayoutPosition() + 1){
-                if(((MessageElement)mData.get(getLayoutPosition() + 1).getObject()).getMine() != ((MessageElement)mData.get(getLayoutPosition()).getObject()).getMine()){
+                if (((MessageElement) mData.get(getLayoutPosition() + 1).getObject()).getMine() != ((MessageElement) mData.get(getLayoutPosition()).getObject()).getMine()) {
                     RecyclerView.LayoutParams p = (RecyclerView.LayoutParams) total.getLayoutParams();
                     p.setMargins(0, convertToDpToPx(10), 0, 0);
+                    total.setLayoutParams(p);
+                    total.requestLayout();
+                } else {
+                    RecyclerView.LayoutParams p = (RecyclerView.LayoutParams) total.getLayoutParams();
+                    p.setMargins(0, 0, 0, 0);
                     total.setLayoutParams(p);
                     total.requestLayout();
                 }
@@ -346,21 +403,18 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             name = itemView.findViewById(R.id.name_of_they);
             total = itemView;
 
-            PushDownAnim.setPushDownAnimTo(itemView)
-                    .setDurationPush(100)
-                    .setScale(PushDownAnim.MODE_SCALE, 0.98f)
-                    .setOnClickListener(view -> {
-                        if(onClickListener != null) {
-                            onClickListener.onClick(view, getLayoutPosition());
-                        }
-                    })
-                    .setOnLongClickListener(view -> {
-                        if(onLongClickListener != null){
-                            onLongClickListener.onLong(view, getLayoutPosition());
-                            return true;
-                        }
-                        return false;
-                    });
+            itemView.setOnClickListener(view -> {
+                if (onClickListener != null) {
+                    onClickListener.onClick(view, getLayoutPosition());
+                }
+            });
+            itemView.setOnLongClickListener(view -> {
+                if (onLongClickListener != null) {
+                    onLongClickListener.onLong(view, getLayoutPosition());
+                    return true;
+                }
+                return false;
+            });
         }
 
         public void onBindData(MessageElement element){
@@ -375,14 +429,25 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             String hour = (h % 12) + "";
             hour = (h == 12) ? "12" : hour;
 
-            String timestamp = hour + ":" + minute + " " + tm;
+            boolean hourFormat = DateFormat.is24HourFormat(inflater.getContext());
+            String timestamp = "";
+            if (!hourFormat) {
+                timestamp = hour + ":" + minute + " " + tm;
+            } else {
+                timestamp = h + ":" + minute;
+            }
             reply.setText(element.getMessageReplyed());
             name.setText(element.getTheirName());
 
-            if(mData.size() > getLayoutPosition() + 1){
-                if(((MessageElement)mData.get(getLayoutPosition() + 1).getObject()).getMine() != ((MessageElement)mData.get(getLayoutPosition()).getObject()).getMine()){
+            if (mData.size() > getLayoutPosition() + 1) {
+                if (((MessageElement) mData.get(getLayoutPosition() + 1).getObject()).getMine() != ((MessageElement) mData.get(getLayoutPosition()).getObject()).getMine()) {
                     RecyclerView.LayoutParams p = (RecyclerView.LayoutParams) total.getLayoutParams();
                     p.setMargins(0, convertToDpToPx(10), 0, 0);
+                    total.setLayoutParams(p);
+                    total.requestLayout();
+                } else {
+                    RecyclerView.LayoutParams p = (RecyclerView.LayoutParams) total.getLayoutParams();
+                    p.setMargins(0, 0, 0, 0);
                     total.setLayoutParams(p);
                     total.requestLayout();
                 }
@@ -425,21 +490,18 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     .setOnClickListener(this);
             total = itemView;
 
-            PushDownAnim.setPushDownAnimTo(itemView)
-                    .setDurationPush(100)
-                    .setScale(PushDownAnim.MODE_SCALE, 0.98f)
-                    .setOnClickListener(view -> {
-                        if(onClickListener != null) {
-                            onClickListener.onClick(view, getLayoutPosition());
-                        }
-                    })
-                    .setOnLongClickListener(view -> {
-                        if(onLongClickListener != null){
-                            onLongClickListener.onLong(view, getLayoutPosition());
-                            return true;
-                        }
-                        return false;
-                    });
+            itemView.setOnClickListener(view -> {
+                if (onClickListener != null) {
+                    onClickListener.onClick(view, getLayoutPosition());
+                }
+            });
+            itemView.setOnLongClickListener(view -> {
+                if (onLongClickListener != null) {
+                    onLongClickListener.onLong(view, getLayoutPosition());
+                    return true;
+                }
+                return false;
+            });
         }
 
         public void onBindData(MessageElement element) {
@@ -456,17 +518,24 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             String hour = (h % 12) + "";
             hour = (h == 12) ? "12" : hour;
 
-            String timestamp = hour + ":" + minute + " " + tm;
+            boolean hourFormat = DateFormat.is24HourFormat(inflater.getContext());
+            String timestamp = "";
+            if (!hourFormat) {
+                timestamp = hour + ":" + minute + " " + tm;
+            } else {
+                timestamp = h + ":" + minute;
+            }
 
-            if(element.getStatus() == 0){
+            stat.setColorFilter(null);
+            if (element.getStatus() == 0) {
                 stat.setImageDrawable(inflater.getContext().getDrawable(R.drawable.ic_clock));
-            }else if(element.getStatus() == 1){
+            } else if (element.getStatus() == 1) {
                 stat.setImageDrawable(inflater.getContext().getDrawable(R.drawable.check_sended));
-            }else if(element.getStatus() == 2){
+            } else if (element.getStatus() == 2) {
                 stat.setImageDrawable(inflater.getContext().getDrawable(R.drawable.ic_check_circle));
-            }else if(element.getStatus() == 3){
+            } else if (element.getStatus() == 3) {
                 stat.setImageDrawable(inflater.getContext().getDrawable(R.drawable.ic_check_circle));
-                stat.setColorFilter(inflater.getContext().getColor(R.color.green_500));
+                stat.setColorFilter(inflater.getContext().getColor(R.color.red_500));
             }
 
             if(element.isSelect()){
@@ -491,16 +560,27 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             String dd = day < 10 ? "0" + day : "" + day;
             String dates = dd + " " + homeFragment.getMonthMinor(inflater.getContext(), (month)) + " " + year + " ";
             String mn = minutes < 10 ? "0" + minutes : "" + minutes;
-            String times = hours +":"+mn;
-            times += c.get(Calendar.AM_PM) == Calendar.AM ?  " a. m." : " p. m.";
+
+            String times = "";
+            if (!hourFormat) {
+                times = hours + ":" + mn;
+                times += c.get(Calendar.AM_PM) == Calendar.AM ? " a. m." : " p. m.";
+            } else {
+                times = c.get(Calendar.HOUR_OF_DAY) + ":" + mn;
+            }
 
             eDate.setText(dates);
             eTime.setText(times);
 
-            if(mData.size() > getLayoutPosition() + 1){
-                if(((MessageElement)mData.get(getLayoutPosition() + 1).getObject()).getMine() != ((MessageElement)mData.get(getLayoutPosition()).getObject()).getMine()){
+            if (mData.size() > getLayoutPosition() + 1) {
+                if (((MessageElement) mData.get(getLayoutPosition() + 1).getObject()).getMine() != ((MessageElement) mData.get(getLayoutPosition()).getObject()).getMine()) {
                     RecyclerView.LayoutParams p = (RecyclerView.LayoutParams) total.getLayoutParams();
                     p.setMargins(0, convertToDpToPx(10), 0, 0);
+                    total.setLayoutParams(p);
+                    total.requestLayout();
+                } else {
+                    RecyclerView.LayoutParams p = (RecyclerView.LayoutParams) total.getLayoutParams();
+                    p.setMargins(0, 0, 0, 0);
                     total.setLayoutParams(p);
                     total.requestLayout();
                 }
@@ -539,21 +619,18 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     .setScale(PushDownAnim.MODE_SCALE, 0.98f)
                     .setOnClickListener(this);
 
-            PushDownAnim.setPushDownAnimTo(itemView)
-                    .setDurationPush(100)
-                    .setScale(PushDownAnim.MODE_SCALE, 0.98f)
-                    .setOnClickListener(view -> {
-                        if(onClickListener != null) {
-                            onClickListener.onClick(view, getLayoutPosition());
-                        }
-                    })
-                    .setOnLongClickListener(view -> {
-                        if(onLongClickListener != null){
-                            onLongClickListener.onLong(view, getLayoutPosition());
-                            return true;
-                        }
-                        return false;
-                    });
+            itemView.setOnClickListener(view -> {
+                if (onClickListener != null) {
+                    onClickListener.onClick(view, getLayoutPosition());
+                }
+            });
+            itemView.setOnLongClickListener(view -> {
+                if (onLongClickListener != null) {
+                    onLongClickListener.onLong(view, getLayoutPosition());
+                    return true;
+                }
+                return false;
+            });
             total = itemView;
         }
 
@@ -574,7 +651,13 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             String hour = (h % 12) + "";
             hour = (h == 12) ? "12" : hour;
 
-            String timestamp = hour + ":" + minute + " " + tm;
+            boolean hourFormat = DateFormat.is24HourFormat(inflater.getContext());
+            String timestamp = "";
+            if (!hourFormat) {
+                timestamp = hour + ":" + minute + " " + tm;
+            } else {
+                timestamp = h + ":" + minute;
+            }
 
             EventMessageElement e = element.getEvent();
 
@@ -590,16 +673,26 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             String dd = day < 10 ? "0" + day : "" + day;
             String dates = dd + " " + homeFragment.getMonthMinor(inflater.getContext(), (month)) + " " + year + " ";
             String mn = minutes < 10 ? "0" + minutes : "" + minutes;
-            String times = hours +":"+mn;
-            times += c.get(Calendar.AM_PM) == Calendar.AM ?  " a. m." : " p. m.";
+            String times = "";
+            if (!hourFormat) {
+                times = hours + ":" + mn;
+                times += c.get(Calendar.AM_PM) == Calendar.AM ? " a. m." : " p. m.";
+            } else {
+                times = c.get(Calendar.HOUR_OF_DAY) + ":" + mn;
+            }
 
             eDate.setText(dates);
             eTime.setText(times);
 
-            if(mData.size() > getLayoutPosition() + 1){
-                if(((MessageElement)mData.get(getLayoutPosition() + 1).getObject()).getMine() != ((MessageElement)mData.get(getLayoutPosition()).getObject()).getMine()){
+            if (mData.size() > getLayoutPosition() + 1) {
+                if (((MessageElement) mData.get(getLayoutPosition() + 1).getObject()).getMine() != ((MessageElement) mData.get(getLayoutPosition()).getObject()).getMine()) {
                     RecyclerView.LayoutParams p = (RecyclerView.LayoutParams) total.getLayoutParams();
                     p.setMargins(0, convertToDpToPx(10), 0, 0);
+                    total.setLayoutParams(p);
+                    total.requestLayout();
+                } else {
+                    RecyclerView.LayoutParams p = (RecyclerView.LayoutParams) total.getLayoutParams();
+                    p.setMargins(0, 0, 0, 0);
                     total.setLayoutParams(p);
                     total.requestLayout();
                 }

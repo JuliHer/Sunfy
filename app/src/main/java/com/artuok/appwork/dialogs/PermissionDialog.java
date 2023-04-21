@@ -70,7 +70,7 @@ public class PermissionDialog extends DialogFragment {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireActivity());
 
         LayoutInflater inflater = requireActivity().getLayoutInflater();
-        View root = inflater.inflate(R.layout.permission_dialog_layout, null);
+        View root = inflater.inflate(R.layout.dialog_permission_layout, null);
         TextView title = root.findViewById(R.id.title_dialog);
         TextView text = root.findViewById(R.id.txt_dialog);
 

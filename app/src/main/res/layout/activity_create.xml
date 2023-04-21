@@ -29,7 +29,7 @@
             android:layout_marginStart="5dp"
             android:textSize="18sp"
             android:maxLines="1"
-            android:fontFamily="@font/poppins"
+            style="@style/poppinsFont"
             android:textFontWeight="500"
             android:includeFontPadding="false"
             android:ellipsize="end"/>

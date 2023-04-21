@@ -10,7 +10,7 @@
         android:layout_height="wrap_content"
         app:cardBackgroundColor="@android:color/transparent"
         app:cardElevation="0dp"
-        >
+        app:cardCornerRadius="0dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -22,6 +22,7 @@
             android:background="@drawable/button_bg_transparent">
 
             <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/usericon"
                 android:layout_width="60dp"
                 android:layout_height="match_parent"
                 android:layout_marginHorizontal="10dp"
@@ -36,7 +37,9 @@
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:gravity="bottom">
+
                     <TextView
                         android:id="@+id/chat_name"
                         android:layout_weight="1"
@@ -46,30 +49,42 @@
                         android:textSize="15sp"
                         android:maxLines="1"
                         android:ellipsize="end"
-                        android:textStyle="bold" />
+                        android:textFontWeight="600" />
                     <TextView
                         android:id="@+id/timestamp"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="1:30 PM"
+                        android:textSize="11sp"
                         android:textColor="?subTextColor"
                         android:layout_marginEnd="10dp"/>
                 </LinearLayout>
 
-
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:paddingEnd="10dp">
+                    android:paddingEnd="10dp"
+                    android:gravity="bottom">
+
+                    <ImageView
+                        android:id="@+id/status_icon"
+                        android:layout_width="20dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_check_circle"
+                        app:tint="?subTextColor"
+                        android:paddingVertical="4dp"
+                        android:paddingStart="0dp"
+                        android:paddingEnd="4dp" />
+
                     <ImageView
                         android:id="@+id/content_icon"
-                        android:layout_width="21dp"
+                        android:layout_width="20dp"
                         android:layout_height="24dp"
                         android:src="@drawable/ic_book"
                         app:tint="?subTextColor"
-                        android:padding="3dp"
+                        android:paddingVertical="4dp"
                         android:paddingStart="0dp"
-                        android:visibility="gone"/>
+                        android:paddingEnd="4dp" />
                     <TextView
                         android:layout_weight="1"
                         android:id="@+id/chat_content"
@@ -80,14 +95,6 @@
                         android:text="Task"
                         android:textColor="?subTextColor"
                         android:textSize="18sp" />
-                    <ImageView
-                        android:id="@+id/status_icon"
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@drawable/ic_check_circle"
-                        app:tint="?subTextColor"
-                        android:padding="3dp"
-                        android:visibility="gone"/>
                 </LinearLayout>
 
             </LinearLayout>

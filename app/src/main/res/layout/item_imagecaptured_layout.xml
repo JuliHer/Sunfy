@@ -3,33 +3,45 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <androidx.cardview.widget.CardView
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        app:cardCornerRadius="8dp"
+
+    <com.artuok.appwork.library.AspectRatioView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="2dp"
         app:cardBackgroundColor="@android:color/transparent"
         android:clickable="true"
-        android:layout_marginEnd="5dp">
+        android:layout_margin="2dp"
+        app:aspectRatio="1:1"
+        app:orientationRatio="vertical">
+
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent">
+
             <ImageView
                 android:id="@+id/imageView"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:scaleType="centerCrop"
                 android:src="@mipmap/usericon"
-                android:scaleType="centerCrop"/>
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
             <ImageView
                 android:id="@+id/delete"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:background="@drawable/x"
-                android:backgroundTint="?subTextColor"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:paddingBottom="12dp"
+                android:paddingStart="12dp"
+                android:paddingEnd="4dp"
+                android:paddingTop="4dp"
+                android:src="@drawable/x"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                android:layout_margin="5dp"/>
+                app:tint="?subTextColor" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
-    </androidx.cardview.widget.CardView>
+    </com.artuok.appwork.library.AspectRatioView>
 </LinearLayout>

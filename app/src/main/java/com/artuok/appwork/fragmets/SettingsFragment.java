@@ -14,9 +14,11 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -35,6 +37,7 @@ import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 
+import com.artuok.appwork.LoginActivity;
 import com.artuok.appwork.MainActivity;
 import com.artuok.appwork.PhotoSelectActivity;
 import com.artuok.appwork.R;
@@ -42,22 +45,24 @@ import com.artuok.appwork.db.DbChat;
 import com.artuok.appwork.dialogs.ImagePreviewDialog;
 import com.artuok.appwork.dialogs.PermissionDialog;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.i18n.phonenumbers.NumberParseException;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.Phonenumber;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 import com.thekhaeng.pushdownanim.PushDownAnim;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.michaelrocks.libphonenumber.android.NumberParseException;
+import io.michaelrocks.libphonenumber.android.PhoneNumberUtil;
+import io.michaelrocks.libphonenumber.android.Phonenumber;
+
 public class SettingsFragment extends Fragment {
-
-
     Switch darkTheme, savermode;
     SharedPreferences sharedPreferences;
-    LinearLayout session, conversation, userSession;
+    LinearLayout session, conversation, userSession, notifications;
     TextView logint;
     ImageView photo;
     FirebaseAuth auth = FirebaseAuth.getInstance();
@@ -75,24 +80,41 @@ public class SettingsFragment extends Fragment {
         savermode = root.findViewById(R.id.saver_mode);
         sharedPreferences = requireActivity().getSharedPreferences("settings", Context.MODE_PRIVATE);
 
+        restartLaunchers();
         LinearLayout version = root.findViewById(R.id.version);
         session = root.findViewById(R.id.closephonesession);
         conversation = root.findViewById(R.id.deleteconversations);
         logint = root.findViewById(R.id.login);
         userSession = root.findViewById(R.id.loginSetting);
         photo = root.findViewById(R.id.photo);
+        notifications = root.findViewById(R.id.notifications_layout);
 
         photo.setOnClickListener(view -> {
-            if(isLogged(requireActivity())) {
+            if (isLogged(requireActivity())) {
                 previewImage(photo);
             }
         });
 
+        /*version.setOnClickListener(view -> {
+
+        });*/
+
         userSession.setOnClickListener(view -> {
-            if(isLogged(requireActivity())){
+            if (isLogged(requireActivity())) {
                 selectPhoto();
+            } else {
+                Intent i = new Intent(requireActivity(), LoginActivity.class);
+                startActivity(i);
             }
         });
+
+        PushDownAnim
+                .setPushDownAnimTo(notifications)
+                .setDurationPush(100)
+                .setScale(PushDownAnim.MODE_SCALE, 0.98f)
+                .setOnClickListener(view -> {
+                    ((MainActivity) requireActivity()).loadExternalFragment(((MainActivity) requireActivity()).alarmsFragment, requireActivity().getString(R.string.notifications));
+                });
 
         PushDownAnim.setPushDownAnimTo(session)
                 .setDurationPush(100)
@@ -149,6 +171,8 @@ public class SettingsFragment extends Fragment {
         setPhoto();
         return root;
     }
+
+
     private static void setLogged(Context context, boolean lg){
         SharedPreferences preferences = context.getSharedPreferences("chat", Context.MODE_PRIVATE);
         SharedPreferences.Editor edit = preferences.edit();
@@ -156,7 +180,7 @@ public class SettingsFragment extends Fragment {
         edit.apply();
     }
 
-    private static boolean isLogged(Context context){
+    public static boolean isLogged(Context context) {
         SharedPreferences preferences = context.getSharedPreferences("chat", Context.MODE_PRIVATE);
         boolean lg = preferences.getBoolean("logged", false);
 
@@ -185,20 +209,106 @@ public class SettingsFragment extends Fragment {
             String appname = getString(R.string.app_name);
             File myDir = new File(root, appname+" Profile");
 
-            if(myDir.exists()){
-                String fname = appname.toUpperCase()+"-USER-IMG.jpg";
+            if (myDir.exists()) {
+                String fname = appname.toUpperCase() + "-USER-IMG.jpg";
 
                 File file = new File(myDir, fname);
 
-                if(file.exists()){
+                if (file.exists()) {
                     map = BitmapFactory.decodeFile(file.getPath());
                     photo.setImageBitmap(map);
                 }
             }
+
+            if (!isPhotoProfile(requireActivity()))
+                if (!isMobileData(requireActivity()) || !isSaverModeActive(requireActivity())) {
+                    updatedPhotoProfile(requireActivity());
+                }
         }
     }
 
-    public void selectPhoto(){
+    public static boolean isPhotoProfile(Context context) {
+        SharedPreferences s = context.getSharedPreferences("settings", Context.MODE_PRIVATE);
+        return s.getBoolean("isPhotoProfile", false);
+    }
+
+    public static void setPhotoProfile(Context context, boolean has) {
+        SharedPreferences s = context.getSharedPreferences("settings", Context.MODE_PRIVATE);
+        SharedPreferences.Editor se = s.edit();
+        se.putBoolean("isPhotoProfile", has).apply();
+    }
+
+    public static void updatedPhotoProfile(Context context) {
+        String user = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+        StorageReference ref = FirebaseStorage.getInstance().getReference().child("chats").child(user).child("profile-photo.jpg");
+        File root = context.getExternalFilesDir("Media");
+        String appName = context.getString(R.string.app_name).toUpperCase();
+        File myDir = new File(root, appName + " Profile");
+        if (!myDir.exists()) {
+            boolean m = myDir.mkdirs();
+            if (m) {
+                File nomedia = new File(myDir, ".nomedia");
+                try {
+                    nomedia.createNewFile();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        String fname = appName + "-USER-IMG.jpg";
+        File file = new File(myDir, fname);
+        try {
+            file.createNewFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+        if (file.exists()) {
+            ref.getFile(file).addOnSuccessListener(it -> {
+                Log.d("cattoUser", "Downloaded");
+                SettingsFragment.setPhotoProfile(context, true);
+            }).addOnFailureListener(it -> {
+                it.printStackTrace();
+                SettingsFragment.deletePhoto(context, user);
+            });
+        }
+    }
+
+    public static void deletePhoto(Context context, String u) {
+        File root = context.getExternalFilesDir("Media");
+        String appname = context.getString(R.string.app_name).toUpperCase();
+        File myDir = new File(root, ".Profiles");
+        if (myDir.exists()) {
+            String fname = "CHAT-" + u + "-" + appname + ".jpg";
+            File file = new File(myDir, fname);
+            if (file.exists()) {
+                file.delete();
+            }
+        }
+    }
+
+    public static boolean isSaverModeActive(Context context) {
+        SharedPreferences s = context.getSharedPreferences("settings", Context.MODE_PRIVATE);
+        return s.getBoolean("datasaver", true);
+    }
+
+    public static boolean isMobileData(Context context) {
+        boolean mobileDataEnable = false;
+        try {
+            ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+            Class<?> cmClass = Class.forName(cm.getClass().getName());
+            Method method = cmClass.getDeclaredMethod("getMobileDataEnabled");
+            method.setAccessible(true);
+            mobileDataEnable = (boolean) method.invoke(cm);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return mobileDataEnable;
+    }
+
+    public void selectPhoto() {
         Dialog dialog = new Dialog(requireActivity());
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView(R.layout.bottom_selectimage_layout);
@@ -275,7 +385,38 @@ public class SettingsFragment extends Fragment {
 
     });
 
-    private void getPictureGallery(){
+    private void restartLaunchers() {
+        requestPermissionLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(), result -> {
+
+        });
+        resultLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        Intent data = result.getData();
+                        if (data.getIntExtra("requestCode", 0) == 3) {
+                        } else if (data.getIntExtra("requestCode", 0) == 2) {
+                            setPhoto();
+                        }
+                    }
+                }
+        );
+        resultForGalleryPicture = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                it -> {
+                    if (it.getResultCode() == RESULT_OK) {
+                        Uri data = it.getData().getData();
+                        Intent i = new Intent(requireActivity(), PhotoSelectActivity.class);
+                        i.setData(data);
+                        i.putExtra("from", "gallery");
+                        i.putExtra("icon", true);
+                        i.getIntExtra("requestCode", 2);
+                        resultLauncher.launch(i);
+                    }
+                });
+    }
+
+    private void getPictureGallery() {
         saveImages();
         Intent i = new Intent(Intent.ACTION_GET_CONTENT);
         i.setType("image/*");
@@ -283,7 +424,7 @@ public class SettingsFragment extends Fragment {
     }
 
     private void openCamera() {
-        if(requireActivity().checkSelfPermission(Manifest.permission.CAMERA)
+        if (requireActivity().checkSelfPermission(Manifest.permission.CAMERA)
                 == PackageManager.PERMISSION_GRANTED){
             saveImages();
             Intent i = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -329,7 +470,7 @@ public class SettingsFragment extends Fragment {
         SharedPreferences shared =
                 requireActivity().getSharedPreferences("chat", Context.MODE_PRIVATE);
         String code = shared.getString("regionCode", "ZZ");
-        PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
+        PhoneNumberUtil phoneUtil = PhoneNumberUtil.createInstance(requireContext());
 
         Phonenumber.PhoneNumber phone = phoneUtil.parse(number, code);
         return phoneUtil.format(

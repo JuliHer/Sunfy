@@ -14,54 +14,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/swipper">
-
-        <LinearLayout
-            android:id="@+id/linearLayout"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_weight="1">
-
-                <androidx.constraintlayout.widget.ConstraintLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent">
-
-                    <ImageView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:src="@drawable/ic_stars"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:tint="#9FFF" />
-
-                    <ImageView
-                        android:layout_width="150dp"
-                        android:layout_height="150dp"
-                        android:layout_margin="16dp"
-                        android:src="@drawable/vibrant_moon"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:tint="@color/white" />
-
-                </androidx.constraintlayout.widget.ConstraintLayout>
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_weight="1" />
-        </LinearLayout>
-
         <LinearLayout
             android:id="@+id/linearLayout3"
             android:layout_width="match_parent"
@@ -75,29 +27,20 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:gravity="center">
 
-                <androidx.appcompat.widget.AppCompatButton
-                    android:id="@+id/ok"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="16dp"
-                    android:layout_weight="1"
+                <ImageView
+                    android:id="@+id/put_off"
+                    android:layout_width="150dp"
+                    android:layout_height="150dp"
                     android:background="@drawable/button"
-                    android:text="Ok"
                     android:backgroundTint="@color/gray_100"
-                    android:textColor="@color/white" />
+                    android:src="@drawable/ic_book_open"
+                    android:padding="40dp"
+                    app:tint="@color/white" />
 
-                <androidx.appcompat.widget.AppCompatButton
-                    android:id="@+id/putoff"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="16dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/button"
-                    android:text="Posponer"
-                    android:backgroundTint="@color/gray_100"
-                    android:textColor="@color/white" />
+
             </LinearLayout>
         </LinearLayout>
 
@@ -112,23 +55,40 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
-            <TextView
-                android:id="@+id/time_clock"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:fontFamily="@font/poppins"
-                android:includeFontPadding="false"
-                android:text="12:00"
-                android:textSize="72sp"
-                android:textColor="@color/white" />
+            <ImageView
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:src="@drawable/ic_book"
+                app:tint="@color/white" />
 
             <TextView
                 android:id="@+id/info"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/title_string"
+                android:text="@string/pending_tasks"
+                android:fontFamily="@font/inter"
                 android:textAlignment="center"
                 android:textSize="16sp"
+                android:textColor="@color/white" />
+
+            <TextView
+                android:id="@+id/time_clock"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/inter"
+                android:includeFontPadding="false"
+                android:text="12:00"
+                android:textSize="64sp"
+                android:textColor="@color/white" />
+
+            <TextView
+                android:id="@+id/tm_clock"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/inter"
+                android:includeFontPadding="false"
+                android:text="a. m."
+                android:textSize="20sp"
                 android:textColor="@color/white" />
         </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>

@@ -4,6 +4,8 @@ import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.database.Cursor
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.net.ConnectivityManager
 import android.os.Bundle
@@ -20,14 +22,16 @@ import com.artuok.appwork.objects.ChatElement
 import com.artuok.appwork.objects.Item
 import com.faltenreich.skeletonlayout.Skeleton
 import com.faltenreich.skeletonlayout.applySkeleton
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.i18n.phonenumbers.NumberParseException
-import com.google.i18n.phonenumbers.PhoneNumberUtil
 import com.thekhaeng.pushdownanim.PushDownAnim
+import io.michaelrocks.libphonenumber.android.NumberParseException
+import io.michaelrocks.libphonenumber.android.PhoneNumberUtil
+import java.util.*
 
 
 class SelectActivity : AppCompatActivity() {
@@ -52,8 +56,10 @@ class SelectActivity : AppCompatActivity() {
     private var isLoading = false
     private var last = false
     private var loggedUsers = 0
+    private var isDetach = false
 
     private lateinit var backButton : ImageView
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,21 +67,32 @@ class SelectActivity : AppCompatActivity() {
 
 
         adapter = ChatAdapter(this, elements) { view, pos ->
-            val c = elements.get(pos).`object` as ChatElement
-            if (c.isLog) {
-                val i = Intent(this, ChatActivity::class.java)
-                i.putExtra("name", c.name)
-                i.putExtra("phone", c.number)
-                i.putExtra("chat", c.chat)
-                i.putExtra("publicKey", c.publicKey)
+            if (elements[pos].type == 0) {
+                val c = elements[pos].`object` as ChatElement
+                if (c.isLog) {
+                    val i = Intent(this, ChatActivity::class.java)
+                    val id = getChatId(c.number)
 
-                val returnIntent = Intent()
-                returnIntent.putExtra("requestCode", 2)
-                setResult(RESULT_OK, returnIntent)
+                    if (id >= 0) {
+                        i.putExtra("id", id)
+                        i.putExtra("first", false)
+                    } else {
+                        i.putExtra("id", c.id.toInt())
+                        i.putExtra("first", true)
+                    }
+
+                    val returnIntent = Intent()
+                    returnIntent.putExtra("requestCode", 2)
+                    setResult(RESULT_OK, returnIntent)
+                    startActivity(i)
+                    finish()
+                }
+            } else if (elements[pos].type == 2) {
+
+                val i = Intent(this, CreateGroupActivity::class.java)
                 startActivity(i)
                 finish()
             }
-
         }
 
         backButton = findViewById(R.id.back_button)
@@ -115,7 +132,7 @@ class SelectActivity : AppCompatActivity() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
                 currentItems = lManager.childCount
-                totalItems = lManager.itemCount - 4
+                totalItems = lManager.itemCount - 10
                 scrollOutItems = lManager.findFirstVisibleItemPosition()
                 if (isScrolling && currentItems + scrollOutItems >= totalItems) {
                     isScrolling = false
@@ -144,10 +161,10 @@ class SelectActivity : AppCompatActivity() {
             }
         })
 
-        /*val b = BitmapFactory.decodeResource(resources, R.drawable.users)
+        val b = BitmapFactory.decodeResource(resources, R.drawable.ic_users)
         val chatElement = ChatElement("", "Create Group", "", "", "", "", false, 0)
         chatElement.image = b
-        elements.add(Item(chatElement, 2))*/
+        elements.add(Item(chatElement, 2))
         realTask = AverageAsync(object : AverageAsync.ListenerOnEvent {
             override fun onPreExecute() {
 
@@ -158,7 +175,7 @@ class SelectActivity : AppCompatActivity() {
             }
 
             override fun onPostExecute(b: Boolean) {
-                adapter.notifyDataSetChanged()
+                adapter.notifyItemRangeInserted(index, 50)
                 index += 50
                 isLoading = false
                 if(index == 50){
@@ -173,37 +190,56 @@ class SelectActivity : AppCompatActivity() {
             }
 
             override fun onExecute(b: Boolean) {
-                getContactsReload()
+                getContacts()
             }
 
             override fun onPostExecute(b: Boolean) {
-                adapter.notifyDataSetChanged()
-                if (elements.size != 0)
-                    skeleton.showOriginal()
-                realTask.exec(true)
+
+                if (!isDetach) {
+                    realTask.exec(true)
+                }
             }
         })
         skeleton.showSkeleton()
         task.exec(false)
     }
 
-    private fun isSaverModeActive() : Boolean{
+    private fun getChatId(number: String): Int {
+        val dbChat = DbChat(this)
+        val db = dbChat.readableDatabase
+        val query = db.rawQuery(
+            "SELECT * FROM ${DbChat.T_CHATS} WHERE contact = '$number' AND type = '0'",
+            null
+        )
+
+        if (query.moveToFirst()) {
+            val i = query.getInt(0)
+            query.close()
+            return i
+        }
+        query.close()
+        return -1
+    }
+
+    private fun isSaverModeActive(): Boolean {
         val s = getSharedPreferences("settings", Context.MODE_PRIVATE)
 
         return s.getBoolean("datasaver", true)
     }
 
     override fun onDestroy() {
+        isDetach = true
         realTask.stop(true)
+        task.stop(true)
         super.onDestroy()
     }
 
-    private fun getInDataContacts(i : Int){
+    private fun getInDataContacts(from: Int, to: Int) {
         val dbHelper = DbChat(this)
         val db = dbHelper.readableDatabase
 
         val query = db.rawQuery(
-            "SELECT * FROM ${DbChat.T_CHATS_LOGGED} ORDER BY isLog DESC, name ASC LIMIT $i, 50",
+            "SELECT * FROM ${DbChat.T_CHATS_LOGGED} WHERE added = '1' ORDER BY log DESC, name COLLATE NOCASE ASC LIMIT $from, $to",
             null
         )
 
@@ -212,30 +248,64 @@ class SelectActivity : AppCompatActivity() {
                 val id = "${query.getInt(0)}"
                 val name = query.getString(1)
                 val number = query.getString(2)
-                val regionIso = query.getString(3)
-                val chat = query.getString(4)
-                val image = query.getString(6)
-                val log = query.getInt(5) == 1
-                val timestamp = query.getLong(3)
+                val log = query.getInt(4) == 1
 
                 val chatelement = ChatElement(
                     id,
                     name,
                     number,
-                    chat,
+                    "",
                     number,
-                    regionIso,
+                    "",
                     log,
-                    timestamp
+                    0
+                )
+
+                if (log) {
+                    loggedUsers++
+                }
+
+                elements.add(Item(chatelement, 0))
+            } while (query.moveToNext())
+        }
+
+        if (query.count == 0)
+            last = true
+
+        query.close()
+    }
+
+    private fun getInDataContacts(i: Int) {
+        val dbHelper = DbChat(this)
+        val db = dbHelper.readableDatabase
+
+        val query = db.rawQuery(
+            "SELECT * FROM ${DbChat.T_CHATS_LOGGED} WHERE added = '1' ORDER BY log DESC, name COLLATE NOCASE ASC LIMIT $i, 50",
+            null
+        )
+
+        if (query.moveToFirst()) {
+            do {
+                val id = "${query.getInt(0)}"
+                val name = query.getString(1)
+                val number = query.getString(2)
+                val log = query.getInt(4) == 1
+
+                val chatelement = ChatElement(
+                    id,
+                    name,
+                    number,
+                    "",
+                    number,
+                    "",
+                    log,
+                    0
                 )
 
                 if(log){
                     loggedUsers++
                 }
 
-
-                if(!isMovileDataActive() || !isSaverModeActive())
-                    getUserDetails(chatelement, elements.size)
                 elements.add(Item(chatelement, 0))
             } while (query.moveToNext())
         }
@@ -246,7 +316,7 @@ class SelectActivity : AppCompatActivity() {
         query.close()
     }
 
-    private fun getContactsReload() {
+    private fun getContacts() {
         val cr = contentResolver
         val table = ContactsContract.CommonDataKinds.Phone.CONTENT_URI
         val selection = "${ContactsContract.Contacts.HAS_PHONE_NUMBER} > ?"
@@ -257,8 +327,16 @@ class SelectActivity : AppCompatActivity() {
             null,
             selection,
             arguments,
-            "${ContactsContract.Contacts.DISPLAY_NAME} ASC"
+            "${ContactsContract.Contacts.DISPLAY_NAME} COLLATE NOCASE ASC"
         )
+
+        val dbChat = DbChat(this)
+        val dbr = dbChat.readableDatabase
+        val dbw = dbChat.writableDatabase
+        var cursor: Cursor
+
+        val myNumber = FirebaseAuth.getInstance().currentUser?.phoneNumber!!
+        val now = Calendar.getInstance().timeInMillis
         if (cur != null) {
             if (cur.moveToFirst()) {
                 val idIndex =
@@ -269,47 +347,75 @@ class SelectActivity : AppCompatActivity() {
                 var id: String
                 var name: String
                 var number: String
-                var codeNa: String
-
                 val shared: SharedPreferences =
                     getSharedPreferences("chat", Context.MODE_PRIVATE)
                 val code = shared.getString("regionCode", "ZZ")
-                val phoneUtil = PhoneNumberUtil.getInstance()
+                var codeNa: String
+                val phoneUtil = PhoneNumberUtil.createInstance(this)
                 do {
                     id = cur.getString(idIndex)
                     name = cur.getString(nameIndex)
                     number = cur.getString(numberIndex)
+                    codeNa = code.toString()
                     try {
-                        val phone = phoneUtil.parse(number, code)
-                        number = phoneUtil.format(
-                            phone,
-                            PhoneNumberUtil.PhoneNumberFormat.INTERNATIONAL
-                        )
-                        codeNa = code.toString()
+                        val phone = phoneUtil.parse(number, codeNa)
+                        val numberp =
+                            phoneUtil.format(phone, PhoneNumberUtil.PhoneNumberFormat.INTERNATIONAL)
+                        val re = Regex("[^0-9+]")
+                        number = re.replace(numberp, "")
 
                         if (phoneUtil.isValidNumber(phone)) {
-                            val re = Regex("[^0-9+]")
-                            number = re.replace(number, "")
-
-                            if (!numberPhones.contains(number)) {
-                                val chatElement = ChatElement(
+                            if (!numberPhones.contains(number) && myNumber != number) {
+                                val chat = ChatElement(
                                     id,
                                     name,
-                                    number,
+                                    numberp,
                                     "",
                                     number,
                                     codeNa,
                                     false,
                                     0
                                 )
-
                                 contactsCount++
 
-                                if(!checkIfIsInDatabase(number))
-                                    uploadContactToDB(chatElement)
-
-                                updateByNumberPhone(name, number)
+                                cursor = dbr.query(
+                                    DbChat.T_CHATS_LOGGED,
+                                    null,
+                                    "number = ?",
+                                    arrayOf(number),
+                                    "",
+                                    "",
+                                    ""
+                                )
+                                if (cursor.moveToFirst()) {
+                                    val lastname = cursor.getString(1)
+                                    if (lastname != name) {
+                                        val values = ContentValues()
+                                        values.put("name", name)
+                                        dbw.update(
+                                            DbChat.T_CHATS_LOGGED,
+                                            values,
+                                            "number = ?",
+                                            arrayOf(number)
+                                        )
+                                    }
+                                } else {
+                                    val values = ContentValues()
+                                    values.put("name", name)
+                                    values.put("number", number)
+                                    values.put("ISO", codeNa)
+                                    values.put("image", "")
+                                    values.put("log", false)
+                                    values.put("publicKey", "noKey")
+                                    values.put("userId", "noUser")
+                                    values.put("updated", now)
+                                    values.put("added", true)
+                                    dbw.insert(DbChat.T_CHATS_LOGGED, null, values)
+                                }
+                                if (!isMovileDataActive() || !isSaverModeActive())
+                                    getUserDetails(chat)
                                 numberPhones.add(number)
+                                cursor.close()
                             }
                         }
 
@@ -317,61 +423,48 @@ class SelectActivity : AppCompatActivity() {
                         e.printStackTrace()
                     }
 
+
                 } while (cur.moveToNext())
+
             }
             cur.close()
         }
     }
 
-    private fun getUserDetails(chatElement: ChatElement, index : Int) {
-        val userDB = FirebaseDatabase.getInstance().reference.child("user")
-        val query = userDB.orderByChild("phone").equalTo(chatElement.number)
+    private fun getUserDetails(chatElement: ChatElement) {
+        val userDB = FirebaseDatabase.getInstance().reference
+        val query = userDB.child("user").orderByChild("phone").equalTo(chatElement.number)
         query.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 contactsDetailed++
                 if (snapshot.exists()) {
                     var phone = ""
-                    var name = ""
                     var publicKey = ""
+                    var updated = 0L
                     for (child in snapshot.children) {
                         if (child.child("phone").value != null)
                             phone = child.child("phone").value.toString()
-                        if (child.child("name").value != null)
-                            name = child.child("name").value.toString()
                         if (child.child("publicKey").value != null)
                             publicKey = child.child("publicKey").value.toString()
+                        if (child.child("updated").value != null)
+                            updated = child.child("updated").value.toString().toLong()
 
                         val imageKey = child.key!!
 
-                        if(!chatElement.isLog){
-                            loggedUsers++
-                            chatElement.isLog = true
-                            adapter.notifyItemChanged(index)
-                            adapter.notifyItemMoved(index, loggedUsers)
-                        }
-
-                        chatElement.isLog = true
-
-                        chatElement.publicKey = publicKey
                         updateContactPublicKey(publicKey, phone)
                         updateContactUser(phone, imageKey)
                         updateContactLog(phone, true)
-
+                        updateContactInfo(updated, phone)
                         return
                     }
                 } else {
-                    chatElement.publicKey = ""
-
-                    if(chatElement.isLog){
-                        loggedUsers--
-                        chatElement.isLog = false
-                        adapter.notifyItemChanged(index)
-                        adapter.notifyItemMoved(index, elements.size-1)
-                    }
-                    chatElement.isLog = false
                     updateContactPublicKey("", chatElement.number)
                     updateContactUser(chatElement.number, "noUser")
                     updateContactLog(chatElement.number, false)
+                }
+
+                if (contactsCount == contactsDetailed) {
+
                 }
             }
 
@@ -379,86 +472,6 @@ class SelectActivity : AppCompatActivity() {
 
             }
         })
-    }
-
-    private fun getAllContactsSaved(b: Int, i : Int){
-        val dbHelper = DbChat(this)
-        val db = dbHelper.readableDatabase
-
-        val query = db.rawQuery(
-            "SELECT * FROM ${DbChat.T_CHATS_LOGGED} ORDER BY isLog DESC, name ASC LIMIT 0, $i",
-            null
-        )
-
-        if (query.moveToFirst()) {
-            do {
-                val id = "${query.getInt(0)}"
-                val name = query.getString(1)
-                val number = query.getString(2)
-                val regionIso = query.getString(3)
-                val chat = query.getString(4)
-                val image = query.getString(6)
-                val log = query.getInt(5) == 1
-                val timestamp = query.getLong(3)
-
-                val chatelement = ChatElement(
-                    id,
-                    name,
-                    number,
-                    chat,
-                    number,
-                    regionIso,
-                    log,
-                    timestamp
-                )
-                elements.add(Item(chatelement, 0))
-            } while (query.moveToNext())
-            adapter.notifyDataSetChanged()
-        }
-
-        query.close()
-    }
-
-    private fun getAllContactsSaved(last : Boolean) {
-        elements.clear()
-        val dbHelper = DbChat(this)
-        val db = dbHelper.readableDatabase
-
-        val query = db.rawQuery(
-            "SELECT * FROM ${DbChat.T_CHATS_LOGGED} ORDER BY isLog DESC, name ASC",
-            null
-        )
-
-        if (query.moveToFirst()) {
-            do {
-                val id = "${query.getInt(0)}"
-                val name = query.getString(1)
-                val number = query.getString(2)
-                val regionIso = query.getString(3)
-                val chat = query.getString(4)
-                val image = query.getString(6)
-                val log = query.getInt(5) == 1
-                val timestamp = query.getLong(3)
-
-                val chatelement = ChatElement(
-                    id,
-                    name,
-                    number,
-                    chat,
-                    number,
-                    regionIso,
-                    log,
-                    timestamp
-                )
-                elements.add(Item(chatelement, 0))
-            } while (query.moveToNext())
-            adapter.notifyDataSetChanged()
-            if(last){
-                skeleton.showOriginal()
-            }
-        }
-
-        query.close()
     }
 
     private fun isMovileDataActive() : Boolean{
@@ -476,71 +489,36 @@ class SelectActivity : AppCompatActivity() {
         return mobileDataEnable
     }
 
-    private fun uploadContactToDB(chat: ChatElement) {
-        val dbHelper = DbChat(this)
-        val db = dbHelper.writableDatabase
 
-        val name = chat.name
-        val number = chat.number
-        var iso = chat.numberInternational
-        val chatId = chat.chat
-        val publicKey = chat.publicKey
-        val values = ContentValues()
-
-        if (iso == null)
-            iso = "MX"
-
-        values.put("name", name)
-        values.put("phone", number)
-        values.put("regionISO", iso)
-        values.put("chatId", chatId)
-        values.put("img", "")
-        values.put("isLog", false)
-        values.put("publicKey", "noKey")
-        values.put("userId", "noUser")
-        db.insert(DbChat.T_CHATS_LOGGED, null, values)
-    }
-
-    private fun updateContactUser(p: String, img: String) {
+    private fun updateContactUser(p: String, user: String) {
         val dbHelper = DbChat(this)
         val db = dbHelper.writableDatabase
 
         val cv = ContentValues()
-        cv.put("userId", img)
-        db.update(DbChat.T_CHATS_LOGGED, cv, "phone = '$p'", null)
+        cv.put("userId", user)
+        db.update(DbChat.T_CHATS_LOGGED, cv, "number = '$p'", null)
     }
 
-    private fun updateByNumberPhone(name: String, number: String) {
-        val dbchat = DbChat(this)
-        val db = dbchat.writableDatabase
 
+    private fun updateContactInfo(time: Long, phone: String) {
+        val dbChat = DbChat(this)
+        val db = dbChat.writableDatabase
         val values = ContentValues()
+        values.put("updated", time)
 
-        values.put("name", name)
-        db.update(DbChat.T_CHATS_LOGGED, values, "phone = '$number'", null)
+        db.update(DbChat.T_CHATS_LOGGED, values, "number = '$phone'", null)
     }
+
 
     private fun updateContactLog(p: String, b: Boolean) {
         val dbHelper = DbChat(this)
         val db = dbHelper.writableDatabase
 
         val cv = ContentValues()
-        cv.put("isLog", if (b) 1 else 0)
-        db.update(DbChat.T_CHATS_LOGGED, cv, "phone = '$p'", null)
+        cv.put("log", if (b) 1 else 0)
+        db.update(DbChat.T_CHATS_LOGGED, cv, "number = '$p'", null)
     }
 
-    private fun checkIfIsInDatabase(number: String) : Boolean{
-        val dbHelper = DbChat(this)
-        val db = dbHelper.readableDatabase
-        val c = db.rawQuery("SELECT * FROM ${DbChat.T_CHATS_LOGGED} WHERE phone = ?", arrayOf(number))
-
-        if(c != null && c.moveToFirst()){
-            c.close()
-            return true
-        }
-        c.close()
-        return false
-    }
 
     private fun updateContactPublicKey(publicKey: String, p: String) {
         val dbHelper = DbChat(this)
@@ -548,7 +526,7 @@ class SelectActivity : AppCompatActivity() {
 
         val cv = ContentValues()
         cv.put("publicKey", publicKey)
-        db.update(DbChat.T_CHATS_LOGGED, cv, "phone = '$p'", null)
+        db.update(DbChat.T_CHATS_LOGGED, cv, "number = '$p'", null)
     }
 
 

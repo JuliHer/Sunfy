@@ -27,8 +27,10 @@
             android:layout_height="wrap_content"
             android:text="@string/required_permissions"
             android:textSize="16sp"
-            android:textStyle="bold"
-            android:textAllCaps="true" />
+            android:textFontWeight="600"
+            android:textAllCaps="true"
+            android:maxLines="2"
+            android:ellipsize="end" />
 
         <TextView
             android:id="@+id/txt_dialog"

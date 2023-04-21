@@ -23,8 +23,6 @@ import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.content.ContextCompat;
-import androidx.core.view.GravityCompat;
-import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
@@ -39,6 +37,9 @@ import com.artuok.appwork.fragmets.SettingsFragment;
 import com.artuok.appwork.fragmets.SubjectsFragment;
 import com.artuok.appwork.fragmets.homeFragment;
 import com.artuok.appwork.library.CalendarWeekView;
+import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.RequestConfiguration;
+import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationBarView;
@@ -47,6 +48,7 @@ import com.google.android.material.snackbar.BaseTransientBottomBar;
 import com.google.android.material.snackbar.Snackbar;
 import com.thekhaeng.pushdownanim.PushDownAnim;
 
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Random;
 
@@ -54,11 +56,11 @@ public class MainActivity extends AppCompatActivity {
 
 
     //Navigation
-    private BottomNavigationView navigation;
-    private DrawerLayout drawerLayout;
+    public BottomNavigationView navigation;
     public Fragment currentFragment;
     private NavigationView navigationView;
-    public static int CURRENT_VERSION = 14;
+    public static int CURRENT_VERSION = 18;
+
 
     //fragments
     homeFragment homefragment = new homeFragment();
@@ -66,10 +68,10 @@ public class MainActivity extends AppCompatActivity {
     CalendarFragment calendarFragment = new CalendarFragment();
     SubjectsFragment subjectsFragment = new SubjectsFragment();
 
-    ChatFragment chatFragment = new ChatFragment();
-    AveragesFragment averagesFragment = new AveragesFragment();
-    AlarmsFragment alarmsFragment = new AlarmsFragment();
-    SettingsFragment settingsFragment = new SettingsFragment();
+    public ChatFragment chatFragment = new ChatFragment();
+    public AveragesFragment averagesFragment = new AveragesFragment();
+    public AlarmsFragment alarmsFragment = new AlarmsFragment();
+    public SettingsFragment settingsFragment = new SettingsFragment();
 
 
     Fragment firstCurrentFragment = homefragment;
@@ -77,10 +79,10 @@ public class MainActivity extends AppCompatActivity {
     Fragment thirdCurrentFragment = calendarFragment;
     Fragment fourCurrentFragment = subjectsFragment;
 
-
     //floating button
     FloatingActionButton actionButton;
 
+    CollapsingToolbarLayout collapsingToolbar;
     //Toolbar
     Toolbar toolbar;
 
@@ -110,17 +112,32 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         navigation = findViewById(R.id.bottom_navigation);
 
-        drawerLayout = findViewById(R.id.drawerLayout);
         navigationView = findViewById(R.id.navigationView);
 
+        collapsingToolbar = findViewById(R.id.collapsingToolbar);
         toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle("");
+
         setSupportActionBar(toolbar);
-        startFragment(homefragment);
-        toolbar.setNavigationIcon(getDrawable(R.drawable.ic_list));
-        toolbar.setNavigationOnClickListener(view -> {
-            drawerLayout.openDrawer(GravityCompat.START);
-        });
+
+        MobileAds.initialize(this);
+        RequestConfiguration configuration = new RequestConfiguration.Builder().setTestDeviceIds(Arrays.asList("1C6196DE1539B306778414AEE133E09B")).build();
+        MobileAds.setRequestConfiguration(configuration);
+        if (savedInstanceState != null)
+            position = savedInstanceState.getInt("position", 1);
+
+        if (position == 1) {
+            startFragment(homefragment);
+        } else if (position == 2) {
+            startFragment(awaitingFragment);
+        } else if (position == 3) {
+            startFragment(calendarFragment);
+        } else if (position == 4) {
+            startFragment(subjectsFragment);
+        } else {
+            startFragment(homefragment);
+        }
+
         instance = this;
 
         actionButton = findViewById(R.id.floating_button);
@@ -148,23 +165,30 @@ public class MainActivity extends AppCompatActivity {
                     resultLauncher.launch(i);
                 });
 
-        navigation.setOnItemSelectedListener(mOnNavigationItemSelectedListener);
-        navigationView.setNavigationItemSelectedListener(mOnItemSelectedListener);
+        if (navigation != null)
+            navigation.setOnItemSelectedListener(mOnNavigationItemSelectedListener);
+        if (navigation == null)
+            navigationView.setNavigationItemSelectedListener(mOnItemSelectedListener);
 
-        if (getIntent().getExtras() != null)
-            if (getIntent().getStringExtra("task").equals("do tasks"))
-                navigation.setSelectedItemId(R.id.awaiting_fragment);
-
-        if(isWarning() || !isActualVersion()){
-            showErrorAnnouncement();
+        if (getIntent().getExtras() != null) {
+            Bundle extras = getIntent().getExtras();
+            if (extras.getString("task", "").equals("new task")) {
+                Intent i = new Intent(this, CreateAwaitingActivity.class);
+                i.getIntExtra("requestCode", 2);
+                startActivity(i);
+            }
         }
 
-        if(!isActualVersion()){
+
+        if (isWarning() || !isActualVersion()) {
+            //showErrorAnnouncement();
+        }
+
+        if (!isActualVersion()) {
             showAnnouncement();
-            setWarning(false);
+            //setWarning(false);
             setVersion(CURRENT_VERSION);
         }
-
     }
 
     @SuppressLint("RestrictedApi")
@@ -173,8 +197,6 @@ public class MainActivity extends AppCompatActivity {
         Snackbar snackbar = Snackbar.make(layout, "", BaseTransientBottomBar.LENGTH_LONG);
 
         View customSnack = getLayoutInflater().inflate(R.layout.snack_notification_layout, null);
-
-
 
         snackbar.getView().setBackgroundColor(Color.TRANSPARENT);
 
@@ -247,25 +269,76 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void navigateTo(int n) {
-        switch (n) {
-            case 0:
-                navigation.setSelectedItemId(R.id.homefragment);
-                break;
-            case 1:
-                navigation.setSelectedItemId(R.id.awaiting_fragment);
-                break;
-            case 2:
-                navigation.setSelectedItemId(R.id.calendar_fragment);
-                break;
-            case 3:
-                navigation.setSelectedItemId(R.id.nav_subject);
-                break;
-            case 4:
-                navigation.setSelectedItemId(R.id.homefragment);
-                position = 5;
-                LoadTextFragment(chatFragment, getString(R.string.chat));
-                break;
-        }
+        if (navigation != null)
+            switch (n) {
+                case 0:
+                    navigation.setSelectedItemId(R.id.homefragment);
+                    break;
+                case 1:
+                    navigation.setSelectedItemId(R.id.awaiting_fragment);
+                    break;
+                case 2:
+                    navigation.setSelectedItemId(R.id.calendar_fragment);
+                    break;
+                case 3:
+                    navigation.setSelectedItemId(R.id.nav_subject);
+                    break;
+                case 4:
+                    navigation.setSelectedItemId(R.id.homefragment);
+                    position = 5;
+                    LoadTextFragment(chatFragment, getString(R.string.chat));
+                    break;
+                case 5:
+                    navigation.setSelectedItemId(R.id.homefragment);
+                    position = 6;
+                    LoadFragment(averagesFragment);
+                    break;
+                case 6:
+                    navigation.setSelectedItemId(R.id.homefragment);
+                    position = 7;
+                    LoadFragment(alarmsFragment);
+                    break;
+                case 7:
+                    navigation.setSelectedItemId(R.id.homefragment);
+                    position = 8;
+                    LoadTextFragment(settingsFragment, getString(R.string.settings_menu));
+                    break;
+            }
+        else
+            switch (n) {
+                case 0:
+                    position = 1;
+                    LoadFragment(homefragment);
+                    break;
+                case 1:
+                    position = 2;
+                    LoadFragment(awaitingFragment);
+                    break;
+                case 2:
+                    position = 3;
+                    LoadFragment(calendarFragment);
+                    break;
+                case 3:
+                    position = 4;
+                    LoadFragment(subjectsFragment);
+                    break;
+                case 4:
+                    position = 5;
+                    LoadTextFragment(chatFragment, getString(R.string.chat));
+                    break;
+                case 5:
+                    position = 6;
+                    LoadFragment(averagesFragment);
+                    break;
+                case 6:
+                    position = 7;
+                    LoadFragment(alarmsFragment);
+                    break;
+                case 7:
+                    position = 8;
+                    LoadTextFragment(settingsFragment, getString(R.string.settings_menu));
+                    break;
+            }
     }
 
     ActivityResultLauncher<Intent> resultLauncher = registerForActivityResult(
@@ -292,7 +365,6 @@ public class MainActivity extends AppCompatActivity {
         if(chatFragment.isAdded()){
             chatFragment.loadChatsMessage();
         }
-
     }
 
     public void updateWidget() {
@@ -314,21 +386,22 @@ public class MainActivity extends AppCompatActivity {
         dialog.setTextColor(textColor);
 
 
-        int[] banners = new int[8];
-        banners[0] = R.mipmap.banner_2;
-        banners[1] = R.mipmap.banner_3;
-        banners[2] = R.mipmap.banner_4;
-        banners[3] = R.mipmap.banner_5;
-        banners[4] = R.mipmap.banner_6;
-        banners[5] = R.mipmap.banner_7;
-        banners[6] = R.mipmap.banner_8;
-        banners[7] = R.mipmap.banner_9;
+        int[] banners = new int[9];
+        banners[0] = R.mipmap.banner;
+        banners[1] = R.mipmap.banner_2;
+        banners[2] = R.mipmap.banner_3;
+        banners[3] = R.mipmap.banner_4;
+        banners[4] = R.mipmap.banner_5;
+        banners[5] = R.mipmap.banner_6;
+        banners[6] = R.mipmap.banner_7;
+        banners[7] = R.mipmap.banner_8;
+        banners[8] = R.mipmap.banner_9;
 
         Random r = new Random();
-        int set = Math.abs(r.nextInt()) % 8;
+        int set = Math.abs(r.nextInt()) % 9;
 
         int banner = banners[set];
-        
+
         dialog.setImage(banner);
 
         dialog.setAgree(false);
@@ -344,7 +417,7 @@ public class MainActivity extends AppCompatActivity {
         AnnouncementDialog dialog = new AnnouncementDialog();
         dialog.setTitle(getString(R.string.v_unstable));
         dialog.setText(getString(R.string.contact_with_progr_unstable_v));
-        dialog.setBackgroundCOlor(getColor(R.color.red_500));
+        dialog.setBackgroundCOlor(getColor(R.color.yellow_700));
         dialog.setDrawable(R.drawable.alert_octagon);
         dialog.setAgree(true);
         dialog.setOnNegativeClickListener(getString(R.string.dismiss), view -> {
@@ -375,33 +448,10 @@ public class MainActivity extends AppCompatActivity {
 
     boolean changesFromDrawer = false;
 
+
     NavigationView.OnNavigationItemSelectedListener mOnItemSelectedListener = item -> {
-        drawerLayout.close();
-        changesFromDrawer = true;
-        navigation.setSelectedItemId(R.id.homefragment);
 
-        switch (item.getItemId()) {
-            case R.id.nav_averages:
-                LoadFragment(averagesFragment);
-                return true;
-            case R.id.nav_settings:
-                LoadTextFragment(settingsFragment, getString(R.string.settings_menu));
-                return true;
-            case R.id.nav_alarms:
-                LoadFragment(alarmsFragment);
-                return true;
-            case R.id.nav_chat:
-                position = 5;
-                LoadTextFragment(chatFragment, getString(R.string.chat));
-                return true;
-        }
 
-        return false;
-    };
-
-    NavigationBarView.OnItemSelectedListener mOnNavigationItemSelectedListener = item -> {
-
-        changesFromDrawer = false;
         switch (item.getItemId()) {
             case R.id.homefragment:
                 position = 1;
@@ -419,6 +469,39 @@ public class MainActivity extends AppCompatActivity {
                 position = 4;
                 LoadFragment(subjectsFragment);
                 return true;
+        }
+
+        return false;
+    };
+
+    NavigationBarView.OnItemSelectedListener mOnNavigationItemSelectedListener = item -> {
+
+
+        if (!changesFromDrawer) {
+            changesFromDrawer = false;
+            switch (item.getItemId()) {
+                case R.id.homefragment:
+                    position = 1;
+
+                    LoadFragment(homefragment);
+                    return true;
+                case R.id.awaiting_fragment:
+                    position = 2;
+                    LoadFragment(awaitingFragment);
+                    return true;
+                case R.id.calendar_fragment:
+                    position = 3;
+                    LoadFragment(calendarFragment);
+                    return true;
+                case R.id.nav_subject:
+                    position = 4;
+                    LoadFragment(subjectsFragment);
+                    return true;
+            }
+        } else {
+            changesFromDrawer = false;
+            position = 1;
+            return true;
         }
 
         return false;
@@ -443,6 +526,8 @@ public class MainActivity extends AppCompatActivity {
             thirdCurrentFragment = fragment;
         } else if (position == 4) {
             fourCurrentFragment = fragment;
+        } else {
+            firstCurrentFragment = fragment;
         }
         currentFragment = fragment;
         transaction.commit();
@@ -451,20 +536,13 @@ public class MainActivity extends AppCompatActivity {
     void LoadTextFragment(Fragment fragment, String title) {
         FragmentTransaction transaction =
                 getSupportFragmentManager()
-                        .beginTransaction()
-                ;
+                        .beginTransaction();
 
-//        transaction.remove(currentFragment)
-//                .add(R.id.frameLayoutMain, fragment)
-//
+
         if (fragment.isAdded()) {
-            transaction
-                    .hide(currentFragment)
-                    .show(fragment);
-
+            return;
         } else {
-            transaction
-                    .hide(currentFragment)
+            transaction.remove(currentFragment)
                     .add(R.id.frameLayoutMain, fragment);
         }
 
@@ -523,31 +601,110 @@ public class MainActivity extends AppCompatActivity {
         ((TextView) toolbar.findViewById(R.id.title)).setText(title);
     }
 
+    public void loadExternalFragment(Fragment fragment, String name) {
+        FragmentTransaction transaction =
+                getSupportFragmentManager()
+                        .beginTransaction();
+
+        if (fragment.isAdded()) {
+            return;
+        } else {
+            transaction.remove(currentFragment)
+                    .add(R.id.frameLayoutMain, fragment);
+        }
+
+        if (navigation != null) {
+            changesFromDrawer = true;
+            navigation.setSelectedItemId(R.id.homefragment);
+        }
+        position = 1;
+
+        if (name == getString(R.string.chat)) {
+            actionButton.setImageResource(R.drawable.message_circle);
+            PushDownAnim.setPushDownAnimTo(actionButton)
+                    .setScale(PushDownAnim.MODE_SCALE, 0.98f)
+                    .setDurationPush(100)
+                    .setOnClickListener(view -> {
+                        SharedPreferences sharedPreferences = getSharedPreferences("chat", MODE_PRIVATE);
+                        boolean b = sharedPreferences.getBoolean("logged", false);
+                        if (b) {
+                            Intent i = new Intent(this, SelectActivity.class);
+                            if (ContextCompat.checkSelfPermission(this,
+                                    Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
+                                resultLauncherSelect.launch(i);
+                            } else if (shouldShowRequestPermissionRationale(Manifest.permission.READ_CONTACTS)) {
+                                showOnContextUI();
+                            } else {
+                                requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS);
+                            }
+                        } else {
+                            showSnackbar(getString(R.string.login_able_chat));
+                        }
+                    });
+        } else {
+            actionButton.setImageResource(R.drawable.ic_baseline_add_24);
+            PushDownAnim.setPushDownAnimTo(actionButton)
+                    .setScale(PushDownAnim.MODE_SCALE, 0.98f)
+                    .setDurationPush(100)
+                    .setOnClickListener(view -> {
+
+                        if (calendarFragment.isAdded()) {
+                            if (calendarFragment.isVisible()) {
+                                if (calendarFragment.isScheduleVisible()) {
+                                    Calendar calendar = Calendar.getInstance();
+                                    int day = calendar.get(Calendar.DAY_OF_WEEK) - 1;
+                                    long hour = 43200;
+                                    long duration = 3600;
+                                    calendarFragment.startCreateActivity(new CalendarWeekView.EventsTask(day, hour, duration, 0, ""));
+                                    return;
+                                }
+                            }
+                        }
+
+                        Intent i = new Intent(this, CreateAwaitingActivity.class);
+                        i.getIntExtra("requestCode", 2);
+                        resultLauncher.launch(i);
+                    });
+        }
+
+        currentFragment = fragment;
+        transaction.commit();
+
+
+        ((TextView) toolbar.findViewById(R.id.title)).setText(name);
+    }
 
     public void LoadFragment(Fragment fragment) {
         FragmentTransaction transaction =
                 getSupportFragmentManager()
-                        .beginTransaction()
-                        ;
+                        .beginTransaction();
+
+//        if (fragment.isAdded()) {
+//            transaction
+//                    .hide(currentFragment)
+//                    .show(fragment);
+//        } else {
+//            transaction
+//                    .hide(currentFragment)
+//                    .add(R.id.frameLayoutMain, fragment);
+//        }
+
 
         if (fragment.isAdded()) {
-            transaction
-                    .hide(currentFragment)
-                    .show(fragment);
-
+            return;
         } else {
-            transaction
-                    .hide(currentFragment)
+            transaction.remove(currentFragment)
                     .add(R.id.frameLayoutMain, fragment);
         }
+
 
         actionButton.setImageResource(R.drawable.ic_baseline_add_24);
         PushDownAnim.setPushDownAnimTo(actionButton)
                 .setScale(PushDownAnim.MODE_SCALE, 0.98f)
                 .setDurationPush(100)
                 .setOnClickListener(view -> {
-                    if(calendarFragment.isAdded()){
-                        if(calendarFragment.isVisible()){
+                    if (calendarFragment.isAdded()) {
+                        if (calendarFragment.isVisible()) {
                             if(calendarFragment.isScheduleVisible()){
                                 Calendar calendar = Calendar.getInstance();
                                 int day = calendar.get(Calendar.DAY_OF_WEEK)-1;
@@ -571,7 +728,11 @@ public class MainActivity extends AppCompatActivity {
         ((TextView) toolbar.findViewById(R.id.title)).setText(MainActivity.this.getString(R.string.app_name));
     }
 
-
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        outState.putInt("position", position);
+        super.onSaveInstanceState(outState);
+    }
 
     public void notifyAllChanged() {
         if (homefragment.isAdded()) {
@@ -588,13 +749,13 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if(subjectsFragment.isAdded()){
-            subjectsFragment.onNotifyDataChaged();
+            subjectsFragment.onNotifyDataChanged();
         }
     }
 
     public void notifyToChatChanged(){
         if(chatFragment.isAdded()){
-            chatFragment.onDataChange();
+            chatFragment.loadChatsMessage();
         }
     }
 
@@ -613,7 +774,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if(subjectsFragment.isAdded() && position != 4){
-            subjectsFragment.onNotifyDataChaged();
+            subjectsFragment.onNotifyDataChanged();
         }
     }
 
@@ -638,7 +799,7 @@ public class MainActivity extends AppCompatActivity {
             dialog.dismiss();
         });
 
-        dialog.setDrawable(R.drawable.users);
+        dialog.setDrawable(R.drawable.ic_users);
         dialog.show(getSupportFragmentManager(), "permissions");
     }
 

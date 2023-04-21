@@ -21,11 +21,13 @@
             />
         <TextView
             android:id="@+id/title"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/nchat"
+            android:layout_marginEnd="60dp"
             android:textSize="20sp"
-            android:fontFamily="@font/poppins"
+            android:textAlignment="center"
+            style="@style/poppinsFont"
             android:includeFontPadding="false"
             android:textFontWeight="500" />
     </LinearLayout>

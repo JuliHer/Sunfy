@@ -38,7 +38,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="@string/you"
-                        android:textStyle="bold"
+                        android:textFontWeight="500"
                         android:textSize="17sp"/>
                     <TextView
                         android:id="@+id/login"
@@ -74,18 +74,14 @@
                     android:padding="16dp"
                     app:tint="?subTextColor" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/dark_theme"
-                    android:textSize="16sp" />
-
                 <Switch
                     android:id="@+id/change_theme"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_margin="16dp"
-
+                    android:layout_marginEnd="16dp"
+                    android:text="@string/dark_theme"
+                    android:textSize="16sp"
+                    android:textFontWeight="500"
                     tools:ignore="UseSwitchCompatOrMaterialXml" />
             </LinearLayout>
             <TextView
@@ -114,29 +110,77 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:paddingTop="16dp">
-                    <TextView
+                    android:paddingTop="16dp"
+                    android:layout_marginEnd="16dp">
 
+                    <Switch
+                        android:id="@+id/saver_mode"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:textSize="16sp"
+                        android:textFontWeight="500"
                         android:text="@string/use_wifi"
-                        android:textSize="16sp" />
+                        tools:ignore="UseSwitchCompatOrMaterialXml" />
+
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="@string/active_wifi_saver"
                         android:textSize="12sp"
-                        android:textColor="?subTextColor"
-                        />
+                        android:textColor="?subTextColor" />
                 </LinearLayout>
+            </LinearLayout>
 
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="16dp"
+                android:paddingStart="16dp"
+                android:text="@string/notifications"
+                android:textStyle="bold"
+                android:textColor="?subTextColor" />
 
-                <Switch
-                    android:id="@+id/saver_mode"
+            <LinearLayout
+                android:id="@+id/notifications_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <ImageView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_margin="16dp"
-                    tools:ignore="UseSwitchCompatOrMaterialXml" />
+                    android:src="@drawable/ic_bell"
+                    android:padding="16dp"
+                    app:tint="?subTextColor" />
+
+                <LinearLayout
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingTop="16dp"
+                    android:layout_marginEnd="16dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/notifications"
+                        android:textSize="16sp"
+                        android:textFontWeight="500" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textSize="12sp"
+                        android:textColor="?subTextColor" />
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/chevron_right"
+                    android:padding="16dp"
+                    app:tint="?backgroundBorder" />
             </LinearLayout>
             <TextView
                 android:layout_width="match_parent"
@@ -176,7 +220,8 @@
                         android:layout_height="wrap_content"
                         android:text="@string/del_conv"
                         android:textSize="16sp"
-                        android:textColor="@color/red_500" />
+                        android:textColor="@color/red_500"
+                        android:textFontWeight="500" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -198,6 +243,7 @@
                         android:layout_height="wrap_content"
                         android:text="@string/del_all"
                         android:textSize="16sp"
+                        android:textFontWeight="500"
                         android:textColor="@color/red_500" />
                 </LinearLayout>
             </LinearLayout>
@@ -222,6 +268,7 @@
                     android:layout_height="wrap_content"
                     android:text="@string/log_out"
                     android:textSize="16sp"
+                    android:textFontWeight="500"
                     android:textColor="@color/red_500" />
             </LinearLayout>
 
@@ -244,6 +291,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/version"
+                    android:textFontWeight="500"
                     android:textSize="16sp" />
 
                 <TextView

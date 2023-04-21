@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.SET_ALARM" />
@@ -21,13 +22,40 @@
 
     <application
         android:allowBackup="true"
-        android:configChanges="orientation|keyboardHidden|screenSize"
+        android:configChanges="keyboardHidden"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.AppWork"
         android:usesCleartextTraffic="true">
+        <activity
+            android:name=".LoginActivity"
+            android:exported="false">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
+
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-5838551368289900~3235231874" />
+        <!--
+<meta-data
+
+            android:value="ca-app-pub-5838551368289900/1451662327"/>
+        <meta-data
+
+            android:value="ca-app-pub-3940256099942544/2247696110"/>
+        -->
+        <activity
+            android:name=".CreateGroupActivity"
+            android:exported="false">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
+
         <receiver
             android:name=".widgets.TodayTaskWidget"
             android:exported="false">
@@ -63,7 +91,9 @@
         </activity>
         <activity
             android:name=".CreateAwaitingActivity"
-            android:exported="false">
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:parentActivityName=".MainActivity">
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />
@@ -87,6 +117,7 @@
             android:excludeFromRecents="true"
             android:exported="true"
             android:launchMode="singleTask"
+            android:screenOrientation="portrait"
             android:showForAllUsers="true"
             android:showOnLockScreen="true"
             android:showWhenLocked="true"
@@ -94,6 +125,7 @@
             android:visibleToInstantApps="true">
             <intent-filter>
                 <action android:name="android.intent.action.ALARM" />
+                <action android:name="com.artuok.appwork.services.DISMISS" />
             </intent-filter>
         </activity>
         <activity
@@ -108,7 +140,7 @@
         </activity>
         <activity
             android:name=".MainActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:configChanges="keyboardHidden"
             android:exported="true"
             android:launchMode="singleTask"
             android:singleUser="true" />
@@ -118,13 +150,14 @@
             android:enabled="true"
             android:exported="false">
             <intent-filter>
-                <action android:name="NOTIFY" />
-                <action android:name="HOMEWORK" />
-                <action android:name="POSTPONE" />
-                <action android:name="DISMISS" />
-                <action android:name="EVENT" />
-                <action android:name="TEVENTS" />
-                <action android:name="TSUBJECTS" />
+                <action android:name="com.artuok.appwork.services.NOTIFY" />
+                <action android:name="com.artuok.appwork.services.HOMEWORK" />
+                <action android:name="com.artuok.appwork.services.POSTPONE" />
+                <action android:name="com.artuok.appwork.services.DISMISS" />
+                <action android:name="com.artuok.appwork.services.EVENT" />
+                <action android:name="com.artuok.appwork.services.TEVENTS" />
+                <action android:name="com.artuok.appwork.services.TSUBJECTS" />
+                <action android:name="com.artuok.appwork.services.MESSAGES" />
             </intent-filter>
         </receiver>
         <receiver
@@ -137,15 +170,21 @@
         </receiver>
 
         <service
+            android:name=".services.ServiceManager"
+            android:enabled="true"
+            android:foregroundServiceType="dataSync"
+            android:icon="@drawable/ic_stat_name"
+            android:stopWithTask="false"
+            android:permission="android.permission.START_FOREGROUND_SERVICES_FROM_BACKGROUND" />
+        <service
             android:name=".services.NotificationService"
             android:enabled="true"
             android:foregroundServiceType="phoneCall"
             android:icon="@drawable/ic_stat_name"
             android:stopWithTask="false" />
-
         <service
             android:name=".widgets.RemoteTodayTaskWidget"
-            android:permission="android.permission.BIND_REMOTEVIEWS"/>
+            android:permission="android.permission.BIND_REMOTEVIEWS" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

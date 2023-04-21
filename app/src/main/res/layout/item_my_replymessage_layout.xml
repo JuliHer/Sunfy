@@ -4,20 +4,23 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
+
+
     <androidx.cardview.widget.CardView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:cardBackgroundColor="@android:color/transparent"
-        android:layout_marginHorizontal="10dp"
+        android:layout_marginEnd="10dp"
         app:cardElevation="0dp"
         android:layout_gravity="end"
-        android:animateLayoutChanges="true"
-        >
+        android:animateLayoutChanges="false"
+        android:layout_marginStart="70dp">
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical">
+
             <androidx.cardview.widget.CardView
                 android:layout_gravity="end"
                 android:layout_width="wrap_content"
@@ -27,12 +30,14 @@
                 app:cardCornerRadius="5dp"
                 android:layout_marginTop="1dp"
                 android:layout_marginHorizontal="5dp">
+
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:paddingVertical="5dp"
                     android:paddingHorizontal="10dp">
+
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -55,7 +60,6 @@
                             android:textColor="?subTextColor"
                             android:maxLines="3"
                             android:ellipsize="end"
-                            android:maxEms="15"
                             />
                     </LinearLayout>
 
@@ -68,7 +72,7 @@
                 android:layout_gravity="end"
                 app:cardBackgroundColor="?iMainColor"
                 app:cardCornerRadius="10dp"
-                app:cardElevation="2dp"
+                app:cardElevation="0dp"
                 android:layout_marginBottom="1dp">
 
                 <LinearLayout
@@ -90,8 +94,7 @@
                             android:id="@+id/mainMessage"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:maxEms="13"
-                            android:text="MMMMMMMMMMMMMMMMMM"
+                            android:text="MMMMMMMMMMMMMMMMMM a asdasd "
                             android:minEms="3"
                             android:textColor="@color/white"
                             android:textSize="17sp"

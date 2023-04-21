@@ -497,7 +497,7 @@ public class CreateActivity extends AppCompatActivity {
         Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.t_subjects + " ORDER BY name DESC", null);
         if (cursor.moveToFirst()) {
             do {
-                elements.add(new ItemSubjectElement(new SubjectElement(cursor.getString(1), cursor.getInt(2)), 2));
+                elements.add(new ItemSubjectElement(new SubjectElement(cursor.getString(1), "", cursor.getInt(2)), 2));
             } while (cursor.moveToNext());
         }
 

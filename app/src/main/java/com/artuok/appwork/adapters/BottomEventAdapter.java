@@ -1,6 +1,7 @@
 package com.artuok.appwork.adapters;
 
 import android.content.Context;
+import android.text.format.DateFormat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -39,7 +40,6 @@ public class BottomEventAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
             return new TextViewHolder(view);
         }
-
 
         return null;
     }
@@ -114,14 +114,19 @@ public class BottomEventAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             int minute = c.get(Calendar.MINUTE);
 
             String min = minute < 10 ? "0" + minute : minute + "";
-            hour = hour > 12 ? hour - 12 : hour;
+            int h = hour > 12 ? hour - 12 : hour;
 
 
-            String time = hour + ":" + min + " ";
+            String tm = (c.get(Calendar.AM_PM) == Calendar.AM) ? "a. m." : "p. m.";
 
-
-            time += (c.get(Calendar.AM_PM) == Calendar.AM) ? "a. m." : "p. m.";
-            hours.setText(time);
+            boolean hourFormat = DateFormat.is24HourFormat(mInflater.getContext());
+            String timestamp = "";
+            if (!hourFormat) {
+                timestamp = h + ":" + min + " " + tm;
+            } else {
+                timestamp = hour + ":" + min;
+            }
+            hours.setText(timestamp);
         }
     }
 }

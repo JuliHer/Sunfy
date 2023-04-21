@@ -21,7 +21,7 @@
         <item name="backgroundDialog">@color/gray_000</item>
         <item name="backgroundAlert">@color/gray_200</item>
         <item name="backgroundBorder">@color/white</item>
-        <item name="subTextColor">@color/gray_800</item>
+        <item name="subTextColor">@color/gray_600</item>
         <item name="iconHint">@color/green_000</item>
         <item name="backgroundHint">@color/green_900</item>
         <item name="iMainColor">@color/green_500</item>
@@ -30,6 +30,8 @@
         <item name="borderLighting">@color/green_000</item>
         <item name="backgroundLighting">@color/green_900</item>
 
+
+        <item name="highInputColor">@color/black_500</item>
         <item name="hintInputColor">@color/gray_100</item>
         <item name="hintViewGrayColor">@color/gray_200</item>
 
@@ -41,6 +43,8 @@
         <item name="textHighLightColor">@color/white</item>
         <item name="textHourColor">@color/gray_500</item>
 
+
+        <item name="backgroundChat">@mipmap/background_black_chat</item>
         <item name="android:dateTextAppearance">@color/gray_500</item>
 
         <!--colorful-->
@@ -50,6 +54,12 @@
         <item name="palette_red">@color/palette_red_b_700</item>
         <item name="palette_purple">@color/palette_purple_b_700</item>
         <item name="cardBackgroundColorTask">@color/gray_100</item>
+        <item name="fontFamily">@font/inter</item>
+    </style>
+
+
+    <style name="poppinsFont">
+        <item name="fontFamily">@font/poppins</item>
     </style>
 
     <style name="DialogAnimation">
@@ -110,7 +120,7 @@
     </style>
 
     <style name="alarmColorBg">
-        <item name="android:background">@drawable/alarm_bg_night</item>
+        <item name="android:background">@color/green_750</item>
     </style>
 
     <style name="alarmColorCardViewBg">

@@ -19,6 +19,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.PersistableBundle
 import android.provider.MediaStore
+import android.text.format.DateFormat
 import android.util.Base64
 import android.util.Log
 import android.view.Gravity
@@ -32,6 +33,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.cardview.widget.CardView
 import androidx.core.content.FileProvider
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.artuok.appwork.adapters.ColorSelectAdapter
@@ -54,7 +56,8 @@ import java.util.*
 
 class CreateAwaitingActivity : AppCompatActivity() {
     private lateinit var activity: EditText
-    private lateinit var chooseSubject: TextView
+    private lateinit var chooseSubject: LinearLayout
+    private lateinit var textSubject: TextView
     private lateinit var datetext: TextView
     private lateinit var timeText: TextView
     private lateinit var datePicker: LinearLayout
@@ -74,9 +77,11 @@ class CreateAwaitingActivity : AppCompatActivity() {
     private val returnIntent = Intent()
 
     private var tempImage = ""
+    private lateinit var progressUpload: ProgressBar
 
     private val images : ArrayList<String> = ArrayList()
-    private val hashimages : ArrayList<String> = ArrayList()
+    private val hashimages: ArrayList<String> = ArrayList()
+    private var is24HourFormat = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -84,27 +89,32 @@ class CreateAwaitingActivity : AppCompatActivity() {
 
         activity = findViewById(R.id.description_task)
         chooseSubject = findViewById(R.id.choose_subject)
+        textSubject = findViewById(R.id.subject_text)
         datePicker = findViewById(R.id.datepicker)
         datetext = findViewById(R.id.datetext)
         timeText = findViewById(R.id.timetext)
         cameraPicker = findViewById(R.id.camera)
         recyclerView = findViewById(R.id.imagesRecycler)
+        progressUpload = findViewById(R.id.on_activity_upload)
+
+        is24HourFormat = DateFormat.is24HourFormat(this)
 
         adapter = ImageAdapter(this, images) { view, pos ->
             images.removeAt(pos)
             deleteFileInDevices(hashimages[pos])
             hashimages.removeAt(pos)
-            adapter.notifyDataSetChanged()
+            adapter.notifyItemRemoved(pos)
 
-            if(images.size >= 5){
+            if (images.size >= 6) {
                 cameraPicker.visibility = View.GONE
-            }else{
+            } else {
                 cameraPicker.visibility = View.VISIBLE
             }
 
             resave()
         }
-        val manager = LinearLayoutManager(this, RecyclerView.HORIZONTAL, false)
+
+        val manager = GridLayoutManager(this, 3, RecyclerView.VERTICAL, false)
 
         recyclerView.layoutManager = manager
         recyclerView.setHasFixedSize(true)
@@ -113,22 +123,23 @@ class CreateAwaitingActivity : AppCompatActivity() {
 
         preferences()
 
-        //if(verifyIfManageIfAndroidAcces()){
-        //    cameraPicker.visibility = View.GONE
-        //}
-
         cameraPicker.setOnClickListener {
             openSelectImage()
         }
 
         chooseSubject.setOnClickListener {
-            setSelectSubject(chooseSubject)
+            setSelectSubject(textSubject)
         }
 
+        if (is24HourFormat) {
+            timeText.text = "-:--"
+        }
         getDeadline()
 
         val cancel: ImageView = findViewById(R.id.cancel_awaiting)
         val accept: Button = findViewById(R.id.accept_awaiting)
+
+
 
         datetext.setOnClickListener {
             val calendar = Calendar.getInstance()
@@ -139,23 +150,26 @@ class CreateAwaitingActivity : AppCompatActivity() {
             val timePicker = TimePickerDialog(this@CreateAwaitingActivity, { timePicker1: TimePicker?, i: Int, i1: Int ->
                 val a = if (i1 < 10) "0$i1" else i1.toString() + ""
                 val e = if (i < 10) "0$i" else i.toString() + ""
-                timeMilis = ((i*60*60)+(i1*60)) * 1000L
+                timeMilis = ((i * 60 * 60) + (i1 * 60)) * 1000L
                 datetime = dateMilis + timeMilis
-
-                val s = if (i >= 12) {
-                    val b = if(i == 12){
-                        i
-                    }else{
-                        i - 12
-                    }
-
-                    "$b:$a p. m."
+                val s = if (is24HourFormat) {
+                    "$i:$a"
                 } else {
-                    "$i:$a a. m."
+                    if (i >= 12) {
+                        val b = if (i == 12) {
+                            i
+                        } else {
+                            i - 12
+                        }
+
+                        "$b:$a p. m."
+                    } else {
+                        "$i:$a a. m."
+                    }
                 }
 
                 timeText.text = s
-            }, 12, 0, false)
+            }, 12, 0, is24HourFormat)
 
             val datePicker = DatePickerDialog(this@CreateAwaitingActivity, { datePicker1: DatePicker?, i: Int, i1: Int, i2: Int ->
                 val m = i1 + 1
@@ -185,23 +199,27 @@ class CreateAwaitingActivity : AppCompatActivity() {
             val timePicker = TimePickerDialog(this@CreateAwaitingActivity, { timePicker1: TimePicker?, i: Int, i1: Int ->
                 val a = if (i1 < 10) "0$i1" else i1.toString() + ""
                 val e = if (i < 10) "0$i" else i.toString() + ""
-                timeMilis = ((i*60*60)+(i1*60)) * 1000L
+                timeMilis = ((i * 60 * 60) + (i1 * 60)) * 1000L
                 datetime = dateMilis + timeMilis
 
-                val s = if (i >= 12) {
-                    val b = if(i == 12){
-                        i
-                    }else{
-                        i - 12
-                    }
-
-                    "$b:$a p. m."
+                val s = if (is24HourFormat) {
+                    "$i:$a"
                 } else {
-                    "$i:$a a. m."
+                    if (i >= 12) {
+                        val b = if (i == 12) {
+                            i
+                        } else {
+                            i - 12
+                        }
+
+                        "$b:$a p. m."
+                    } else {
+                        "$i:$a a. m."
+                    }
                 }
 
                 timeText.text = s
-            }, 12, 0, false)
+            }, 12, 0, is24HourFormat)
 
             timePicker.show()
         }
@@ -215,20 +233,40 @@ class CreateAwaitingActivity : AppCompatActivity() {
                 .setDurationPush(100)
                 .setOnClickListener {
                     datetime = dateMilis + timeMilis
-                    if (datetime > 0) {
-                        if (subject > 0) {
-                            val l = insertAwaiting(activity.text.toString(), datetime, subject)
+                    if (activity.text.toString().length > 0) {
+                        if (datetime > 0) {
+                            if (subject > 0) {
+                                progressUpload.visibility = View.VISIBLE
+                                accept.visibility = View.GONE
+                                val l = insertAwaiting(activity.text.toString(), datetime, subject)
 
-                            if(images.size != 0)
-                                saveImagesInDevice(images, l)
+                                if (images.size != 0)
+                                    saveImagesInDevice(images, l)
 
-                            updateWidget()
-                            returnIntent.putExtra("requestCode", 2)
-                            setResult(RESULT_OK, returnIntent)
-                            finish()
+                                updateWidget()
+                                returnIntent.putExtra("requestCode", 2)
+                                setResult(RESULT_OK, returnIntent)
+                                finish()
+                            } else {
+                                Toast.makeText(
+                                    this@CreateAwaitingActivity,
+                                    getString(R.string.select_subject),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
                         } else {
-                            Toast.makeText(this@CreateAwaitingActivity, getString(R.string.select_subject), Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                this@CreateAwaitingActivity,
+                                "Select deadline",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
+                    } else {
+                        Toast.makeText(
+                            this@CreateAwaitingActivity,
+                            "Write something",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
         getImages()
@@ -289,6 +327,7 @@ class CreateAwaitingActivity : AppCompatActivity() {
             dialog.window!!.setGravity(Gravity.BOTTOM)
         //}
     }
+
 
     private fun showInContextUI(i : Int) {
 
@@ -436,7 +475,7 @@ class CreateAwaitingActivity : AppCompatActivity() {
         super.onResume()
         adapter.notifyDataSetChanged()
 
-        if(images.size >= 5){
+        if (images.size >= 6) {
             cameraPicker.visibility = View.GONE
         }
     }
@@ -446,25 +485,33 @@ class CreateAwaitingActivity : AppCompatActivity() {
             val deadline = intent.extras!!.getLong("deadline", 0)
             val c = Calendar.getInstance()
             c.timeInMillis = deadline + 43200000
-            val d = c.timeInMillis
-
-            datetime = d
+            dateMilis = deadline
+            timeMilis = 43200000
             val dd = c[Calendar.DAY_OF_MONTH]
-            val mm = c[Calendar.MONTH]+1
+            val mm = c[Calendar.MONTH] + 1
             val aaaa = c[Calendar.YEAR]
             val hh = c[Calendar.HOUR_OF_DAY]
-            val MM = if(c[Calendar.MINUTE] < 10) "0${c[Calendar.MINUTE]}" else "${c[Calendar.MINUTE]}"
-            val mmm = if(c[Calendar.MONTH]+1 < 10) "0${c[Calendar.MONTH]+1}" else "${c[Calendar.MONTH]+1}"
-            val tm = if(c[Calendar.AM_PM] == Calendar.AM) "a. m." else "p. m."
+            val MM =
+                if (c[Calendar.MINUTE] < 10) "0${c[Calendar.MINUTE]}" else "${c[Calendar.MINUTE]}"
+            val mmm =
+                if (c[Calendar.MONTH] + 1 < 10) "0${c[Calendar.MONTH] + 1}" else "${c[Calendar.MONTH] + 1}"
+            val tm = if (c[Calendar.AM_PM] == Calendar.AM) "a. m." else "p. m."
 
 
-            val hhh = if(hh > 12){
+            val hhh = if (hh > 12) {
                 hh - 12
-            }else{
+            } else {
                 hh
             }
+
+
             datetext.text = "$dd/$mmm/$aaaa"
-            timeText.text = "$hhh:$MM $tm"
+
+            if (is24HourFormat) {
+                timeText.text = "$hh:$MM"
+            } else {
+                timeText.text = "$hhh:$MM $tm"
+            }
         }
     }
 
@@ -535,6 +582,7 @@ class CreateAwaitingActivity : AppCompatActivity() {
 
         val fname = "TEMP-"
         val file = File.createTempFile(fname, "-${appname.uppercase()}.jpg", myDir)
+
         tempImage = file.path
         saveTempImg(tempImage)
         return FileProvider.getUriForFile(this, "com.artuok.android.fileprovider", file)
@@ -763,7 +811,16 @@ class CreateAwaitingActivity : AppCompatActivity() {
         val cursor = db.rawQuery("SELECT * FROM ${DbHelper.t_subjects} ORDER BY name DESC", null)
         if (cursor.moveToFirst()) {
             do {
-                elements.add(ItemSubjectElement(SubjectElement(cursor.getInt(0), cursor.getString(1), cursor.getInt(2)), 2))
+                elements.add(
+                    ItemSubjectElement(
+                        SubjectElement(
+                            cursor.getInt(0),
+                            cursor.getString(1),
+                            "",
+                            cursor.getInt(2)
+                        ), 2
+                    )
+                )
             } while (cursor.moveToNext())
         }
         cursor.close()

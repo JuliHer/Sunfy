@@ -22,36 +22,56 @@
             android:gravity="center_vertical">
             <com.artuok.appwork.library.AspectRatioView
                 android:id="@+id/background"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                app:cardCornerRadius="8dp"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                app:cardCornerRadius="0dp"
                 android:layout_marginEnd="8dp"
-                app:cardElevation="0dp"
-                >
+                app:cardElevation="0dp">
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:paddingTop="1dp"
                     android:paddingStart="1dp">
+
                     <ImageView
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:src="@drawable/tag"
                         android:alpha="0.5"
-                        android:padding="13dp"
-                        />
+                        android:padding="13dp" />
                 </LinearLayout>
 
             </com.artuok.appwork.library.AspectRatioView>
 
-            <TextView
-                android:id="@+id/subject_name"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/subject"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="?backgroundBorder" />
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/subject_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/subject"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:layout_marginBottom="4dp"
+                    android:textColor="?backgroundBorder" />
+
+                <TextView
+                    android:id="@+id/subject_statistics"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="15 pendientes • 2 atrasadas • 5 hechas"
+                    android:textSize="8sp"
+                    android:layout_marginTop="6dp"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:textColor="?subTextColor" />
+            </LinearLayout>
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 </com.faltenreich.skeletonlayout.SkeletonLayout>

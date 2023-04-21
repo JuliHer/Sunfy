@@ -30,10 +30,12 @@
         <attr name="shimmerHintSkeleton" format="color" />
         <attr name="maskHintSkeleton" format="color" />
 
+        <attr name="highInputColor" format="color" />
         <attr name="hintInputColor" format="color" />
         <attr name="hintViewGrayColor" format="color" />
         <attr name="colorThird" format="color" />
         <attr name="MainColor" format="color" />
+        <attr name="backgroundChat" format="reference" />
     </declare-styleable>
 
     <declare-styleable name="CalendarWeekView">

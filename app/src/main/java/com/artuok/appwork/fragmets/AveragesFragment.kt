@@ -59,9 +59,7 @@ class AveragesFragment : Fragment() {
         recyclerView.isNestedScrollingEnabled = false
         recyclerView.adapter = adapter
 
-
         skeleton = recyclerView.applySkeleton(R.layout.skeleton_statistics_layout, 12)
-
         val ta = requireActivity().obtainStyledAttributes(R.styleable.AppCustomAttrs)
         val shimmerColor = ta.getColor(R.styleable.AppCustomAttrs_shimmerSkeleton, Color.GRAY)
         val maskColor = ta.getColor(R.styleable.AppCustomAttrs_maskSkeleton, Color.LTGRAY)
@@ -77,15 +75,13 @@ class AveragesFragment : Fragment() {
             override fun onExecute(b: Boolean) {
                 getWeeklyProgress()
                 setProgressSubject(b)
-                adapter.notifyDataSetChanged()
             }
 
             override fun onPostExecute(b: Boolean) {
-
+                adapter.notifyDataSetChanged()
                 skeleton.showOriginal()
             }
         })
-
 
 
 
@@ -169,14 +165,16 @@ class AveragesFragment : Fragment() {
     }
 
     private fun getMinDayOfWeek(dayOfWeek: Int): String? {
+        if (isDetached)
+            return ""
         when (dayOfWeek) {
-            0 -> return context!!.getString(R.string.min_sunday)
-            1 -> return context!!.getString(R.string.min_monday)
-            2 -> return context!!.getString(R.string.min_tuesday)
-            3 -> return context!!.getString(R.string.min_wednesday)
-            4 -> return context!!.getString(R.string.min_thursday)
-            5 -> return context!!.getString(R.string.min_friday)
-            6 -> return context!!.getString(R.string.min_saturday)
+            0 -> return requireContext().getString(R.string.min_sunday)
+            1 -> return requireContext().getString(R.string.min_monday)
+            2 -> return requireContext().getString(R.string.min_tuesday)
+            3 -> return requireContext().getString(R.string.min_wednesday)
+            4 -> return requireContext().getString(R.string.min_thursday)
+            5 -> return requireContext().getString(R.string.min_friday)
+            6 -> return requireContext().getString(R.string.min_saturday)
         }
         return ""
     }
@@ -199,7 +197,10 @@ class AveragesFragment : Fragment() {
         completedTask.text = cursor.count.toString()
         cursor.close()
 
-        cursor = db.rawQuery("SELECT * FROM ${DbHelper.T_TASK} WHERE status = '0' ", null)
+        cursor = db.rawQuery(
+            "SELECT * FROM ${DbHelper.T_TASK} WHERE status = '0' AND date > '$start' AND date <= '$end'",
+            null
+        )
         pendingTask.text = cursor.count.toString()
         cursor.close()
 

@@ -13,5 +13,7 @@
         android:textSize="20sp"
         android:fontFamily="@font/poppins"
         android:includeFontPadding="false"
+        style="@style/poppinsFont"
+        android:layout_gravity="center"
         android:textFontWeight="500" />
 </androidx.appcompat.widget.Toolbar>

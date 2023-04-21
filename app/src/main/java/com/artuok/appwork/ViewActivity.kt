@@ -2,14 +2,13 @@ package com.artuok.appwork
 
 import android.app.Dialog
 import android.content.ContentValues
-import android.content.Context
-import android.content.ContextWrapper
 import android.content.Intent
+import android.content.res.TypedArray
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
-import android.net.ConnectivityManager
 import android.os.Bundle
+import android.text.format.DateFormat
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
@@ -22,10 +21,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.artuok.appwork.adapters.AwaitingAdapter
 import com.artuok.appwork.adapters.PublicationImageAdapter
 import com.artuok.appwork.adapters.ShareAdapter
 import com.artuok.appwork.db.DbChat
 import com.artuok.appwork.db.DbHelper
+import com.artuok.appwork.fragmets.SettingsFragment
 import com.artuok.appwork.fragmets.homeFragment
 import com.artuok.appwork.objects.*
 import com.google.firebase.auth.FirebaseAuth
@@ -34,12 +35,12 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.thekhaeng.pushdownanim.PushDownAnim
-import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
 class ViewActivity : AppCompatActivity() {
 
+    private lateinit var name: TextView
     private lateinit var subject: TextView
     private lateinit var day: TextView
     private lateinit var desc: TextView
@@ -50,13 +51,19 @@ class ViewActivity : AppCompatActivity() {
     private lateinit var adapter: PublicationImageAdapter
     private val elements : ArrayList<PublicationImageElement> = ArrayList()
     private lateinit var checkButton : LinearLayout
-    private lateinit var shareButton : LinearLayout
-    private lateinit var likeButton : LinearLayout
-    private var id : Int = 0
-    private lateinit var titleTask : String
-    private lateinit var userUid : String
+    private lateinit var shareButton: LinearLayout
+    private lateinit var likeButton: LinearLayout
+    private lateinit var likeIndicator: ImageView
+    private var id: Int = 0
+    private lateinit var titleTask: String
+    private lateinit var userUid: String
+    private var liked = false;
 
-    private var endDate : Long = 0
+    private var endDate: Long = 0
+
+    private val suggests: ArrayList<Item> = ArrayList()
+    private lateinit var awaitRecyclerView: RecyclerView
+    private lateinit var adapterAwait: AwaitingAdapter
 
     private val auth = FirebaseAuth.getInstance()
 
@@ -72,6 +79,21 @@ class ViewActivity : AppCompatActivity() {
         likeButton = findViewById(R.id.likePublication)
         shareButton = findViewById(R.id.sharePublication)
         photo = findViewById(R.id.usericon)
+        name = findViewById(R.id.name)
+        likeIndicator = findViewById(R.id.image_like)
+
+        awaitRecyclerView = findViewById(R.id.more_views)
+
+
+        adapterAwait = AwaitingAdapter(this, suggests)
+        adapterAwait.setOnClickListener { _, pos ->
+
+        }
+
+        awaitRecyclerView.setHasFixedSize(true)
+        awaitRecyclerView.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
+        awaitRecyclerView.isNestedScrollingEnabled = false
+        awaitRecyclerView.adapter = adapterAwait
 
         val c = findViewById<ImageView>(R.id.checkButton)
 
@@ -81,14 +103,23 @@ class ViewActivity : AppCompatActivity() {
             showShares()
         }
 
-        PushDownAnim.setPushDownAnimTo(checkButton)
+        PushDownAnim.setPushDownAnimTo(likeButton)
             .setDurationPush(100)
             .setScale(PushDownAnim.MODE_SCALE, 0.95f)
-            .setOnClickListener{
+            .setOnClickListener {
+                liked = !liked
+                setLike(liked)
+                updateLike(liked)
+            }
+
+        PushDownAnim.setPushDownAnimTo(checkButton)
+            .setDurationPush(100)
+            .setScale(PushDownAnim.MODE_SCALE, 1.1f)
+            .setOnClickListener {
                 val s = checkTask(id)
-                if(s){
+                if (s) {
                     c.setColorFilter(getColor(R.color.blue_500))
-                }else{
+                } else {
                     c.setColorFilter(a.getColor(R.styleable.AppCustomAttrs_subTextColor, 0))
                 }
             }
@@ -116,55 +147,151 @@ class ViewActivity : AppCompatActivity() {
                 }
         id = intent.getIntExtra("id", 0)
         val s = isCheckTask(id)
-        if(s){
+        if (s) {
             c.setColorFilter(getColor(R.color.blue_500))
-        }else{
+        } else {
             c.setColorFilter(a.getColor(R.styleable.AppCustomAttrs_subTextColor, 0))
         }
+        a.recycle()
         loadData(id)
         loadImages(id)
-        setPhoto()
+        preparePendingTasks()
         enableButton()
+        loadPendingTasks()
     }
 
-    private fun setPhoto() {
-        if(userUid != ""){
-            if(auth.currentUser != null && (userUid == auth.currentUser?.uid || userUid == "noUser")){
-                val root = getExternalFilesDir("Media")
+    private fun loadPendingTasks() {
+        adapterAwait.notifyItemRangeInserted(0, suggests.size)
+    }
 
-                val cw = ContextWrapper(this)
+    private fun preparePendingTasks() {
+        val helper = DbHelper(this)
+        val db = helper.readableDatabase
+        val c = db.rawQuery(
+            "SELECT * FROM ${DbHelper.T_TASK} WHERE status = '0' AND id != '$id' ORDER BY end_date DESC",
+            null
+        )
 
+        if (c.moveToFirst()) {
+            do {
+                val cc = Calendar.getInstance()
+                val date: Long = c.getLong(2)
+                cc.timeInMillis = date
+                val day = cc[Calendar.DAY_OF_MONTH]
+                val month = cc[Calendar.MONTH]
+                val year = cc[Calendar.YEAR]
+                val hourFormat = DateFormat.is24HourFormat(this)
+                var hour = cc[Calendar.HOUR_OF_DAY]
+                if (!hourFormat) hour = if (cc[Calendar.HOUR] == 0) 12 else cc[Calendar.HOUR]
 
+                val minute = cc[Calendar.MINUTE]
 
+                val dd = if (day < 10) "0$day" else "" + day
+                val dates = dd + " " + homeFragment.getMonthMinor(
+                    this,
+                    month
+                ) + " " + year + " "
+                val mn = if (minute < 10) "0$minute" else "" + minute
+                var times = "$hour:$mn"
 
-                val appname = getString(R.string.app_name)
-                val myDir = File(root, "$appname Profile")
-                if (myDir.exists()) {
-                    val fname = appname.uppercase() + "-USER-IMG.jpg"
-                    val file = File(myDir, fname)
-                    if (file.exists()) {
-                        val map = BitmapFactory.decodeFile(file.path)
-                        photo.setImageBitmap(map)
-                    }
+                if (!hourFormat) {
+                    times += if (cc[Calendar.AM_PM] == Calendar.AM) " a. m." else " p. m."
                 }
-            }else{
-                val root = getExternalFilesDir("Media")
-                val appname = getString(R.string.app_name)
-                val myDir = File(root, ".Profiles")
-                if (myDir.exists()) {
-                    val fname = appname.uppercase() + "-$userUid-IMG.jpg"
-                    val file = File(myDir, fname)
-                    if (file.exists()) {
-                        val map = BitmapFactory.decodeFile(file.path)
-                        photo.setImageBitmap(map)
-                    }
+
+                val done = c.getInt(5) == 1
+                val liked = c.getInt(7) == 1
+                val subjectName: Int = c.getInt(3)
+
+                val s = db.rawQuery(
+                    "SELECT * FROM " + DbHelper.t_subjects + " WHERE id = " + subjectName,
+                    null
+                )
+                var colors = 0
+                var subject: String? = ""
+                if (s.moveToFirst()) {
+                    colors = s.getInt(2)
+                    subject = s.getString(1)
                 }
-            }
+
+                s.close()
+
+                val id: Int = c.getInt(0)
+                val title: String = c.getString(4)
+                val status: String = daysLeft(true, date)
+                val statusColor: Int = statusColor(false, date)
+
+                val eb = AwaitElement(id, title, status, dates, times, colors, statusColor)
+                eb.isDone = done
+                eb.subject = subject
+                eb.isLiked = liked
+                suggests.add(Item(eb, 3))
+            } while (c.moveToNext())
         }
 
+        c.close()
+        loadPendingTasks()
     }
 
-    private fun loadImages(id: Int){
+    private fun statusColor(isClosed: Boolean, time: Long): Int {
+        val ta: TypedArray = obtainStyledAttributes(R.styleable.AppCustomAttrs)
+        val colorB = ta.getColor(
+            R.styleable.AppCustomAttrs_subTextColor,
+            getColor(R.color.yellow_700)
+        )
+        ta.recycle()
+        val today = Calendar.getInstance()
+        val tod = today.timeInMillis
+        val rest = (time - tod) / 86400000
+        return colorB
+
+    }
+
+    private fun daysLeft(isOpen: Boolean, time: Long): String {
+        var d = ""
+        val c = Calendar.getInstance()
+        c.timeInMillis = time
+        val today = Calendar.getInstance()
+        val tod = today.timeInMillis
+        if (isOpen) {
+            var rest = (time - tod) / 86400000
+            if (tod < time) {
+                val toin = today[Calendar.DAY_OF_YEAR]
+                val awin = c[Calendar.DAY_OF_YEAR]
+                rest = if (awin < toin) {
+                    (awin + 364 - toin).toLong()
+                } else {
+                    (awin - toin).toLong()
+                }
+            }
+            val dow = c[Calendar.DAY_OF_WEEK]
+            if (rest == 1L) {
+                d = getString(R.string.tomorrow)
+            } else if (rest == 0L) {
+                d = getString(R.string.today)
+            } else if (rest < 7) {
+                if (dow == 1) {
+                    d = getString(R.string.sunday)
+                } else if (dow == 2) {
+                    d = getString(R.string.monday)
+                } else if (dow == 3) {
+                    d = getString(R.string.tuesday)
+                } else if (dow == 4) {
+                    d = getString(R.string.wednesday)
+                } else if (dow == 5) {
+                    d = getString(R.string.thursday)
+                } else if (dow == 6) {
+                    d = getString(R.string.friday)
+                } else if (dow == 7) {
+                    d = getString(R.string.saturday)
+                }
+            } else {
+                d = rest.toString() + " " + getString(R.string.day_left)
+            }
+        }
+        return d
+    }
+
+    private fun loadImages(id: Int) {
         val dbHelper = DbHelper(this)
         val db = dbHelper.readableDatabase
         val cursor = db.rawQuery("SELECT * FROM ${DbHelper.T_PHOTOS} WHERE awaiting = '$id'", null)
@@ -189,17 +316,18 @@ class ViewActivity : AppCompatActivity() {
         if(elements.size > 0){
 
             var s =
-            if(elements.size > 3){
-                2
-            }else{
-                elements.size
-            }
+                if (elements.size > 3) {
+                    2
+                } else {
+                    elements.size
+                }
 
             val manager = GridLayoutManager(this, s, RecyclerView.VERTICAL, false)
-                desc.textSize = convertToSpToPx(11).toFloat()
+            desc.textSize = convertToSpToPx(11).toFloat()
             recyclerView.layoutManager = manager
+        } else {
+            recyclerView.visibility = View.GONE
         }
-
         cursor.close()
     }
 
@@ -216,7 +344,6 @@ class ViewActivity : AppCompatActivity() {
         }else{
             shareButton.visibility = View.GONE
         }
-
     }
 
     private fun isCheckTask(id: Int) : Boolean{
@@ -224,34 +351,48 @@ class ViewActivity : AppCompatActivity() {
         val db = dbHelper.readableDatabase
         val c = db.rawQuery("SELECT * FROM ${DbHelper.T_TASK} WHERE id = '$id'", null)
         var sa = false
-        if (c.moveToFirst() && c.getCount() == 1) {
-            val s :Boolean = c.getInt(5) > 0
+        if (c.moveToFirst() && c.count == 1) {
+            val s: Boolean = c.getInt(5) > 0
             sa = s
         }
         c.close()
         return sa
     }
 
-    private fun sendEventMessageToDatabase(msg : MessageElement, chat : ChatElement, event : EventMessageElement){
+    private fun sendEventMessageToDatabase(msg : MessageElement, chat : ChatElement, event : EventMessageElement) {
         val dbChat = DbChat(this)
         val db = dbChat.writableDatabase
 
         val message = ContentValues()
         val now = Calendar.getInstance().timeInMillis
-        message.put("MSG", " 1")
+        var key = FirebaseDatabase.getInstance().reference.child("chat").push().key!!
+        val chatId =
+            if (!chat.isLog) {
+                createChatLocal(chat, key)
+            } else {
+                key = obtainChatId(chat.id.toInt())
+                chat.id.toLong()
+            }
+
+        val msgKey =
+            FirebaseDatabase.getInstance().reference.child("chat").child(key).child("messages")
+                .push().key!!
+
+        msg.id = msgKey
+        chat.id = chatId.toString()
+
+        message.put("message", " 1")
         message.put("me", 0)
-        message.put("name", msg.theirName)
-        message.put("chat", chat.chat)
-        message.put("number", chat.number)
-        message.put("mid", "$now")
         message.put("timeSend", now)
+        message.put("mid", msgKey)
         message.put("status", 0)
         message.put("reply", "")
-        message.put("publicKey", "")
-        val n : Long = db.insert(DbChat.T_CHATS_MSG, null, message)
+        message.put("number", chat.number)
+        message.put("chat", chatId)
+        val n: Long = db.insert(DbChat.T_CHATS_MSG, null, message)
 
         val events = ContentValues()
-        events.put("chat", chat.chat)
+        events.put("chat", chatId)
         events.put("date", event.date)
         events.put("end_date", event.endDate)
         events.put("message", n)
@@ -261,16 +402,44 @@ class ViewActivity : AppCompatActivity() {
         db.insert(DbChat.T_CHATS_EVENT, null, events)
 
         msg.addEvent(event)
-        createMsg(chat.number, msg, n)
+        createMsg(chat.number, msg, n, key)
     }
 
-    private fun checkTask(id : Int) : Boolean{
+    private fun obtainChatId(id: Int): String {
+        val dbChat = DbChat(this)
+        val db = dbChat.readableDatabase
+        val query = db.rawQuery("SELECT * FROM ${DbChat.T_CHATS} WHERE id = '$id'", null)
+        if (query.moveToFirst()) {
+            val chat = query.getString(4)
+            query.close()
+            return chat
+        }
+        query.close()
+        return ""
+    }
+
+    private fun createChatLocal(chat: ChatElement, key: String): Long {
+        val dbChat = DbChat(this)
+        val db = dbChat.writableDatabase
+
+        val values = ContentValues()
+        values.put("name", chat.name)
+        values.put("type", 0)
+        values.put("contact", chat.number)
+        values.put("chat", key)
+        values.put("image", chat.chat)
+        values.put("publicKey", "")
+
+        return db.insert(DbChat.T_CHATS, null, values)
+    }
+
+    private fun checkTask(id: Int): Boolean {
         val dbHelper = DbHelper(this)
         val db = dbHelper.readableDatabase
         val c = db.rawQuery("SELECT * FROM ${DbHelper.T_TASK} WHERE id = '$id'", null)
         var sa = false
         if (c.moveToFirst()) {
-            val s :Boolean = c.getInt(5) > 0
+            val s: Boolean = c.getInt(5) > 0
             sa = s
             val values = ContentValues()
             if(sa){
@@ -302,6 +471,28 @@ class ViewActivity : AppCompatActivity() {
         return false
     }
 
+    private fun getNameById(uid: String): String {
+        if (SettingsFragment.isLogged(this)) {
+            val dbChat = DbChat(this)
+            val db = dbChat.readableDatabase
+
+            val cursor =
+                db.rawQuery("SELECT * FROM ${DbChat.T_CHATS_LOGGED} WHERE userId = '$uid'", null)
+
+            if (cursor.moveToFirst()) {
+                val name = cursor.getString(1)
+                cursor.close()
+                return name
+            }
+            cursor.close()
+            if (auth.currentUser?.uid!! == uid) {
+                return getString(R.string.you)
+            }
+            return "Unknow"
+        }
+        return getString(R.string.you)
+    }
+
     private fun loadData(id: Int) {
         val dbHelper = DbHelper(this)
         val db = dbHelper.readableDatabase
@@ -312,27 +503,59 @@ class ViewActivity : AppCompatActivity() {
         var user = ""
         var days = ""
         titleTask = ""
+        var color = 0
         var dow = ""
         if (cursor.moveToFirst()) {
-            title = getsubjectNameById(cursor.getInt(3))
+            title = getSubjectNameById(cursor.getInt(3))
+            color = getSubjectColorById(cursor.getInt(3))
             val t = cursor.getLong(2)
             endDate = t
             days = getDayLeft(t)
             titleTask = cursor.getString(4)
+
+            liked = cursor.getInt(7) == 1
+            setLike(cursor.getInt(7) == 1)
             user = cursor.getString(6)
             dow = getDOW(t)
         }
 
 
+        photo.setColorFilter(color)
         dayOfWeek.text = dow
         userUid = user
+
+        name.text = getNameById(user)
         subject.text = title
         day.text = days
         desc.text = titleTask
         cursor.close()
     }
 
-    private fun getDOW(time : Long) : String{
+    private fun setLike(like: Boolean) {
+        val a = obtainStyledAttributes(R.styleable.AppCustomAttrs)
+        val likedColor = a.getColor(R.styleable.AppCustomAttrs_iMainColor, Color.TRANSPARENT)
+        val unlikedColor = a.getColor(R.styleable.AppCustomAttrs_subTextColor, Color.TRANSPARENT)
+
+        a.recycle()
+        if (like) {
+            likeIndicator.setImageDrawable(getDrawable(R.drawable.heart_fill))
+            likeIndicator.setColorFilter(likedColor)
+        } else {
+            likeIndicator.setImageDrawable(getDrawable(R.drawable.heart))
+            likeIndicator.setColorFilter(unlikedColor)
+        }
+    }
+
+    private fun updateLike(like: Boolean) {
+        val dbhelper = DbHelper(this)
+        val db = dbhelper.writableDatabase
+        val values = ContentValues()
+        values.put("favorite", like)
+
+        db.update(DbHelper.T_TASK, values, "id = '$id'", null)
+    }
+
+    private fun getDOW(time: Long): String {
         val c = Calendar.getInstance()
         c.timeInMillis = time
 
@@ -347,7 +570,6 @@ class ViewActivity : AppCompatActivity() {
         val dialog = Dialog(this)
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         dialog.setContentView(R.layout.bottom_share_layout)
-
         val recycler = dialog.findViewById<RecyclerView>(R.id.recycler)
         var elements : ArrayList<Item> = getUserShares()
         if(elements.size == 0){
@@ -395,7 +617,20 @@ class ViewActivity : AppCompatActivity() {
         try{
             if(cursor.moveToFirst()){
                 do{
-                    dd.add(Item(ChatElement("0", cursor.getString(1), "", cursor.getString(4), cursor.getString(2), "", true, 0), 0))
+                    dd.add(
+                        Item(
+                            ChatElement(
+                                "${cursor.getInt(0)}",
+                                cursor.getString(1),
+                                "",
+                                "",
+                                cursor.getString(2),
+                                "",
+                                false,
+                                0
+                            ), 0
+                        )
+                    )
                 }while (cursor.moveToNext())
             }
         }finally{
@@ -407,32 +642,65 @@ class ViewActivity : AppCompatActivity() {
     private fun getUserShares(): ArrayList<Item> {
         val dbChat = DbChat(this)
         val db = dbChat.readableDatabase
-        val cursor = db.rawQuery("SELECT * FROM ${DbChat.T_CHATS_MSG} GROUP BY number ORDER BY timeSend", null)
-        val dd : ArrayList<Item> = ArrayList()
+        val curso = db.rawQuery(
+            "SELECT * FROM ${DbChat.T_CHATS_MSG} GROUP BY chat ORDER BY timeSend DESC",
+            null
+        )
+        val dd: ArrayList<Item> = ArrayList()
 
-        try{
-            if(cursor.moveToFirst()){
-                do{
-                    dd.add(Item(ChatElement("0", cursor.getString(4), "", cursor.getString(5), cursor.getString(6), "", true, 0), 0))
-                }while (cursor.moveToNext())
+        curso.use { cursor ->
+            if (cursor.moveToFirst()) {
+                do {
+                    val chat = cursor.getInt(8)
+                    val query =
+                        db.rawQuery("SELECT * FROM ${DbChat.T_CHATS} WHERE id = '$chat'", null)
+                    if (query.moveToFirst()) {
+                        dd.add(
+                            Item(
+                                ChatElement(
+                                    chat.toString(),
+                                    query.getString(1),
+                                    "",
+                                    "",
+                                    query.getString(3),
+                                    "",
+                                    true,
+                                    0
+                                ), 0
+                            )
+                        )
+                    }
+                    query.close()
+                } while (cursor.moveToNext())
             }
-        }finally{
-            cursor.close()
         }
         return dd
     }
 
-    private fun getsubjectNameById(id : Int) : String{
+    private fun getSubjectNameById(id: Int): String {
         val dbHelper = DbHelper(this)
         val db = dbHelper.readableDatabase
         val c = db.rawQuery("SELECT * FROM ${DbHelper.t_subjects} WHERE id = '$id'", null)
 
         var name = ""
-        if(c.moveToFirst()){
+        if (c.moveToFirst()) {
             name = c.getString(1)
         }
 
         return name
+    }
+
+    private fun getSubjectColorById(id: Int): Int {
+        val dbHelper = DbHelper(this)
+        val db = dbHelper.readableDatabase
+        val c = db.rawQuery("SELECT * FROM ${DbHelper.t_subjects} WHERE id = '$id'", null)
+
+        var color = 0
+        if (c.moveToFirst()) {
+            color = c.getInt(2)
+        }
+
+        return color
     }
 
     private fun convertToSpToPx(sp: Int): Int {
@@ -443,7 +711,7 @@ class ViewActivity : AppCompatActivity() {
         ).toInt()
     }
 
-    private fun getDayLeft(tim : Long) : String{
+    private fun getDayLeft(tim: Long): String {
         val d : String
         val c = Calendar.getInstance()
         c.timeInMillis = tim
@@ -498,7 +766,7 @@ class ViewActivity : AppCompatActivity() {
             var datetime = "$dd " + homeFragment.getMonthMinor(this, month) + " $year "
             val mn = if (minute < 10) "0$minute" else "" + minute
             datetime += "$hour:$mn"
-            datetime += if(c.get(Calendar.AM_PM) == Calendar.AM) " a. m." else " p. m."
+            datetime += if (c.get(Calendar.AM_PM) == Calendar.AM) " a. m." else " p. m."
             d = datetime
         }
 
@@ -506,12 +774,11 @@ class ViewActivity : AppCompatActivity() {
     }
 
 
-    private fun createMsg(number : String, Msg : MessageElement, sd : Long){
-        if(!isMovileDataActive() || !isSaverModeActive()){
-            val key = FirebaseDatabase.getInstance().reference.child("chat").push().key!!
+    private fun createMsg(number: String, Msg: MessageElement, sd: Long, key: String) {
+        if (!SettingsFragment.isMobileData(this) || !SettingsFragment.isSaverModeActive(this)) {
             val db = FirebaseDatabase.getInstance().reference.child("user")
             val query = db.orderByChild("phone").equalTo(number)
-            query.addListenerForSingleValueEvent(object : ValueEventListener{
+            query.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     if (snapshot.exists()) {
                         var name = ""
@@ -527,7 +794,7 @@ class ViewActivity : AppCompatActivity() {
                             val users = usersArr[0] + usersArr[1]
 
                             val nochat = FirebaseDatabase.getInstance().reference.child("chat")
-                                .orderByChild("users").equalTo(users)
+                                .orderByChild("code").equalTo(users)
                             nochat.addListenerForSingleValueEvent(object : ValueEventListener {
                                 override fun onDataChange(snapshot: DataSnapshot) {
                                     var chat : String = ""
@@ -540,7 +807,7 @@ class ViewActivity : AppCompatActivity() {
                                     } else {
                                         chat = key
                                         val hash = mapOf(
-                                            "users" to users,
+                                            "code" to users,
                                             "messages" to true,
                                             "type" to 0
                                         )
@@ -551,7 +818,7 @@ class ViewActivity : AppCompatActivity() {
                                         db.child(FirebaseAuth.getInstance().currentUser!!.uid)
                                             .child("chat").child(key).setValue(true)
                                     }
-                                    sendToDatabase(chat, Msg, auth.currentUser!!.uid, "", sd)
+                                    sendToDatabase(chat, number, Msg, auth.currentUser!!.uid)
                                 }
 
                                 override fun onCancelled(error: DatabaseError) {
@@ -571,35 +838,12 @@ class ViewActivity : AppCompatActivity() {
         }
     }
 
-    private fun isSaverModeActive() : Boolean{
-        val s = getSharedPreferences("settings", Context.MODE_PRIVATE)
 
-        return s.getBoolean("datasaver", true)
-    }
-
-    private fun isMovileDataActive() : Boolean{
-        var mobileDataEnable = false
-        try{
-            val cm = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-            val cmClass = Class.forName(cm.javaClass.name)
-            val method = cmClass.getDeclaredMethod("getMobileDataEnabled")
-            method.isAccessible = true
-            mobileDataEnable = method.invoke(cm) as Boolean
-        }catch( e : Exception){
-            e.printStackTrace()
-        }
-
-        return mobileDataEnable
-    }
-
-    fun sendToDatabase(chat: String, msg: MessageElement, user: String, reply : String, temp : Long): String {
-        if(chat == "")
-            return ""
-        val db =
+    fun sendToDatabase(chat: String, number: String, msg: MessageElement, user: String) {
+        val messageRef =
             FirebaseDatabase.getInstance().reference.child("chat").child(chat).child("messages")
-                .push()
-        val time = Calendar.getInstance().timeInMillis
-
+                .child(msg.id)
+        val now = Calendar.getInstance().timeInMillis
         val emsg = msg.message
 
         val events = msg.event
@@ -612,27 +856,17 @@ class ViewActivity : AppCompatActivity() {
             "eventEndDate" to events.endDate
         )
 
-        var hash = mapOf(
+        val hash = mapOf(
             "message" to emsg,
+            "status" to 1,
+            "number" to number,
             "userId" to user,
-            "timestamp" to time,
-            "event" to event,
-            "idTemp" to temp
+            "timestamp" to now,
+            "event" to event
         )
-        if(reply != ""){
-            hash = mapOf(
-                "message" to emsg,
-                "userId" to user,
-                "timestamp" to time,
-                "reply" to reply,
-                "event" to event,
-                "idTemp" to temp
-            )
-        }
 
-        db.updateChildren(hash)
+        messageRef.updateChildren(hash)
 
-        return db.key!!
     }
 }
 

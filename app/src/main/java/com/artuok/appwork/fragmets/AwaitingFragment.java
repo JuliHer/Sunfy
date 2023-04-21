@@ -7,11 +7,15 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.TypedArray;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.text.format.DateFormat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,15 +38,24 @@ import com.artuok.appwork.adapters.AwaitingAdapter;
 import com.artuok.appwork.db.DbHelper;
 import com.artuok.appwork.dialogs.AnnouncementDialog;
 import com.artuok.appwork.dialogs.PermissionDialog;
-import com.artuok.appwork.objects.AwaitingElement;
+import com.artuok.appwork.objects.AnnouncesElement;
+import com.artuok.appwork.objects.AwaitElement;
 import com.artuok.appwork.objects.Item;
 import com.artuok.appwork.objects.TextElement;
 import com.artuok.appwork.widgets.TodayTaskWidget;
+import com.faltenreich.skeletonlayout.Skeleton;
+import com.faltenreich.skeletonlayout.SkeletonLayoutUtils;
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdLoader;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.LoadAdError;
+import com.google.android.gms.ads.nativead.NativeAd;
 
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Random;
 
 import it.xabaras.android.recyclerview.swipedecorator.RecyclerViewSwipeDecorator;
 
@@ -55,8 +68,11 @@ public class AwaitingFragment extends Fragment {
     LinearLayoutManager manager;
     TextView done, onHold, lose;
     AwaitingAdapter.OnClickListener listener;
-
     LinearLayout empty;
+
+    int advirments = 0;
+
+    Skeleton skeleton;
 
     ItemTouchHelper.SimpleCallback touchHelper = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
         @Override
@@ -88,8 +104,8 @@ public class AwaitingFragment extends Fragment {
         @Override
         public void onChildDraw(@NonNull Canvas c, @NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
             int position = viewHolder.getLayoutPosition();
-            if (elements.get(position).getType() == 0) {
-                if(!((AwaitingElement)elements.get(position).getObject()).isDone()){
+            if (elements.get(position).getType() == 0 || elements.get(position).getType() == 3) {
+                if(!((AwaitElement)elements.get(position).getObject()).isDone()){
                     new RecyclerViewSwipeDecorator.Builder(requireActivity(), c, recyclerView, viewHolder, dX, dY, actionState,
                             isCurrentlyActive)
                             .addSwipeLeftBackgroundColor(requireActivity().getColor(R.color.red_500))
@@ -97,7 +113,6 @@ public class AwaitingFragment extends Fragment {
                             .addSwipeLeftActionIcon(R.drawable.ic_trash)
                             .setSwipeLeftActionIconTint(requireActivity().getColor(R.color.white))
                             .setSwipeLeftLabelColor(requireActivity().getColor(R.color.white))
-
                             .addSwipeRightBackgroundColor(requireActivity().getColor(R.color.blue_400))
                             .addSwipeRightLabel(requireActivity().getString(R.string.check))
                             .addSwipeRightActionIcon(R.drawable.ic_check_circle)
@@ -153,11 +168,39 @@ public class AwaitingFragment extends Fragment {
             }
     );
 
+    private void setOnResultListener(){
+        resultLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        Intent data = result.getData();
+                        if (data.getIntExtra("requestCode", 0) == 3) {
+                        } else if (data.getIntExtra("requestCode", 0) == 2) {
+                            NotifyChanged();
+                            int i = data.getIntExtra("taskModify", 0);
+                            notifyGlobalChanged(i);
+                            DbHelper dbHelper = new DbHelper(requireActivity());
+                            SQLiteDatabase db = dbHelper.getReadableDatabase();
+                            Cursor pendingTasks = db.rawQuery("SELECT * FROM " + DbHelper.T_TASK + " WHERE status = '0'", null);
+                            if (pendingTasks.getCount() < 1) {
+                                showCongratulations();
+                            }
+                        }
+
+                        if(data.getIntExtra("shareCode", 0) == 2){
+                            ((MainActivity)requireActivity()).notifyToChatChanged();
+                        }
+                    }
+                }
+        );
+    }
+
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.awaiting_fragment, container, false);
 
+        setOnResultListener();
         setListener();
         elements = new ArrayList<>();
         adapter = new AwaitingAdapter(requireActivity(), elements);
@@ -171,13 +214,49 @@ public class AwaitingFragment extends Fragment {
 
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(manager);
+        recyclerView.setAdapter(adapter);
+
+        skeleton = SkeletonLayoutUtils.applySkeleton(recyclerView, R.layout.skeleton_awaiting_layout, 12);
+        TypedArray a = requireActivity().obtainStyledAttributes(R.styleable.AppCustomAttrs);
+
+        int shimmerColor = a.getColor(R.styleable.AppCustomAttrs_shimmerSkeleton, Color.GRAY);
+        int maskColor = a.getColor(R.styleable.AppCustomAttrs_maskSkeleton, Color.LTGRAY);
+
+        skeleton.setMaskColor(maskColor);
+        skeleton.setShimmerColor(shimmerColor);
+        a.recycle();
+
+        skeleton.showSkeleton();
 
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(touchHelper);
         itemTouchHelper.attachToRecyclerView(recyclerView);
 
-
         statistics();
-        loadAwaitings(true);
+
+        new AverageAsync(new AverageAsync.ListenerOnEvent() {
+            @Override
+            public void onPreExecute() {
+
+            }
+
+            @Override
+            public void onExecute(boolean b) {
+                loadAwaitings();
+
+            }
+
+            @Override
+            public void onPostExecute(boolean b) {
+                adapter.notifyDataSetChanged();
+                skeleton.showOriginal();
+                if (elements.size() != 0) {
+                    empty.setVisibility(View.GONE);
+                } else {
+                    empty.setVisibility(View.VISIBLE);
+                }
+            }
+        }).exec(true);
+
 
         SharedPreferences s = requireActivity().getSharedPreferences("settings", Context.MODE_PRIVATE);
         boolean firstTime = s.getBoolean("firstAwaitingOpens", true);
@@ -198,8 +277,7 @@ public class AwaitingFragment extends Fragment {
     void setListener() {
         listener = (view, p) -> {
             if (elements.get(p).getType() == 0) {
-                int id = ((AwaitingElement)elements.get(p).getObject()).getId();
-
+                int id = ((AwaitElement)elements.get(p).getObject()).getId();
                 Intent i = new Intent(requireActivity(), ViewActivity.class);
 
                 i.getIntExtra("requestCode", 2);
@@ -260,7 +338,7 @@ public class AwaitingFragment extends Fragment {
         if (elements != null) {
             elements.clear();
             statistics();
-            loadAwaitings(true);
+            loadAwaitings();
         }
     }
 
@@ -278,7 +356,9 @@ public class AwaitingFragment extends Fragment {
         }
     }
 
-    void loadAwaitings(boolean first) {
+    void loadAwaitings() {
+        if(!isAdded())
+            return;
 
         DbHelper dbHelper = new DbHelper(requireActivity().getApplicationContext());
         SQLiteDatabase db = dbHelper.getReadableDatabase();
@@ -287,10 +367,10 @@ public class AwaitingFragment extends Fragment {
 
         Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.T_TASK + " WHERE status = '0' AND end_date > '" + min + "' ORDER BY end_date ASC", null);
 
-
         if (cursor.moveToFirst()) {
             TextElement el = new TextElement(requireActivity().getString(R.string.pending_activities));
             elements.add(new Item(el, 2));
+
             do {
                 Calendar c = Calendar.getInstance();
                 boolean e = true;
@@ -299,23 +379,30 @@ public class AwaitingFragment extends Fragment {
                 int day = c.get(Calendar.DAY_OF_MONTH);
                 int month = c.get(Calendar.MONTH);
                 int year = c.get(Calendar.YEAR);
-                int hour = c.get(Calendar.HOUR) == 0 ? 12 : c.get(Calendar.HOUR);
+                boolean hourFormat = DateFormat.is24HourFormat(requireActivity());
+                int hour = c.get(Calendar.HOUR_OF_DAY);
+                if(!hourFormat)
+                    hour = c.get(Calendar.HOUR) == 0 ? 12 : c.get(Calendar.HOUR);
+
                 int minute = c.get(Calendar.MINUTE);
 
+                int inApp = new Random().nextInt() % 5;
+                if(inApp == 8){
+                    setAnnounce(elements.size());
+                }
                 String dd = day < 10 ? "0" + day : "" + day;
+                if(!isAdded())
+                    return;
                 String dates = dd + " " + homeFragment.getMonthMinor(requireActivity(), (month)) + " " + year + " ";
                 String mn = minute < 10 ? "0" + minute : "" + minute;
                 String times = hour +":"+mn;
-                times += c.get(Calendar.AM_PM) == Calendar.AM ?  " a. m." : " p. m.";
 
-                long status = 0;
-                if (c.getTimeInMillis() < Calendar.getInstance().getTimeInMillis()) {
-                    e = false;
-                } else {
-                    status = (c.getTimeInMillis());
+                if(!hourFormat){
+                    times += c.get(Calendar.AM_PM) == Calendar.AM ?  " a. m." : " p. m.";
                 }
 
                 boolean done = cursor.getInt(5) == 1;
+                boolean liked = cursor.getInt(7) == 1;
                 int subjectName = cursor.getInt(3);
 
                 Cursor s = db.rawQuery("SELECT * FROM " + DbHelper.t_subjects + " WHERE id = " + subjectName, null);
@@ -328,34 +415,135 @@ public class AwaitingFragment extends Fragment {
 
                 s.close();
 
-                AwaitingElement eb = new AwaitingElement(cursor.getInt(0), cursor.getString(4), subject, dates, times, status);
+                int id = cursor.getInt(0);
+                String title = cursor.getString(4);
+                String status = daysLeft(true, date);
+                int statusColor = statusColor(false, date);
+
+                AwaitElement eb = new AwaitElement(id, title, status, dates, times, colors, statusColor);
                 eb.setDone(done);
-                eb.setOpen(e);
-                eb.setColorSubject(colors);
+                eb.setSubject(subject);
+                eb.setLiked(liked);
                 elements.add(new Item(eb, 0));
             } while (cursor.moveToNext());
         }
-
+        if(!isAdded())
+            return;
         loadLate();
-
+        if(!isAdded())
+            return;
         loadDone();
         cursor.close();
-        if (first) {
-            recyclerView.setAdapter(adapter);
-        } else {
-            adapter.notifyDataSetChanged();
-        }
-
-        if (elements.size() != 0) {
-            empty.setVisibility(View.GONE);
-        } else {
-            empty.setVisibility(View.VISIBLE);
-        }
 
         updateWidget();
     }
 
+    private int statusColor(boolean isClosed, long time){
+        TypedArray ta = requireActivity().obtainStyledAttributes(R.styleable.AppCustomAttrs);
+        int colorB = ta.getColor(R.styleable.AppCustomAttrs_subTextColor, requireActivity().getColor(R.color.yellow_700));
+        ta.recycle();
+        Calendar today = Calendar.getInstance();
+        long tod = today.getTimeInMillis();
+
+        long rest = (time - tod) / 86400000;
+        if (isClosed) {
+            return colorB;
+        } else {
+            if (rest > 2) {
+                return requireActivity().getColor(R.color.green_500);
+            } else {
+                return requireActivity().getColor(R.color.yellow_700);
+            }
+        }
+    }
+
+    private String daysLeft(boolean isOpen, long time){
+        String d = "";
+        Calendar c = Calendar.getInstance();
+        c.setTimeInMillis(time);
+
+        Calendar today = Calendar.getInstance();
+
+        long tod = today.getTimeInMillis();
+
+        if(isOpen) {
+            long rest = (time - tod) / 86400000;
+
+            if (tod < time) {
+                int toin = today.get(Calendar.DAY_OF_YEAR);
+                int awin = c.get(Calendar.DAY_OF_YEAR);
+                if (awin < toin) {
+                    rest = awin + 364 - toin;
+                } else {
+                    rest = awin - toin;
+                }
+            }
+
+            int dow = c.get(Calendar.DAY_OF_WEEK);
+
+            if (rest == 1) {
+                d = requireActivity().getString(R.string.tomorrow);
+            } else if (rest == 0) {
+                d = requireActivity().getString(R.string.today);
+            } else if (rest < 7) {
+                if (dow == 1) {
+                    d = requireActivity().getString(R.string.sunday);
+                } else if (dow == 2) {
+                    d = requireActivity().getString(R.string.monday);
+                } else if (dow == 3) {
+                    d = requireActivity().getString(R.string.tuesday);
+                } else if (dow == 4) {
+                    d = requireActivity().getString(R.string.wednesday);
+                } else if (dow == 5) {
+                    d = requireActivity().getString(R.string.thursday);
+                } else if (dow == 6) {
+                    d = requireActivity().getString(R.string.friday);
+                } else if (dow == 7) {
+                    d = requireActivity().getString(R.string.saturday);
+                }
+            } else {
+                d = rest + " " + requireActivity().getString(R.string.day_left);
+            }
+        }
+        return d;
+    }
+
+    private void setAnnounce(int pos){
+        int finalPos = pos + advirments;
+        advirments++;
+        AdLoader adLoader = new AdLoader.Builder(requireActivity(), "ca-app-pub-3940256099942544/2247696110")
+                .forNativeAd(nativeAd -> {
+                    String title = nativeAd.getHeadline();
+                    String body = nativeAd.getBody();
+                    String advertiser = nativeAd.getAdvertiser();
+                    String price = nativeAd.getPrice();
+                    List<NativeAd.Image> images = nativeAd.getImages();
+                    NativeAd.Image icon = nativeAd.getIcon();
+
+                    advirments--;
+                    AnnouncesElement element = new AnnouncesElement(title, body, advertiser, images, icon);
+                    element.setAction(nativeAd.getCallToAction());
+                    element.setPrice(price);
+                    elements.add(finalPos, new Item(element, 12));
+                    adapter.notifyItemInserted(finalPos);
+                    Log.d("CattoAwaiting", "AD loaded");
+                }).withAdListener(new AdListener() {
+                    @Override
+                    public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
+                        super.onAdFailedToLoad(loadAdError);
+                    }
+
+                    @Override
+                    public void onAdLoaded() {
+                        super.onAdLoaded();
+                    }
+                }).build();
+        adLoader.loadAd(new AdRequest.Builder().build());
+    }
+
     private void updateWidget(){
+        if(!isAdded())
+            return;
         Intent i = new Intent(requireActivity(), TodayTaskWidget.class);
         i.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
 
@@ -382,23 +570,27 @@ public class AwaitingFragment extends Fragment {
                 int day = c.get(Calendar.DAY_OF_MONTH);
                 int month = c.get(Calendar.MONTH);
                 int year = c.get(Calendar.YEAR);
-                int hour = c.get(Calendar.HOUR) == 0 ? 12 : c.get(Calendar.HOUR);
+                int inApp = new Random().nextInt() % 10;
+                if(inApp == 8){
+                    setAnnounce(elements.size());
+                }
+                boolean hourFormat = DateFormat.is24HourFormat(requireActivity());
+                int hour = c.get(Calendar.HOUR_OF_DAY);
+                if(!hourFormat)
+                    hour = c.get(Calendar.HOUR) == 0 ? 12 : c.get(Calendar.HOUR);
+
                 int minute = c.get(Calendar.MINUTE);
 
                 String dd = day < 10 ? "0" + day : "" + day;
                 String dates = dd + " " + homeFragment.getMonthMinor(requireActivity(), (month)) + " " + year + " ";
                 String mn = minute < 10 ? "0" + minute : "" + minute;
                 String times = hour +":"+mn;
-                times += c.get(Calendar.AM_PM) == Calendar.AM ?  " a. m." : " p. m.";
 
-                long status = 0;
-                if (c.getTimeInMillis() < Calendar.getInstance().getTimeInMillis()) {
-                    e = false;
-                } else {
-                    status = (c.getTimeInMillis());
-                }
+                if(!hourFormat)
+                    times += c.get(Calendar.AM_PM) == Calendar.AM ?  " a. m." : " p. m.";
 
                 boolean done = cursor.getInt(5) == 1;
+                boolean liked = cursor.getInt(7) == 1;
                 int subjectName = cursor.getInt(3);
 
                 Cursor s = db.rawQuery("SELECT * FROM " + DbHelper.t_subjects + " WHERE id = " + subjectName, null);
@@ -410,11 +602,15 @@ public class AwaitingFragment extends Fragment {
                 }
 
                 s.close();
+                int id = cursor.getInt(0);
+                String title = cursor.getString(4);
+                String status = requireActivity().getString(R.string.overdue);
+                int statusColor = statusColor(true, date);
 
-                AwaitingElement eb = new AwaitingElement(cursor.getInt(0), cursor.getString(4), subject, dates, times, status);
+                AwaitElement eb = new AwaitElement(id, title, status, dates, times, colors, statusColor);
                 eb.setDone(done);
-                eb.setOpen(e);
-                eb.setColorSubject(colors);
+                eb.setLiked(liked);
+                eb.setSubject(subject);
                 elements.add(new Item(eb, 0));
             } while (cursor.moveToNext());
         }
@@ -437,23 +633,27 @@ public class AwaitingFragment extends Fragment {
                 int day = c.get(Calendar.DAY_OF_MONTH);
                 int month = c.get(Calendar.MONTH);
                 int year = c.get(Calendar.YEAR);
-                int hour = c.get(Calendar.HOUR) == 0 ? 12 : c.get(Calendar.HOUR);
+                boolean hourFormat = DateFormat.is24HourFormat(requireActivity());
+                int hour = c.get(Calendar.HOUR_OF_DAY);
+                if(!hourFormat)
+                    hour = c.get(Calendar.HOUR) == 0 ? 12 : c.get(Calendar.HOUR);
                 int minute = c.get(Calendar.MINUTE);
-
+                int inApp = new Random().nextInt() % 5;
+                if(inApp == 8){
+                    setAnnounce(elements.size());
+                }
                 String dd = day < 10 ? "0" + day : "" + day;
+                if(!isAdded())
+                    return;
                 String dates = dd + " " + homeFragment.getMonthMinor(requireActivity(), (month)) + " " + year + " ";
                 String mn = minute < 10 ? "0" + minute : "" + minute;
                 String times = hour +":"+mn;
-                times += c.get(Calendar.AM_PM) == Calendar.AM ?  " a. m." : " p. m.";
 
-                long status = 0;
-                if (c.getTimeInMillis() < Calendar.getInstance().getTimeInMillis()) {
-                    e = false;
-                } else {
-                    status = (c.getTimeInMillis());
-                }
+                if(!hourFormat)
+                    times += c.get(Calendar.AM_PM) == Calendar.AM ?  " a. m." : " p. m.";
 
                 boolean done = cursor.getInt(5) == 1;
+                boolean liked = cursor.getInt(7) == 1;
                 int subjectName = cursor.getInt(3);
 
                 Cursor s = db.rawQuery("SELECT * FROM " + DbHelper.t_subjects + " WHERE id = " + subjectName, null);
@@ -465,11 +665,15 @@ public class AwaitingFragment extends Fragment {
                 }
 
                 s.close();
+                int id = cursor.getInt(0);
+                String title = cursor.getString(4);
+                String status = requireActivity().getString(R.string.done_string);
+                int statusColor = statusColor(true, date);
 
-                AwaitingElement eb = new AwaitingElement(cursor.getInt(0), cursor.getString(4), subject, dates, times, status);
+                AwaitElement eb = new AwaitElement(id, title, status, dates, times, colors, statusColor);
                 eb.setDone(done);
-                eb.setOpen(e);
-                eb.setColorSubject(colors);
+                eb.setLiked(liked);
+                eb.setSubject(subject);
                 elements.add(new Item(eb, 0));
             } while (cursor.moveToNext());
         }
@@ -478,16 +682,17 @@ public class AwaitingFragment extends Fragment {
 
     void removeTask(int position) {
         if(elements.get(position).getType() == 0) {
-            int id = ((AwaitingElement) elements.get(position).getObject()).getId();
+            int id = ((AwaitElement) elements.get(position).getObject()).getId();
             PermissionDialog dialog = new PermissionDialog();
             dialog.setTitleDialog(requireActivity().getString(R.string.remove));
             dialog.setTextDialog(requireActivity().getString(R.string.remove_task));
             dialog.setDrawable(R.drawable.ic_trash);
-
+            adapter.notifyItemChanged(position);
             dialog.setNegative((view, which) -> {
                 adapter.notifyItemChanged(position);
                 dialog.dismiss();
             });
+
 
             dialog.setPositive((view, which) -> {
                 DbHelper dbHelper = new DbHelper(requireActivity());
@@ -529,9 +734,7 @@ public class AwaitingFragment extends Fragment {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
         if(elements.get(position).getType() == 0) {
-
-
-            int id = ((AwaitingElement) elements.get(position).getObject()).getId();
+            int id = ((AwaitElement) elements.get(position).getObject()).getId();
 
 
             Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.T_TASK + " WHERE id = '" + id + "'", null);
@@ -551,7 +754,7 @@ public class AwaitingFragment extends Fragment {
                     });
 
                     permissionDialog.setPositive((view, which) -> {
-                        ((AwaitingElement) elements.get(position).getObject()).setDone(false);
+                        ((AwaitElement) elements.get(position).getObject()).setDone(false);
 
                         long dat = Calendar.getInstance().getTimeInMillis();
 
@@ -582,7 +785,7 @@ public class AwaitingFragment extends Fragment {
 
                     permissionDialog.show(requireActivity().getSupportFragmentManager(), "C");
                 } else {
-                    ((AwaitingElement) elements.get(position).getObject()).setDone(true);
+                    ((AwaitElement) elements.get(position).getObject()).setDone(true);
 
                     long dat = Calendar.getInstance().getTimeInMillis();
 
@@ -647,4 +850,7 @@ public class AwaitingFragment extends Fragment {
         i.close();
         return pos;
     }
+
+
+
 }

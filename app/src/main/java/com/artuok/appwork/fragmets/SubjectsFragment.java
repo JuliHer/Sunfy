@@ -40,6 +40,7 @@ import com.faltenreich.skeletonlayout.Skeleton;
 import com.faltenreich.skeletonlayout.SkeletonLayoutUtils;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 public class SubjectsFragment extends Fragment {
@@ -75,7 +76,7 @@ public class SubjectsFragment extends Fragment {
         refreshLayout.setProgressBackgroundColorSchemeColor(a.getColor(R.styleable.AppCustomAttrs_backgroundDialog, 0));
 
 
-        refreshLayout.setColorSchemeColors(requireActivity().getColor(R.color.blue_400), requireActivity().getColor(R.color.green_500), requireActivity().getColor(R.color.purple_500));
+        refreshLayout.setColorSchemeColors(a.getColor(R.styleable.AppCustomAttrs_iMainColor, 0));
 
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(manager);
@@ -90,8 +91,9 @@ public class SubjectsFragment extends Fragment {
 
         skeleton.setMaskColor(maskColor);
         skeleton.setShimmerColor(shimmerColor);
-
+        a.recycle();
         new TaskAsinc().execute(true);
+
 
         return root;
     }
@@ -110,9 +112,7 @@ public class SubjectsFragment extends Fragment {
         ta.recycle();
         LinearLayout color = dialog.findViewById(R.id.color_picker);
 
-        color.setOnClickListener(view -> {
-            showColorPicker();
-        });
+        color.setOnClickListener(view -> showColorPicker());
         accept.setOnClickListener(view -> {
             String msg = checkMessage(title.getText().toString());
             if (!msg.isEmpty()) {
@@ -120,7 +120,7 @@ public class SubjectsFragment extends Fragment {
                 insertSubject(msg);
             } else {
                 dialog.dismiss();
-                ((MainActivity)requireActivity()).showSnackbar(getString(R.string.name_is_empty));
+                ((MainActivity) requireActivity()).showSnackbar(getString(R.string.name_is_empty));
             }
         });
 
@@ -147,8 +147,7 @@ public class SubjectsFragment extends Fragment {
             }
 
             if ((length - start) > 0) {
-                String msg = text.substring(start, length);
-                return msg;
+                return text.substring(start, length);
             }
         }
         return "";
@@ -165,7 +164,7 @@ public class SubjectsFragment extends Fragment {
         new TaskAsinc().execute(false);
     }
 
-    public void onNotifyDataChaged(){
+    public void onNotifyDataChanged() {
         new TaskAsinc().execute(false);
     }
 
@@ -176,15 +175,47 @@ public class SubjectsFragment extends Fragment {
         }));
         DbHelper helper = new DbHelper(requireActivity().getApplicationContext());
         SQLiteDatabase db = helper.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.t_subjects + " ORDER BY name ASC", null);
+        Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.t_subjects + " ORDER BY name COLLATE NOCASE ASC", null);
         if (cursor.moveToFirst()) {
             do {
-                elements.add(new ItemSubjectElement(new SubjectElement(cursor.getString(1), cursor.getInt(2)), 0));
+                int subject = cursor.getInt(0);
+                String statistic = getStatisticsSubject(subject);
+                elements.add(new ItemSubjectElement(new SubjectElement(cursor.getString(1), statistic, cursor.getInt(2)), 0));
             } while (cursor.moveToNext());
         }
 
 
         cursor.close();
+    }
+
+    private String getStatisticsSubject(int id) {
+        String status = "";
+        if (isAdded()) {
+            DbHelper helper = new DbHelper(requireActivity().getApplicationContext());
+            SQLiteDatabase db = helper.getReadableDatabase();
+            Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.T_TASK + " WHERE subject = '" + id + "'", null);
+            status = "0 " + requireActivity().getString(R.string.pending) + " • 0 " + requireActivity().getString(R.string.overdue) + " • 0 " + requireActivity().getString(R.string.done_string);
+            int pending = 0, overdue = 0, done = 0;
+            if (cursor.moveToFirst()) {
+                do {
+                    boolean taskDone = cursor.getInt(5) == 1;
+                    if (taskDone) {
+                        done++;
+                    } else {
+                        long today = Calendar.getInstance().getTimeInMillis();
+                        boolean taskPending = cursor.getLong(2) > today;
+                        if (taskPending) {
+                            pending++;
+                        } else {
+                            overdue++;
+                        }
+                    }
+                } while (cursor.moveToNext());
+                status = pending + " " + requireActivity().getString(R.string.pending) + " • " + overdue + " " + requireActivity().getString(R.string.overdue) + " • " + done + " " + requireActivity().getString(R.string.done_string);
+            }
+            cursor.close();
+        }
+        return status;
     }
 
     ColorSelectAdapter adapterC;
@@ -217,6 +248,7 @@ public class SubjectsFragment extends Fragment {
 
         colorSelector.show();
     }
+
 
     public List<ColorSelectElement> getColors() {
         List<ColorSelectElement> e = new ArrayList<>();
@@ -268,8 +300,8 @@ public class SubjectsFragment extends Fragment {
     public void notifyDelete(String subject) {
         PermissionDialog dialog = new PermissionDialog();
         dialog.setTitleDialog(requireActivity().getString(R.string.delete)+" "+subject);
-        dialog.setTextDialog(subject +" "+ requireActivity().getString(R.string.subject_delete));
-        dialog.setDrawable(R.drawable.tag);
+        dialog.setTextDialog(subject + " " + requireActivity().getString(R.string.subject_delete));
+        dialog.setDrawable(R.drawable.bookmark);
         dialog.setPositive((view, which) -> {
             deleteSubject(subject);
             dialog.dismiss();

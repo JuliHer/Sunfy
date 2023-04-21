@@ -49,6 +49,9 @@ public class Calendar extends View {
     private int mColorMonth;
     private int mColorOutMonth;
 
+    private int maxHeight;
+    private int maxWidth;
+
     //Calendar
     private java.util.Calendar calendar;
     private java.util.Calendar calendarR;
@@ -186,6 +189,8 @@ public class Calendar extends View {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        maxWidth = MeasureSpec.getSize(widthMeasureSpec);
+        maxHeight = MeasureSpec.getSize(heightMeasureSpec);
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
     }
@@ -215,9 +220,9 @@ public class Calendar extends View {
                 date[0] = month + 1 > 11 ? 0 : month + 1;
                 date[1] = month + 1 > 11 ? year + 1 : year;
             }
-            drawMonths(canvas, date, getWidth() * i);
-            drawWeekDays(canvas, getWidth() * i);
-            drawDays(canvas, date, getWidth() * i);
+            drawMonths(canvas, date, maxWidth * i);
+            drawWeekDays(canvas, maxWidth * i);
+            drawDays(canvas, date, maxWidth * i);
         }
     }
 
@@ -232,7 +237,7 @@ public class Calendar extends View {
     }
 
     private void setValues() {
-        mSpacingOfDays = getWidth() / 7;
+        mSpacingOfDays = maxWidth / 7;
         mHeightSpacingOfDays = (int) (mSpacingOfDays * 0.75f);
         year = calendar.get(java.util.Calendar.YEAR);
         year = month < 0 ? year - 1 + (month / 12) : year + (month / 12);
@@ -625,10 +630,10 @@ public class Calendar extends View {
             case MotionEvent.ACTION_UP:
                 if (swipe < 0) {
                     monthTemp = -1;
-                    scrolling(getWidth());
+                    scrolling(maxWidth);
                 } else if (swipe > 0) {
                     monthTemp = 1;
-                    scrolling(-getWidth());
+                    scrolling(-maxWidth);
                 } else {
                     monthTemp = 0;
                     scrolling(0);
@@ -693,9 +698,9 @@ public class Calendar extends View {
 
     public void scrolling(int x) {
         setHeight();
-        int dur = 300 / getWidth() * Math.abs(offsetX);
+        int dur = 300 / maxWidth * Math.abs(offsetX);
         if (swipe != 0) {
-            dur = 300 - (300 / getWidth() * Math.abs(offsetX));
+            dur = 300 - (300 / maxWidth * Math.abs(offsetX));
         }
 
         to = x;

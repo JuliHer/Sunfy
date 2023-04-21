@@ -18,7 +18,7 @@
             <LinearLayout
                 android:layout_marginHorizontal="10dp"
                 android:layout_width="60dp"
-                android:layout_height="match_parent"
+                android:layout_height="45dp"
                 android:gravity="center_horizontal">
                 <com.artuok.appwork.library.AspectRatioView
                     android:layout_width="match_parent"
@@ -26,14 +26,15 @@
                     app:aspectRatio="1:1"
                     app:orientationRatio="horizontal"
                     app:cardBackgroundColor="?iMainColor"
-                    app:cardCornerRadius="15dp"
+                    app:cardCornerRadius="30dp"
                     >
+
                     <ImageView
                         android:id="@+id/buttonicon"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:src="@drawable/users"
-                        android:padding="9dp"
+                        android:src="@drawable/ic_users"
+                        android:padding="11dp"
                         app:tint="@color/white" />
                 </com.artuok.appwork.library.AspectRatioView>
 

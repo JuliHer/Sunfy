@@ -7,7 +7,6 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.artuok.appwork.R;
@@ -79,11 +78,13 @@ public class SubjectAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     class SubjectViewHolder extends RecyclerView.ViewHolder {
 
         TextView title;
-        CardView backgroud;
+        TextView desc;
+        View backgroud;
 
         public SubjectViewHolder(@NonNull View itemView) {
             super(itemView);
             title = itemView.findViewById(R.id.subject_name);
+            desc = itemView.findViewById(R.id.subject_statistics);
             backgroud = itemView.findViewById(R.id.background);
             PushDownAnim.setPushDownAnimTo(itemView)
                     .setScale(PushDownAnim.MODE_SCALE, 0.98f)
@@ -96,8 +97,9 @@ public class SubjectAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
         void onBindData(SubjectElement element) {
             title.setText(element.getName());
+            desc.setText(element.getDesc());
             if (backgroud != null) {
-                backgroud.setCardBackgroundColor(element.getColor());
+                backgroud.setBackgroundColor(element.getColor());
             }
         }
 

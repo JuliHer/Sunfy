@@ -1,6 +1,5 @@
 package com.artuok.appwork.db;
 
-import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -10,7 +9,7 @@ import androidx.annotation.Nullable;
 import com.google.firebase.auth.FirebaseAuth;
 
 public class DbHelper extends SQLiteOpenHelper {
-    private static final int DatabaseVersion = 16;
+    private static final int DatabaseVersion = 17;
     private static final String DatabaseName = "Calendar";
     public static final String t_subjects = "subjects";
     @Deprecated
@@ -38,8 +37,9 @@ public class DbHelper extends SQLiteOpenHelper {
                 "end_date LONG NOT NULL," +
                 "subject INTEGER NOT NULL," +
                 "description VARCHAR(500)," +
-                "status INTEGER(1) NOT NULL,"+
-                "user TEXT NOT NULL)");
+                "status INTEGER(1) NOT NULL," +
+                "user TEXT NOT NULL," +
+                "favorite INTEGER NOT NULL)");
         sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS " + t_event + "(" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "title TEXT NOT NULL," +
@@ -65,11 +65,8 @@ public class DbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
-        sqLiteDatabase.execSQL("ALTER TABLE  "+T_TASK+" ADD COLUMN user TEXT");
-        if(auth.getCurrentUser() != null){
-            ContentValues values = new ContentValues();
-            values.put("user", auth.getCurrentUser().getUid());
-            sqLiteDatabase.update(T_TASK, values, "", null);
+        if (i <= 16) {
+            sqLiteDatabase.execSQL("ALTER TABLE  " + T_TASK + " ADD COLUMN favorite DEFAULT (0) NOT NULL");
         }
         onCreate(sqLiteDatabase);
     }

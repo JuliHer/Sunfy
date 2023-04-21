@@ -75,7 +75,7 @@
         <ImageView
             android:layout_width="100dp"
             android:layout_height="100dp"
-            android:src="@drawable/users"
+            android:src="@drawable/ic_users"
             app:tint="?backgroundBorder" />
         <TextView
             android:layout_width="300dp"

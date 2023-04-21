@@ -6,6 +6,17 @@
     android:layout_height="match_parent"
     tools:context=".ChatActivity">
 
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:src="?backgroundChat"
+        android:scaleType="centerCrop"
+        android:alpha="0.6"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <LinearLayout
         android:id="@+id/toolbar2"
         android:layout_width="match_parent"
@@ -15,6 +26,7 @@
         app:layout_constraintTop_toTopOf="parent"
         android:gravity="center_vertical"
         android:background="?backgroundDialog">
+
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent">
@@ -44,6 +56,7 @@
                         android:background="@drawable/ic_arrow_left" />
 
                     <de.hdodenhof.circleimageview.CircleImageView
+                        android:id="@+id/usericon"
                         android:layout_width="35dp"
                         android:layout_height="35dp"
                         android:src="@mipmap/usericon" />
@@ -54,7 +67,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:ellipsize="end"
-                    android:fontFamily="@font/poppins"
+                    style="@style/poppinsFont"
                     android:includeFontPadding="false"
                     android:maxLines="1"
                     android:text="Mi Niña Bonita"
@@ -98,9 +111,10 @@
                     app:tint="?backgroundBorder"
                     android:padding="13dp"/>
                 <ImageView
+                    android:id="@+id/copy_button"
                     android:layout_width="50dp"
                     android:layout_height="50dp"
-                    android:src="@drawable/star"
+                    android:src="@drawable/copy"
                     app:tint="?backgroundBorder"
                     android:padding="13dp"/>
             </LinearLayout>
@@ -113,6 +127,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:clipToPadding="false"
+        android:paddingVertical="15dp"
         app:layout_constraintBottom_toTopOf="@+id/linearLayout2"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -171,7 +186,7 @@
                             android:layout_height="wrap_content"
                             android:text="Replyed Message"
                             android:textColor="?subTextColor"
-                            android:maxLines="1"
+                            android:maxLines="3"
                             android:ellipsize="end"
                             android:textSize="13sp"/>
                     </LinearLayout>

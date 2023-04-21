@@ -3,16 +3,18 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="wrap_content">
+
     <androidx.cardview.widget.CardView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="10dp"
+        android:layout_marginStart="10dp"
         android:layout_marginVertical="1dp"
         android:elevation="0dp"
         app:cardElevation="0dp"
         app:cardBackgroundColor="@android:color/transparent"
         android:layout_gravity="start"
+        android:layout_marginEnd="70dp"
         >
 
 
@@ -21,6 +23,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             >
+
             <androidx.cardview.widget.CardView
                 android:id="@+id/task"
                 android:layout_width="wrap_content"
@@ -28,14 +31,13 @@
                 app:cardBackgroundColor="@color/black_transparent"
                 app:cardElevation="0dp"
                 app:cardCornerRadius="5dp"
-                android:layout_marginTop="2dp"
-                android:layout_marginHorizontal="5dp"
-                android:animateLayoutChanges="true">
+                android:layout_marginHorizontal="5dp">
+
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    >
+                    android:orientation="vertical">
+
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -43,28 +45,36 @@
                         android:paddingVertical="10dp"
                         android:paddingHorizontal="10dp"
                         android:gravity="center_vertical">
-                        <de.hdodenhof.circleimageview.CircleImageView
+
+                        <ImageView
+                            android:id="@+id/usericon"
                             android:layout_width="30dp"
                             android:layout_height="30dp"
-                            android:src="@mipmap/usericon"
-                            android:layout_marginEnd="5dp"/>
+                            android:src="@drawable/ic_book"
+                            android:layout_marginEnd="10dp"
+                            app:tint="?subTextColor" />
+
                         <LinearLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:orientation="vertical">
+
                             <LinearLayout
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 >
+
                                 <TextView
+                                    android:id="@+id/eventtitle"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="@string/title_string"
-                                    android:ems="11"
+                                    android:text="Sdjaskdj klad klasjd klasjd kljaslk jaslkdj laksdj lkjaslk jaskld jklsd "
+                                    android:minEms="11"
                                     android:maxLines="1"
                                     android:ellipsize="end"
-                                    android:textSize="16sp"/>
+                                    android:textSize="16sp" />
                                 <TextView
+                                    android:id="@+id/username"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="username"
@@ -81,12 +91,14 @@
                                 android:layout_height="wrap_content"
                                 >
                                 <TextView
+                                    android:id="@+id/endDate"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="18 Feb 2022"
                                     android:textColor="?subTextColor"
                                     android:textSize="11sp"/>
                                 <TextView
+                                    android:id="@+id/endTime"
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
                                     android:text="13:00"
@@ -102,14 +114,16 @@
             <androidx.cardview.widget.CardView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:cardElevation="2dp"
+                app:cardElevation="0dp"
                 app:cardCornerRadius="10dp"
-                android:layout_marginBottom="1dp">
+                app:cardBackgroundColor="?hintInputColor">
+
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:paddingHorizontal="5dp"
                     android:paddingVertical="5dp">
+
                     <com.artuok.appwork.library.MsgFlexboxLayout
                         android:id="@+id/msg_layout"
                         android:layout_width="wrap_content"
@@ -124,9 +138,8 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:textSize="17sp"
-                            android:text="messa"
+                            android:text="@string/task"
                             android:minEms="3"
-                            android:maxEms="11"
                             android:autoLink="email|phone|web"
                             android:textColorLink="?MainColor"/>
 

@@ -63,7 +63,7 @@ public class MsgFlexboxLayout extends RelativeLayout {
 
 
 
-        int availableWidth = Math.min(widthSize - getPaddingLeft() - getPaddingRight(), viewWidthMax);
+        int availableWidth = widthSize - getPaddingLeft() - getPaddingRight();
         int availableHeight = heightSize - getPaddingTop() - getPaddingBottom();
 
         viewPartMainLayoutParams = (LayoutParams) viewMain.getLayoutParams();
@@ -87,7 +87,7 @@ public class MsgFlexboxLayout extends RelativeLayout {
             heightSize += viewPartMainHeight;
         } else if (viewPartMainLineCount > 1 && (viewPartMainLastLineWitdh + viewPartSlaveWidth >= availableWidth)) {
             widthSize += viewPartMainWidth;
-            heightSize += viewPartMainHeight * 2;
+            heightSize += viewPartMainHeight + viewPartSlaveHeight;
         } else if (viewPartMainLineCount == 1 && (viewPartMainWidth + viewPartSlaveWidth >= availableWidth)) {
             if(viewPartMainWidth >= availableWidth - (ds/2)){
                 widthSize += availableWidth;
@@ -95,7 +95,7 @@ public class MsgFlexboxLayout extends RelativeLayout {
                 widthSize += viewPartMainWidth;
             }
 
-            heightSize += viewPartMainHeight * 2;
+            heightSize += viewPartMainHeight + viewPartSlaveHeight;
         }else if(viewPartMainLineCount == 1 && (viewPartMainWidth >= availableWidth - viewPartSlaveWidth - ds)){
             widthSize += availableWidth;
             heightSize += viewPartMainHeight;

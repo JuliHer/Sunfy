@@ -2,6 +2,7 @@ package com.artuok.appwork.adapters;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
+import android.text.format.DateFormat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -40,9 +41,12 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }else if (viewType == 1) {
             View view = mInflater.inflate(R.layout.item_group_chat_layout, parent, false);
             return new GroupViewHolder(view);
-        }else if(viewType == 2){
+        }else if (viewType == 2) {
             View view = mInflater.inflate(R.layout.item_add_group_chat_layout, parent, false);
             return new AddGroupViewHolder(view);
+        } else if (viewType == 3) {
+            View view = mInflater.inflate(R.layout.item_user_select, parent, false);
+            return new ChatSelectViewHolder(view);
         }
 
         return null;
@@ -58,9 +62,12 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }else if(viewType == 1){
             ChatElement element = (ChatElement) mData.get(position).getObject();
             ((GroupViewHolder) holder).onBindData(element);
-        }else if(viewType == 2){
+        }else if (viewType == 2) {
             ChatElement element = (ChatElement) mData.get(position).getObject();
             ((AddGroupViewHolder) holder).onBindData(element);
+        } else if (viewType == 3) {
+            ChatElement element = (ChatElement) mData.get(position).getObject();
+            ((ChatSelectViewHolder) holder).onBindData(element);
         }
     }
 
@@ -87,6 +94,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             statusIcon = itemView.findViewById(R.id.status_icon);
             contentIcon = itemView.findViewById(R.id.content_icon);
             time = itemView.findViewById(R.id.timestamp);
+            perfilPhoto = itemView.findViewById(R.id.usericon);
             PushDownAnim.setPushDownAnimTo(inviteBtn)
                     .setDurationPush(100)
                     .setScale(PushDownAnim.MODE_SCALE, 0.98f);
@@ -101,6 +109,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             name.setText(chat_name);
             content.setText(chat_number);
 
+            if (element.getImage() != null)
+                perfilPhoto.setImageBitmap(element.getImage());
+
             Calendar c = Calendar.getInstance();
             c.setTimeInMillis(element.getTimestamp());
             int h = c.get(Calendar.HOUR_OF_DAY);
@@ -109,17 +120,24 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             String tm = c.get(Calendar.AM_PM) == Calendar.AM ? "a. m." : "p. m.";
 
             String hour = (h % 12) + "";
-            hour = (h == 12) ? "12" : hour;
+            boolean hourFormat = DateFormat.is24HourFormat(mInflater.getContext());
+            String timestamp = "";
+            if (!hourFormat) {
+                hour = (h == 12) ? "12" : hour;
+                timestamp = hour + ":" + minute + " " + tm;
+            } else {
+                hour = h + "";
+                timestamp = hour + ":" + minute;
+            }
 
-            String timestamp = hour + ":" + minute + " " + tm;
 
             if (!element.isLog()) {
                 inviteBtn.setVisibility(View.VISIBLE);
-            }else{
+            } else {
                 inviteBtn.setVisibility(View.GONE);
             }
 
-            if(element.getTimestamp() != 0){
+            if (element.getTimestamp() != 0) {
                 time.setVisibility(View.VISIBLE);
             }else{
                 time.setVisibility(View.GONE);
@@ -159,16 +177,47 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
     }
 
-    static class GroupViewHolder extends RecyclerView.ViewHolder{
+    class ChatSelectViewHolder extends RecyclerView.ViewHolder {
+        TextView name;
+        ImageView image, check;
+
+
+        public ChatSelectViewHolder(@NonNull View itemView) {
+            super(itemView);
+            name = itemView.findViewById(R.id.chat_name);
+            image = itemView.findViewById(R.id.image);
+            check = itemView.findViewById(R.id.check);
+            itemView.setOnClickListener(view -> {
+                listener.onClick(view, getLayoutPosition());
+            });
+        }
+
+        void onBindData(ChatElement element) {
+            name.setText(element.getName());
+
+            if (element.getImage() != null)
+                image.setImageBitmap(element.getImage());
+
+            if (element.isLog()) {
+                check.setVisibility(View.VISIBLE);
+            } else {
+                check.setVisibility(View.GONE);
+            }
+        }
+    }
+
+    class GroupViewHolder extends RecyclerView.ViewHolder {
 
         TextView name, time, content;
         ImageView image;
+
         public GroupViewHolder(@NonNull View itemView) {
             super(itemView);
             name = itemView.findViewById(R.id.chat_name);
             time = itemView.findViewById(R.id.timestamp);
             content = itemView.findViewById(R.id.chat_content);
             image = itemView.findViewById(R.id.chat_icon);
+
         }
 
         public void onBindData(ChatElement element) {
@@ -185,20 +234,30 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             String tm = c.get(Calendar.AM_PM) == Calendar.AM ? "a. m." : "p. m.";
 
             String hour = (h % 12) + "";
-            hour = (h == 12) ? "12" : hour;
-            String timestamp = hour + ":" + minute + " " + tm;
+            boolean hourFormat = DateFormat.is24HourFormat(mInflater.getContext());
+            String timestamp = "";
+            if (!hourFormat) {
+                hour = (h == 12) ? "12" : hour;
+                timestamp = hour + ":" + minute + " " + tm;
+            } else {
+                hour = h + "";
+                timestamp = hour + ":" + minute;
+            }
+
             time.setText(timestamp);
         }
     }
 
-    static class AddGroupViewHolder extends RecyclerView.ViewHolder{
+    class AddGroupViewHolder extends RecyclerView.ViewHolder {
 
         TextView name;
         ImageView image;
+
         public AddGroupViewHolder(@NonNull View itemView) {
             super(itemView);
             name = itemView.findViewById(R.id.buttontext);
             image = itemView.findViewById(R.id.buttonicon);
+            itemView.setOnClickListener(view -> listener.onClick(view, getLayoutPosition()));
         }
 
         public void onBindData(ChatElement element) {

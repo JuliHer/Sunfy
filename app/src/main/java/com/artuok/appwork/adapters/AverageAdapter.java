@@ -9,7 +9,6 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.artuok.appwork.R;
@@ -60,7 +59,7 @@ public class AverageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     class AverageViewHolder extends RecyclerView.ViewHolder {
         TextView title;
         ProgressBar progressBar;
-        CardView card;
+        View card;
         ImageView imageView;
 
         public AverageViewHolder(@NonNull View itemView) {
@@ -75,7 +74,7 @@ public class AverageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
         void onBindData(AverageElement element) {
             title.setText(element.getSubject());
-            card.setCardBackgroundColor(element.getColor());
+            card.setBackgroundColor(element.getColor());
 
             if (element.getMax() == 0) {
                 progressBar.setProgressDrawable(mInflater.getContext().getDrawable(R.drawable.circle_progress_green));
