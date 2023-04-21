@@ -10,7 +10,6 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.media.AudioManager;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
@@ -19,16 +18,16 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
+import android.text.format.DateFormat;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
-import androidx.appcompat.widget.AppCompatButton;
-import androidx.constraintlayout.widget.ConstraintLayout;
 
 import com.artuok.appwork.db.DbHelper;
 import com.artuok.appwork.services.AlarmWorkManager;
@@ -40,6 +39,7 @@ public class AlarmActivity extends AppCompatActivity {
 
     BroadcastReceiver receiver;
     private TextView fhour;
+    private TextView postTimer;
     Ringtone ringtoneAlarm;
     boolean isCancelP = false;
     Handler postpone;
@@ -50,6 +50,7 @@ public class AlarmActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ringing);
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
             setShowWhenLocked(true);
             setTurnScreenOn(true);
@@ -64,6 +65,8 @@ public class AlarmActivity extends AppCompatActivity {
 
 
         linearLayout1 = findViewById(R.id.time_context);
+
+        postTimer = findViewById(R.id.tm_clock);
         fhour = findViewById(R.id.time_clock);
         TextView info = findViewById(R.id.info);
         setPendents(info);
@@ -77,14 +80,25 @@ public class AlarmActivity extends AppCompatActivity {
         Calendar c = Calendar.getInstance();
         String fh = "";
 
+        final boolean isHourFormat = DateFormat.is24HourFormat(this);
+
         int h = c.get(Calendar.HOUR_OF_DAY);
-        if (h > 12) {
+
+        if (!isHourFormat && h > 12) {
             h = h - 12;
         }
 
         fh += h < 10 ? "0" + h + ":" : h + ":";
 
         fh += c.get(Calendar.MINUTE) < 10 ? "0" + c.get(Calendar.MINUTE) : c.get(Calendar.MINUTE);
+
+        if (!isHourFormat) {
+            postTimer.setVisibility(View.VISIBLE);
+            String tm = c.get(Calendar.AM_PM) == Calendar.AM ? "a. m." : "p. m.";
+            postTimer.setText(tm);
+        } else {
+            postTimer.setVisibility(View.GONE);
+        }
 
         fhour.setText(fh);
         receiver = new BroadcastReceiver() {
@@ -95,30 +109,39 @@ public class AlarmActivity extends AppCompatActivity {
                     String fh = "";
 
                     int h = c.get(Calendar.HOUR_OF_DAY);
-                    if (h > 12) {
+
+                    if (!isHourFormat && h > 12) {
                         h = h - 12;
                     }
 
                     fh += h < 10 ? "0" + h + ":" : h + ":";
 
                     fh += c.get(Calendar.MINUTE) < 10 ? "0" + c.get(Calendar.MINUTE) : c.get(Calendar.MINUTE);
+
+                    if (!isHourFormat) {
+                        postTimer.setVisibility(View.VISIBLE);
+                        String tm = c.get(Calendar.AM_PM) == Calendar.AM ? "a. m." : "p. m.";
+                        postTimer.setText(tm);
+                    } else {
+                        postTimer.setVisibility(View.GONE);
+                    }
                     fhour.setText(fh);
                 }
             }
         };
 
-        AppCompatButton button = findViewById(R.id.putoff);
-        PushDownAnim.setPushDownAnimTo(button)
-                .setScale(PushDownAnim.MODE_SCALE, 0.98f)
-                .setDurationPush(100)
-                .setOnClickListener(view -> {
+        BroadcastReceiver receiverS = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if (intent.getAction() == AlarmWorkManager.ACTION_DISMISS) {
                     cancelVibration();
-                    MoreFiveMinutes();
                     finish();
-                });
+                }
+            }
+        };
 
-        AppCompatButton buttonOK = findViewById(R.id.ok);
-        PushDownAnim.setPushDownAnimTo(buttonOK)
+        ImageView button = findViewById(R.id.put_off);
+        PushDownAnim.setPushDownAnimTo(button)
                 .setScale(PushDownAnim.MODE_SCALE, 0.98f)
                 .setDurationPush(100).setOnClickListener(view -> {
                     cancelVibration();
@@ -129,14 +152,14 @@ public class AlarmActivity extends AppCompatActivity {
         postpone.postDelayed(() -> {
             if (!isCancelP) {
                 cancelVibration();
-                MoreFiveMinutes();
                 finish();
             }
-        }, 60000);
+        }, 300000);
 
 
-        ConstraintLayout swip = findViewById(R.id.swipper);
+        registerReceiver(receiverS, new IntentFilter(AlarmWorkManager.ACTION_DISMISS));
         registerReceiver(receiver, new IntentFilter(Intent.ACTION_TIME_TICK));
+
         vibrate();
     }
 
@@ -181,7 +204,6 @@ public class AlarmActivity extends AppCompatActivity {
         vibrator.vibrate(VibrationEffect.createWaveform(a, 0));
         Uri alarmTone = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
         ringtoneAlarm = RingtoneManager.getRingtone(getApplicationContext(), alarmTone);
-        ringtoneAlarm.setStreamType(AudioManager.STREAM_ALARM);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             ringtoneAlarm.setLooping(true);
         }
@@ -196,6 +218,7 @@ public class AlarmActivity extends AppCompatActivity {
         vibrator.cancel();
         postpone.removeCallbacksAndMessages(null);
         ringtoneAlarm.stop();
+        isCancelP = true;
     }
 
     void Preferences() {
@@ -258,7 +281,7 @@ public class AlarmActivity extends AppCompatActivity {
     void setPendents(TextView a) {
         DbHelper dbHelper = new DbHelper(this);
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor p = db.rawQuery("SELECT * FROM " + DbHelper.t_task + " WHERE status = '0'", null);
+        Cursor p = db.rawQuery("SELECT * FROM " + DbHelper.T_TASK + " WHERE status = '0'", null);
 
         int count = p.getCount();
         String g = "";

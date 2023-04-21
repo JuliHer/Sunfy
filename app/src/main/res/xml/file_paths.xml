@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <external-files-path
+        name="Images"
+        path="Media/Sunfy Temp" />
+    <files-path
+        name="Image"
+        path="Media/Sunfy Images" />
+</paths>

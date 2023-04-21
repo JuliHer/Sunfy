@@ -69,12 +69,14 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             long timeIM = element.getMillisSeconds();
 
             if (element.isCheck()) {
-                status.setColorFilter(mInflater.getContext().getColor(R.color.blue_400));
+
+
                 title.setPaintFlags(title.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
-                TypedArray ta = mInflater.getContext().obtainStyledAttributes(R.styleable.AppWidgetAttrs);
+                TypedArray ta = mInflater.getContext().obtainStyledAttributes(R.styleable.AppCustomAttrs);
 
-                int color = ta.getColor(R.styleable.AppWidgetAttrs_subTextColor, Color.WHITE);
+                int color = ta.getColor(R.styleable.AppCustomAttrs_subTextColor, Color.WHITE);
 
+                status.setColorFilter(color);
                 title.setTextColor(color);
                 ta.recycle();
             } else {
@@ -82,7 +84,12 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
 
                     status.setColorFilter(mInflater.getContext().getColor(R.color.green_500));
                 } else {
-                    status.setColorFilter(mInflater.getContext().getColor(R.color.red_500));
+                    TypedArray ta = mInflater.getContext().obtainStyledAttributes(R.styleable.AppCustomAttrs);
+
+                    int color = ta.getColor(R.styleable.AppCustomAttrs_subTextColor, Color.WHITE);
+
+                    status.setColorFilter(color);
+                    ta.recycle();
                 }
 
             }

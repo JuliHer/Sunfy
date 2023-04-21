@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.text.format.DateFormat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,11 +24,19 @@ import com.artuok.appwork.MainActivity;
 import com.artuok.appwork.R;
 import com.artuok.appwork.adapters.TasksAdapter;
 import com.artuok.appwork.db.DbHelper;
+import com.artuok.appwork.library.LineChart;
+import com.artuok.appwork.objects.AnnouncesElement;
 import com.artuok.appwork.objects.CountElement;
 import com.artuok.appwork.objects.Item;
+import com.artuok.appwork.objects.LineChartElement;
 import com.artuok.appwork.objects.TaskElement;
 import com.artuok.appwork.objects.TasksElement;
 import com.faltenreich.skeletonlayout.Skeleton;
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdLoader;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.LoadAdError;
+import com.google.android.gms.ads.nativead.NativeAd;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -35,6 +44,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Random;
 
 public class homeFragment extends Fragment {
 
@@ -46,12 +56,24 @@ public class homeFragment extends Fragment {
     private List<Item> elements;
     private ArrayList<Integer> history;
     private TasksAdapter.OnRecyclerListener listener;
+    int advirments = 0;
 
+    ActivityResultLauncher<Intent> resultLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == Activity.RESULT_OK) {
+                    Intent data = result.getData();
+                    if (data.getIntExtra("requestCode", 0) == 3) {
+                        ((MainActivity) requireActivity()).navigateTo(2);
+                    } else if (data.getIntExtra("requestCode", 0) == 2) {
+                        ((MainActivity) requireActivity()).notifyAllChanged();
+                    }
+                }
+            }
+    );
 
     //elementExp
     int posExp = -1;
-
-
     int min = 0;
     int total = 0;
 
@@ -61,7 +83,7 @@ public class homeFragment extends Fragment {
         View root = inflater.inflate(R.layout.home_fragment, container, false);
 
         setListener();
-
+        restartResultLauncher();
         history = new ArrayList<>();
 
         elements = new ArrayList<>();
@@ -69,7 +91,7 @@ public class homeFragment extends Fragment {
         adapter.setAddEventListener((view, pos) -> {
             String d = ((TasksElement) elements.get(pos).getObject()).getDate();
 
-            SimpleDateFormat format = new SimpleDateFormat("MMMM dd, yyyy");
+            SimpleDateFormat format = new SimpleDateFormat("dd MMM yyyy");
             Date date = new Date();
             try {
                 date = format.parse(d);
@@ -91,9 +113,43 @@ public class homeFragment extends Fragment {
 
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(manager);
+        recyclerView.setAdapter(adapter);
         loadCount();
-        loadTasks(-1);
+
+        new AverageAsync(new AverageAsync.ListenerOnEvent() {
+            @Override
+            public void onPreExecute() {
+
+            }
+
+            @Override
+            public void onExecute(boolean b) {
+                loadTasks(-1);
+            }
+
+            @Override
+            public void onPostExecute(boolean b) {
+                adapter.notifyDataSetChanged();
+            }
+        }).exec(true);
+
         return root;
+    }
+
+    void restartResultLauncher() {
+        resultLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        Intent data = result.getData();
+                        if (data.getIntExtra("requestCode", 0) == 3) {
+                            ((MainActivity) requireActivity()).navigateTo(2);
+                        } else if (data.getIntExtra("requestCode", 0) == 2) {
+                            ((MainActivity) requireActivity()).notifyAllChanged();
+                        }
+                    }
+                }
+        );
     }
 
     void setListener() {
@@ -104,7 +160,7 @@ public class homeFragment extends Fragment {
         DbHelper dbHelper = new DbHelper(requireActivity());
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
-        Cursor onHold = db.rawQuery("SELECT * FROM " + DbHelper.t_task + " WHERE status = '0'", null);
+        Cursor onHold = db.rawQuery("SELECT * FROM " + DbHelper.T_TASK + " WHERE status = '0'", null);
 
         int holding = onHold.getCount();
         onHold.close();
@@ -122,10 +178,37 @@ public class homeFragment extends Fragment {
             txt += "" + holding;
             sTxt = requireActivity().getString(R.string.pending_tasks);
         }
-        elements.add(new Item(new CountElement(txt, sTxt), 1));
+    }
+
+    private String getTimeDay() {
+        Calendar c = Calendar.getInstance();
+
+        int hour = c.get(Calendar.HOUR_OF_DAY);
+        if (hour >= 19) {
+            return requireActivity().getString(R.string.good_night);
+        } else if (hour >= 12) {
+            return requireActivity().getString(R.string.good_afternoon);
+        } else if (hour < 4) {
+            return requireActivity().getString(R.string.good_night);
+        } else {
+            return requireActivity().getString(R.string.good_morning);
+        }
     }
 
     void loadTasks(int pos) {
+        if (!isAdded())
+            return;
+
+        CountElement resume = new CountElement(getTimeDay(),
+                view -> ((MainActivity) requireActivity()).loadExternalFragment(((MainActivity) requireActivity()).chatFragment, requireActivity().getString(R.string.chat)),
+                view -> ((MainActivity) requireActivity()).loadExternalFragment(((MainActivity) requireActivity()).settingsFragment, requireActivity().getString(R.string.settings_menu)));
+
+        if (!SettingsFragment.isLogged(requireActivity())) {
+            resume.setChatVisible(false);
+        }
+
+        elements.add(new Item(resume, 1));
+
         boolean changedData = pos >= 0;
         Calendar c = Calendar.getInstance();
         long d = c.getTimeInMillis();
@@ -134,16 +217,33 @@ public class homeFragment extends Fragment {
         if (!changedData) {
             for (int i = 0; i < 7; i++) {
                 long today = d + (day * i);
+                if (!isAdded())
+                    return;
                 List<TaskElement> task = getTaskDay(today);
                 int dow = ((dayWeek + i) % 7) + 1;
 
                 String title = dow - 1 == dayWeek ? requireActivity().getString(R.string.today) : getDayOfWeek(requireActivity(), dow);
                 title = dow - 1 == (dayWeek + 1) % 7 ? requireActivity().getString(R.string.tomorrow) : title;
 
+                int inApp = new Random().nextInt() % 15;
+                if (inApp == 8 && i > 1) {
+                    setAnnounce(elements.size());
+                }
+
+                if (i == 2) {
+                    LineChartElement element = new LineChartElement(getWeeklyProgress(), new LineChartElement.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            ((MainActivity) requireActivity()).loadExternalFragment(((MainActivity) requireActivity()).averagesFragment, requireActivity().getString(R.string.average_fragment_menu));
+                        }
+                    });
+
+                    elements.add(new Item(element, 2));
+                }
                 Date date = new Date();
                 date.setTime(today);
-                SimpleDateFormat format = new SimpleDateFormat("MMMM dd, yyyy");
-                String time = format.format(date);
+                SimpleDateFormat format = new SimpleDateFormat("dd MMM yyyy");
+                String time = format.format(date).toUpperCase();
 
                 elements.add(new Item(new TasksElement(title, time, i, task), 0));
             }
@@ -151,82 +251,79 @@ public class homeFragment extends Fragment {
             long today = d + (day * pos);
             List<TaskElement> task = getTaskDay(today);
             ((TasksElement) elements.get(pos).getObject()).setData(task);
-            adapter.notifyItemChanged(pos);
-        }
-        if (!changedData) {
-            recyclerView.setAdapter(adapter);
-        }
 
+        }
     }
 
-    ActivityResultLauncher<Intent> resultLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if (result.getResultCode() == Activity.RESULT_OK) {
-                    Intent data = result.getData();
-                    if (data.getIntExtra("requestCode", 0) == 3) {
-                        ((MainActivity) requireActivity()).navigateTo(2);
-                    } else if (data.getIntExtra("requestCode", 0) == 2) {
-                        ((MainActivity) requireActivity()).notifyAllChanged();
+    private void setAnnounce(int pos) {
+        int finalPos = pos + advirments;
+        advirments++;
+        AdLoader adLoader = new AdLoader.Builder(requireActivity(), "ca-app-pub-3940256099942544/2247696110")
+                .forNativeAd(nativeAd -> {
+                    String title = nativeAd.getHeadline();
+                    String body = nativeAd.getBody();
+                    String advertiser = nativeAd.getAdvertiser();
+                    String price = nativeAd.getPrice();
+                    List<NativeAd.Image> images = nativeAd.getImages();
+                    NativeAd.Image icon = nativeAd.getIcon();
+                    advirments--;
+                    AnnouncesElement element = new AnnouncesElement(title, body, advertiser, images, icon);
+                    element.setAction(nativeAd.getCallToAction());
+                    element.setPrice(price);
+                    elements.add(finalPos, new Item(element, 12));
+                    adapter.notifyItemInserted(finalPos);
+                }).withAdListener(new AdListener() {
+                    @Override
+                    public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
+                        super.onAdFailedToLoad(loadAdError);
                     }
-                }
-            }
-    );
 
+                    @Override
+                    public void onAdLoaded() {
+                        super.onAdLoaded();
+                    }
+                }).build();
+        adLoader.loadAd(new AdRequest.Builder().build());
+    }
 
     public List<TaskElement> getTaskDay(long aday) {
+
         DbHelper dbHelper = new DbHelper(requireActivity().getApplicationContext());
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
         List<TaskElement> tasks = new ArrayList<>();
+        Calendar c = Calendar.getInstance();
+        c.setTimeInMillis(aday);
+        int y = c.get(Calendar.YEAR);
+        int mm = c.get(Calendar.MONTH);
+        int dd = c.get(Calendar.DAY_OF_MONTH);
 
-        Date datet = new Date();
-        datet.setTime(aday);
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd 00:00:00");
-        String td = format.format(datet);
+        c.set(y, mm, dd, 0, 0, 0);
+        long td = c.getTimeInMillis();
+        c.set(y, mm, dd, 23, 59, 59);
+        long tm = c.getTimeInMillis();
 
-        long tomorrow = aday + 86400000;
-        datet.setTime(tomorrow);
-        String tm = format.format(datet);
-
-        Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.t_task + " WHERE end_date BETWEEN '" + td + "' AND '" + tm + "' ORDER BY end_date ASC", null);
+        Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.T_TASK + " WHERE end_date BETWEEN '" + td + "' AND '" + tm + "' ORDER BY end_date ASC", null);
         if (cursor.moveToFirst()) {
             do {
-                boolean check = Integer.parseInt(cursor.getString(6)) > 0;
-                String title = cursor.getString(5);
-                String[] t = cursor.getString(3).split(" ");
-
-                String[] date = t[0].split("-");
-                int year = Integer.parseInt(date[0]);
-                int month = Integer.parseInt(date[1]);
-                int day = Integer.parseInt(date[2]);
-                String[] timed = t[1].split(":");
-                int hour = Integer.parseInt(timed[0]);
-                int minute = Integer.parseInt(timed[1]);
-
+                boolean check = Integer.parseInt(cursor.getString(5)) > 0;
+                String title = cursor.getString(4);
+                long t = cursor.getLong(2);
                 Calendar m = Calendar.getInstance();
-                m.set(year, (month - 1), day, hour, minute, 0);
-
-                String time = "";
-                String mn = minute < 10 ? "0" + minute : "" + minute;
-                if (hour > 12) {
-                    hour = hour - 12;
-                    time += hour + ":" + mn + " PM";
-                } else {
-
-                    int fh = hour;
-                    if (hour == 0) {
-                        fh = 12;
-                    }
-                    time += fh + ":" + mn;
-
-                    if (hour == 12) {
-                        time += " PM";
-                    } else {
-                        time += " AM";
-                    }
+                m.setTimeInMillis(t);
+                int minute = m.get(Calendar.MINUTE);
+                boolean hourFormat = DateFormat.is24HourFormat(requireActivity());
+                int hour = m.get(Calendar.HOUR_OF_DAY);
+                if (!hourFormat) {
+                    hour = m.get(Calendar.HOUR) == 0 ? 12 : m.get(Calendar.HOUR);
                 }
 
+                String mn = minute < 10 ? "0" + minute : "" + minute;
+
+                String time = hour + ":" + mn;
+                if (!hourFormat) {
+                    time += m.get(Calendar.AM_PM) == Calendar.AM ? " a. m." : " p. m.";
+                }
 
                 tasks.add(new TaskElement(check, title, time, m.getTimeInMillis()));
             } while (cursor.moveToNext());
@@ -294,6 +391,138 @@ public class homeFragment extends Fragment {
                 return context.getString(R.string.saturday);
             default:
                 return "";
+        }
+    }
+
+    ArrayList<LineChart.LineChartData> getWeeklyProgress() {
+
+        ArrayList<LineChart.LineChartData> data = new ArrayList();
+
+        data.add(
+                new LineChart.LineChartData(
+                        requireActivity().getString(R.string.completed_tasks),
+                        getLineChartDataSet(),
+                        requireActivity().getColor(R.color.green_500)
+                )
+        );
+        data.add(
+                new LineChart.LineChartData(
+                        requireActivity().getString(R.string.pending_tasks),
+                        getPendingLineChartDataSet(),
+                        requireActivity().getColor(R.color.red_500)
+                )
+        );
+
+        return data;
+    }
+
+    ArrayList<LineChart.LineChartDataSet> getLineChartDataSet() {
+        DbHelper dbHelper = new DbHelper(requireActivity());
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+
+        ArrayList<LineChart.LineChartDataSet> data = new ArrayList();
+        Calendar calendar = Calendar.getInstance();
+        for (int i = 0; i <= 6; i++) {
+            calendar.set(Calendar.HOUR_OF_DAY, 0);
+            calendar.set(Calendar.MINUTE, 0);
+            calendar.set(Calendar.SECOND, 0);
+            calendar.set(Calendar.DAY_OF_WEEK, i + 1);
+
+
+            long date1 = calendar.getTimeInMillis();
+            calendar.set(Calendar.HOUR_OF_DAY, 23);
+            calendar.set(Calendar.MINUTE, 59);
+            calendar.set(Calendar.SECOND, 59);
+            long date2 = calendar.getTimeInMillis();
+
+
+            Cursor cursor = db.rawQuery(
+                    "SELECT * FROM " + DbHelper.T_TASK + " WHERE status = '1' AND date > '" + date1 + "' AND date <= '" + date2 + "'",
+                    null
+            );
+
+            if (cursor.moveToFirst()) {
+                data.add(new LineChart.LineChartDataSet(getMinDayOfWeek(i), cursor.getCount()));
+            } else {
+                data.add(new LineChart.LineChartDataSet(getMinDayOfWeek(i), 0));
+            }
+
+        }
+
+        return data;
+    }
+
+    ArrayList<LineChart.LineChartDataSet> getPendingLineChartDataSet() {
+        DbHelper dbHelper = new DbHelper(requireActivity());
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+
+        ArrayList<LineChart.LineChartDataSet> data = new ArrayList();
+        Calendar calendar = Calendar.getInstance();
+        for (int i = 0; i <= 6; i++) {
+
+            calendar.set(Calendar.DAY_OF_WEEK, i + 1);
+            int yyyy = calendar.get(Calendar.YEAR);
+            int mm = calendar.get(Calendar.MONTH);
+            int dd = calendar.get(Calendar.DAY_OF_MONTH);
+            calendar.set(yyyy, mm, dd, 0, 0, 0);
+            long date1 = calendar.getTimeInMillis();
+            calendar.set(yyyy, mm, dd, 23, 59, 59);
+            long date2 = calendar.getTimeInMillis();
+
+
+            Cursor cursor = db.rawQuery(
+                    "SELECT * FROM " + DbHelper.T_TASK + " WHERE status = '0' AND end_date > '" + date1 + "' AND end_date <= '" + date2 + "'",
+                    null
+            );
+
+            if (cursor.moveToFirst()) {
+                data.add(new LineChart.LineChartDataSet(getMinDayOfWeek(i), cursor.getCount()));
+            } else {
+                data.add(new LineChart.LineChartDataSet(getMinDayOfWeek(i), 0));
+            }
+            cursor.close();
+        }
+
+
+        return data;
+    }
+
+    private String getMinDayOfWeek(int dayOfWeek) {
+        switch (dayOfWeek) {
+            case 0:
+                return requireContext().getString(R.string.min_sunday);
+            case 1:
+                return requireContext().getString(R.string.min_monday);
+            case 2:
+                return requireContext().getString(R.string.min_tuesday);
+            case 3:
+                return requireContext().getString(R.string.min_wednesday);
+            case 4:
+                return requireContext().getString(R.string.min_thursday);
+            case 5:
+                return requireContext().getString(R.string.min_friday);
+            case 6:
+                return requireContext().getString(R.string.min_saturday);
+        }
+        return "";
+    }
+
+    long getStartEndOFWeek(int enterWeek, int enterYear, boolean start) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.clear();
+        calendar.set(Calendar.WEEK_OF_YEAR, enterWeek);
+        calendar.set(Calendar.YEAR, enterYear);
+        long startDateInStr = calendar.getTimeInMillis();
+        calendar.add(Calendar.DATE, 6);
+        calendar.set(Calendar.HOUR_OF_DAY, 23);
+        calendar.set(Calendar.MINUTE, 59);
+        calendar.set(Calendar.SECOND, 59);
+        long endDaString = calendar.getTimeInMillis();
+
+        if (start) {
+            return startDateInStr;
+        } else {
+            return endDaString;
         }
     }
 }

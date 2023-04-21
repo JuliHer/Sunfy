@@ -6,13 +6,20 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 import androidx.annotation.Nullable;
 
+import com.google.firebase.auth.FirebaseAuth;
+
 public class DbHelper extends SQLiteOpenHelper {
-    private static final int DatabaseVersion = 9;
+    private static final int DatabaseVersion = 17;
     private static final String DatabaseName = "Calendar";
     public static final String t_subjects = "subjects";
+    @Deprecated
     public static final String t_task = "task";
+    public static final String T_TASK = "tasks";
     public static final String t_event = "event";
     public static final String t_alarm = "alarm";
+    public static final String T_PHOTOS = "photos";
+
+    private FirebaseAuth auth = FirebaseAuth.getInstance();
 
     public DbHelper(@Nullable Context context) {
         super(context, DatabaseName, null, DatabaseVersion);
@@ -24,14 +31,15 @@ public class DbHelper extends SQLiteOpenHelper {
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "name TEXT NOT NULL," +
                 "color INTEGER NOT NULL)");
-        sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS " + t_task + "(" +
+        sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS " + T_TASK + "(" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                "date DATETIME NOT NULL," +
-                "title TEXT NOT NULL," +
-                "end_date DATETIME NOT NULL," +
+                "date LONG NOT NULL," +
+                "end_date LONG NOT NULL," +
                 "subject INTEGER NOT NULL," +
                 "description VARCHAR(500)," +
-                "status INTEGER(1) NOT NULL)");
+                "status INTEGER(1) NOT NULL," +
+                "user TEXT NOT NULL," +
+                "favorite INTEGER NOT NULL)");
         sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS " + t_event + "(" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "title TEXT NOT NULL," +
@@ -45,20 +53,21 @@ public class DbHelper extends SQLiteOpenHelper {
                 "title TEXT NOT NULL," +
                 "hour LONG NOT NULL," +
                 "last_alarm INTEGER NOT NULL," +
-                "alarm INTEGER NOT NULL," +
-                "sunday INTEGER NOT NULL," +
-                "monday INTEGER NOT NULL," +
-                "tuesday INTEGER NOT NULL," +
-                "wednesday INTEGER NOT NULL," +
-                "thursday INTEGER NOT NULL," +
-                "friday INTEGER NOT NULL," +
-                "saturday INTEGER NOT NULL)");
+                "alarm INTEGER NOT NULL)");
+        sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS " + T_PHOTOS + "(" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "awaiting INTEGER NOT NULL," +
+                "name TEXT NOT NULL," +
+                "path TEXT NOT NULL," +
+                "timestamp LONG NOT NULL" +
+                ")");
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
-
-
+        if (i <= 16) {
+            sqLiteDatabase.execSQL("ALTER TABLE  " + T_TASK + " ADD COLUMN favorite DEFAULT (0) NOT NULL");
+        }
         onCreate(sqLiteDatabase);
     }
 

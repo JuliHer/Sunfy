@@ -1,5 +1,10 @@
 package com.artuok.appwork.objects;
 
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
+
+import androidx.annotation.Nullable;
+
 public class ChatElement {
     String id;
     String name;
@@ -7,18 +12,59 @@ public class ChatElement {
     String chat;
     String desc;
     String numberInternational;
-    String image;
+    Bitmap image;
     boolean Log;
+    String publicKey;
+    long timestamp;
+    boolean group;
+    Drawable contentIcon;
+    int status = -1;
 
-    public ChatElement(String id, String name, String desc, String chat, String number, String ISO, String image, boolean hasLog) {
+    public ChatElement(String id, String name, String desc, String chat, String number, String ISO, boolean hasLog, long timestamp) {
         this.id = id;
         this.name = name;
         this.chat = chat;
         this.desc = desc;
         this.number = number;
-        this.numberInternational = numberInternational;
-        this.image = image;
+        this.numberInternational = ISO;
         this.Log = hasLog;
+        this.timestamp = timestamp;
+    }
+
+    public Drawable getContentIcon() {
+        return contentIcon;
+    }
+
+    public void setContentIcon(Drawable contentIcon) {
+        this.contentIcon = contentIcon;
+    }
+
+    public int getStatus() {
+        return status;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
+    }
+
+    public boolean isGroup() {
+        return this.group;
+    }
+
+    public void setGroup(boolean group) {
+        this.group = group;
+    }
+
+    public void setImage(Bitmap image) {
+        this.image = image;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    public String getPublicKey() {
+        return publicKey;
     }
 
     public String getChat() {
@@ -77,11 +123,12 @@ public class ChatElement {
         this.number = number;
     }
 
-    public String getImage() {
+    public Bitmap getImage() {
         return image;
     }
 
-    public void setImage(String image) {
-        this.image = image;
+
+    public void setPublicKey(String publicKey) {
+        this.publicKey = publicKey;
     }
 }

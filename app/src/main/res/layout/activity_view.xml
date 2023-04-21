@@ -1,131 +1,266 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ViewActivity"
     android:orientation="vertical">
-
-    <LinearLayout
+    <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="8dp">
+        android:layout_height="wrap_content">
 
-        <ImageView
-            android:id="@+id/back_button"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:padding="5dp"
-            android:src="@drawable/ic_arrow_left"
-            app:tint="?backgroundBorder" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:paddingHorizontal="15dp"
-        android:paddingVertical="7dp">
-
-        <TextView
-            android:id="@+id/title_subject"
+        <com.google.android.material.appbar.CollapsingToolbarLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/subject"
-            android:textSize="26sp"
-            android:textStyle="bold" />
+            app:titleCollapseMode="scale"
+            app:layout_scrollFlags="scroll|snap|enterAlwaysCollapsed">
 
-        <TextView
-            android:id="@+id/days_left"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/day_left"
-            android:textSize="13sp"
-            android:textColor="?subTextColor" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="8dp"
+                android:gravity="center_vertical"
+                android:background="?backgroundDialog">
 
-        <TextView
-            android:id="@+id/description_task"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque diam ante, semper ut lorem a, dapibus iaculis elit. In aliquet purus sit amet magna vestibulum, eget pretium metus tristique. Morbi ut rhoncus neque. Donec dictum lorem diam, in convallis ante."
-            android:justificationMode="inter_word"
-            android:maxLines="15"
-            android:ellipsize="end"
-            android:textSize="16sp" />
-    </LinearLayout>
+                <ImageView
+                    android:id="@+id/back_button"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_arrow_left"
+                    app:tint="?backgroundBorder" />
 
-    <GridLayout
+                <TextView
+                    android:layout_weight="1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:textAlignment="center"
+                    style="@style/poppinsFont"
+                    android:text="@string/app_name"
+                    android:textSize="22sp"
+                    android:layout_marginEnd="40dp"
+                    android:includeFontPadding="false"
+                    android:textFontWeight="500" />
+            </LinearLayout>
+        </com.google.android.material.appbar.CollapsingToolbarLayout>
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:columnCount="2"
-        android:rowCount="2"
-        android:paddingVertical="3dp"
-        android:paddingHorizontal="10dp">
+        android:paddingBottom="65dp"
+        android:clipToPadding="false"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <androidx.cardview.widget.CardView
-            android:layout_columnWeight="1"
-            android:layout_rowWeight="1"
-            android:elevation="0dp"
-            app:cardElevation="0dp"
-            android:background="@drawable/transparent_background"
-            app:cardCornerRadius="12dp"
-            android:layout_margin="5dp">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-            <ImageView
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingVertical="7dp"
+                    android:layout_marginHorizontal="10dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    android:background="@drawable/backgroud_list">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:paddingHorizontal="15dp"
+                        android:paddingTop="8dp">
+
+                        <ImageView
+                            android:id="@+id/usericon"
+                            android:layout_width="45dp"
+                            android:layout_height="45dp"
+                            android:padding="10dp"
+                            android:src="@drawable/bookmark"
+                            android:layout_marginEnd="10dp"
+                            android:background="@drawable/textinput_background"
+                            android:backgroundTint="?backgroundDialog"
+                            app:tint="@color/palette_green_b_700" />
+
+                <LinearLayout
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/name"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/you"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/title_subject"
+                        android:layout_width="match_parent"
+                        android:maxLines="1"
+                        android:ellipsize="end"
+                        android:layout_height="wrap_content"
+                        android:text="@string/subject"
+                        android:textSize="13sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginHorizontal="15dp"
+
+                        >
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginTop="10dp"
+                            android:layout_marginBottom="5dp">
+
+                            <androidx.cardview.widget.CardView
+                                android:id="@+id/status_color_card"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:elevation="0dp"
+                                app:cardCornerRadius="5dp"
+                                app:cardElevation="0dp">
+
+                                <TextView
+                                    android:id="@+id/dayofweek"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:background="?subTextColor"
+                                    android:paddingVertical="2dp"
+                                    android:paddingHorizontal="5dp"
+                                    android:includeFontPadding="false"
+                                    android:text="@string/monday"
+                                    android:textFontWeight="600"
+                                    android:textSize="11sp"
+                                    android:textColor="?backgroundDialog" />
+
+                            </androidx.cardview.widget.CardView>
+
+                            <TextView
+                                android:id="@+id/days_left"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/day_left"
+                                android:textColor="?subTextColor"
+                                android:maxLines="1"
+                                android:layout_marginStart="5dp"
+                                android:ellipsize="end"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/description_task"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:ellipsize="end"
+                            android:maxLines="15"
+                            android:text="Lorem ipsum dolor sit amet Dolor un is falit pan es utn etie ha n smi isnup total"
+                            android:textSize="22sp"
+                            android:layout_marginBottom="5dp"
+                    />
+            </LinearLayout>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerImages"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:adjustViewBounds="true"
-                android:src="@drawable/ic_hexagon" />
-        </androidx.cardview.widget.CardView>
-
-        <androidx.cardview.widget.CardView
-            android:layout_columnWeight="1"
-            android:layout_rowWeight="1"
-            android:elevation="0dp"
-            app:cardElevation="0dp"
-            android:background="@drawable/transparent_background"
-            app:cardCornerRadius="12dp"
-            android:layout_margin="5dp">
-
-            <ImageView
+                android:paddingVertical="5dp"
+                android:paddingHorizontal="13dp"
+                android:clipToPadding="false"
+                app:layout_constraintHeight_default="wrap"
+                android:nestedScrollingEnabled="false" />
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:adjustViewBounds="true"
-                android:src="@drawable/ic_hexagon" />
-        </androidx.cardview.widget.CardView>
+                android:layout_marginHorizontal="5dp"
+                android:layout_marginTop="5dp"
+                android:orientation="horizontal">
 
-        <androidx.cardview.widget.CardView
-            android:layout_columnWeight="1"
-            android:layout_rowWeight="1"
-            android:elevation="0dp"
-            app:cardElevation="0dp"
-            android:background="@drawable/transparent_background"
-            app:cardCornerRadius="12dp"
-            android:layout_margin="5dp">
+                <LinearLayout
+                    android:id="@+id/checkPublication"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    >
 
-            <ImageView
+                    <ImageView
+                        android:id="@+id/checkButton"
+                        android:layout_width="25dp"
+                        android:layout_height="25dp"
+                        android:layout_margin="10dp"
+                        android:src="@drawable/ic_check_circle"
+                        app:tint="?subTextColor" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/sharePublication"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone">
+
+                    <ImageView
+                        android:layout_width="25dp"
+                        android:layout_height="25dp"
+                        android:layout_margin="10dp"
+                        android:src="@drawable/send"
+                        app:tint="?subTextColor" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/likePublication"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <ImageView
+                        android:id="@+id/image_like"
+                        android:layout_width="25dp"
+                        android:layout_height="25dp"
+                        android:layout_margin="10dp"
+                        android:src="@drawable/heart"
+                        app:tint="?subTextColor" />
+                </LinearLayout>
+            </LinearLayout>
+                </LinearLayout>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:adjustViewBounds="true"
-                android:src="@drawable/ic_hexagon" />
-        </androidx.cardview.widget.CardView>
+                android:text="@string/pending_activities"
+                android:padding="10dp"
+                android:textAllCaps="true"
+                android:textSize="18sp"
+                android:layout_marginVertical="15dp"
+                android:textFontWeight="700" />
 
-        <androidx.cardview.widget.CardView
-            android:layout_columnWeight="1"
-            android:layout_rowWeight="1"
-            android:elevation="0dp"
-            app:cardElevation="0dp"
-            android:background="@drawable/transparent_background"
-            app:cardCornerRadius="12dp"
-            android:layout_margin="5dp">
-
-            <ImageView
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/more_views"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:adjustViewBounds="true"
-                android:src="@drawable/ic_hexagon" />
-        </androidx.cardview.widget.CardView>
-    </GridLayout>
-
-</LinearLayout>
+                android:paddingHorizontal="5dp" />
+        </LinearLayout>
+</androidx.core.widget.NestedScrollView>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

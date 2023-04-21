@@ -4,9 +4,22 @@
     <color name="purple_200">#9a61f9</color>
     <color name="purple_500">#7a48f2</color>
     <color name="purple_700">#5929d0</color>
+
+    <color name="green_b_100">#147529</color>
+    <color name="green_b_200">#16602B</color>
+    <color name="green_b_500">#218F50</color>
+    <color name="green_b_700">#FF27ae61</color>
+
+    <color name="green_k_000">#B6D8C5</color>
+    <color name="green_k_250">#7BC39A</color>
+    <color name="green_k_500">#47BD7A</color>
+    <color name="green_k_750">#27ae61</color>
+
     <color name="teal_200">#FF03DAC5</color>
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
+    <color name="black_transparent">#22000000</color>
+    <color name="black_transparent_500">#88000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="blue_500">#FF0099f5</color>
     <color name="blue_400">#FF1982c4</color>
@@ -25,6 +38,7 @@
     <color name="gray_200">#FF222222</color>
     <color name="gray_100">#FF191919</color>
     <color name="gray_000">#FF121212</color>
+    <color name="black_500">#FF0e0e0e</color>
     <color name="gray_300_transparent">#66888888</color>
 
     <color name="palette_purple_100">#5929d0</color>
@@ -58,6 +72,10 @@
     <color name="purple_900">#2A1F3A</color>
     <color name="purple_800">#392A50</color>
     <color name="purple_750">#403059</color>
+    <color name="green_900">#1E3C2B</color>
+    <color name="green_800">#2A533B</color>
+    <color name="green_750">#326849</color>
+    <color name="green_000">#79C599</color>
 
     <color name="bluew_100">#DBECF3</color>
     <color name="bluew_200">#CEDFE6</color>

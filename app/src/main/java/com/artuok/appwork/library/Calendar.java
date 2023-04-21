@@ -49,6 +49,9 @@ public class Calendar extends View {
     private int mColorMonth;
     private int mColorOutMonth;
 
+    private int maxHeight;
+    private int maxWidth;
+
     //Calendar
     private java.util.Calendar calendar;
     private java.util.Calendar calendarR;
@@ -131,6 +134,7 @@ public class Calendar extends View {
             if (offsetX == to) {
                 offsetX = 0;
                 month += monthTemp;
+                setValues();
             }
             postInvalidate();
         });
@@ -178,7 +182,6 @@ public class Calendar extends View {
         mTextPaintHighlight.setTextAlign(Paint.Align.CENTER);
         mTextPaintMonth.setFakeBoldText(true);
         mTextPaintOutMonth.setTextAlign(Paint.Align.CENTER);
-
         ta.recycle();
     }
 
@@ -186,7 +189,10 @@ public class Calendar extends View {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        maxWidth = MeasureSpec.getSize(widthMeasureSpec);
+        maxHeight = MeasureSpec.getSize(heightMeasureSpec);
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+
     }
 
     @Override
@@ -196,7 +202,9 @@ public class Calendar extends View {
 
     private void drawing(Canvas canvas) {
 
-        setValues();
+        if(mSpacingOfDays == 0){
+            setValues();
+        }
 
         int[] date = new int[2];
 
@@ -212,9 +220,9 @@ public class Calendar extends View {
                 date[0] = month + 1 > 11 ? 0 : month + 1;
                 date[1] = month + 1 > 11 ? year + 1 : year;
             }
-            drawMonths(canvas, date, getWidth() * i);
-            drawWeekDays(canvas, getWidth() * i);
-            drawDays(canvas, date, getWidth() * i);
+            drawMonths(canvas, date, maxWidth * i);
+            drawWeekDays(canvas, maxWidth * i);
+            drawDays(canvas, date, maxWidth * i);
         }
     }
 
@@ -229,7 +237,7 @@ public class Calendar extends View {
     }
 
     private void setValues() {
-        mSpacingOfDays = getWidth() / 7;
+        mSpacingOfDays = maxWidth / 7;
         mHeightSpacingOfDays = (int) (mSpacingOfDays * 0.75f);
         year = calendar.get(java.util.Calendar.YEAR);
         year = month < 0 ? year - 1 + (month / 12) : year + (month / 12);
@@ -260,8 +268,6 @@ public class Calendar extends View {
             if (today >= s.getTimeInMillis() && today <= e.getTimeInMillis()) {
                 mPaintHighlight.setColor(period.getColor());
                 canvas.drawCircle(x, fy, mSpacingOfDays / 27, mPaintHighlight);
-
-
                 if (t.get(java.util.Calendar.DAY_OF_MONTH) > 1) {
                     long yesterday = today - day;
                     if (yesterday >= s.getTimeInMillis() && yesterday <= e.getTimeInMillis()) {
@@ -624,10 +630,10 @@ public class Calendar extends View {
             case MotionEvent.ACTION_UP:
                 if (swipe < 0) {
                     monthTemp = -1;
-                    scrolling(getWidth());
+                    scrolling(maxWidth);
                 } else if (swipe > 0) {
                     monthTemp = 1;
-                    scrolling(-getWidth());
+                    scrolling(-maxWidth);
                 } else {
                     monthTemp = 0;
                     scrolling(0);
@@ -678,7 +684,6 @@ public class Calendar extends View {
                     }
                 }
 
-
                 postInvalidate();
             }
             return true;
@@ -693,9 +698,9 @@ public class Calendar extends View {
 
     public void scrolling(int x) {
         setHeight();
-        int dur = 300 / getWidth() * Math.abs(offsetX);
+        int dur = 300 / maxWidth * Math.abs(offsetX);
         if (swipe != 0) {
-            dur = 300 - (300 / getWidth() * Math.abs(offsetX));
+            dur = 300 - (300 / maxWidth * Math.abs(offsetX));
         }
 
         to = x;

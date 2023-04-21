@@ -17,7 +17,7 @@
     <item
         android:id="@+id/nav_subject"
         android:title="@string/subject"
-        android:icon="@drawable/ic_layers" />
+        android:icon="@drawable/bookmark" />
     <item
         android:id="@+id/placeholder"
         android:title="" />

@@ -128,7 +128,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Averages"
+                android:text="@string/average_fragment_menu"
                 android:textStyle="bold"
                 android:textColor="?subTextColor"
                 android:layout_marginVertical="10dp"

@@ -5,21 +5,23 @@ public class AwaitingElement {
     String title;
     String subject;
     String date;
-    String status;
-    String description;
-    boolean statusB;
-    boolean open;
+    String time;
+    long status;
+    boolean done = false;
+    boolean open = true;
     int colorSubject;
 
-    public AwaitingElement(int id, String title, String subject, String date, String status, String description, boolean statusB, boolean open) {
+    public AwaitingElement(int id, String title, String subject, String date, String time, long status){
         this.id = id;
         this.title = title;
         this.subject = subject;
         this.date = date;
+        this.time = time;
         this.status = status;
-        this.description = description;
-        this.statusB = statusB;
-        this.open = open;
+    }
+
+    public String getTime() {
+        return time;
     }
 
     public int getColorSubject() {
@@ -46,23 +48,23 @@ public class AwaitingElement {
         return date;
     }
 
-    public String getStatus() {
+    public long getStatus() {
         return status;
     }
 
-    public String getDescription() {
-        return description;
+    public boolean isDone() {
+        return done;
     }
 
-    public boolean isStatusB() {
-        return statusB;
+    public void setDone(boolean done) {
+        this.done = done;
     }
 
     public boolean isOpen() {
         return open;
     }
 
-    public void setStatusB(boolean statusB) {
-        this.statusB = statusB;
+    public void setOpen(boolean open) {
+        this.open = open;
     }
 }

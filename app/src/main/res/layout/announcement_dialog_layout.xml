@@ -6,57 +6,93 @@
     android:layout_height="wrap_content"
     android:gravity="center">
 
-    <LinearLayout
+    <androidx.cardview.widget.CardView
         android:id="@+id/bg"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/textinput_background"
-        android:padding="5dp"
-        android:orientation="vertical"
+        android:padding="0dp"
+        app:cardCornerRadius="10dp"
         android:layout_margin="15dp"
-        android:gravity="center">
+        android:backgroundTint="@color/gray_100">
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
-        <ImageView
-            android:id="@+id/image"
-            android:layout_width="150dp"
-            android:layout_height="150dp"
-            android:src="@drawable/ic_clock"
-            android:layout_marginVertical="10dp"
-            app:tint="@color/white" />
+            <ImageView
+                android:id="@+id/close_x"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/x"
+                android:padding="8dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:tint="?subTextColor" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="vertical"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
 
-        <TextView
-            android:id="@+id/title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAlignment="center"
-            android:text="Title"
-            android:textAllCaps="true"
-            android:fontFamily="@font/poppins"
-            android:textSize="22sp"
-            android:textStyle="bold" />
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/cardView"
+                    android:layout_width="200dp"
+                    android:layout_height="200dp"
+                    android:layout_marginTop="15dp"
+                    app:cardCornerRadius="5dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="@android:color/transparent">
 
-        <TextView
-            android:id="@+id/text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAlignment="center"
-            android:textSize="15sp"
-            android:layout_marginHorizontal="15dp"
-            android:text=""
-            android:textColor="@color/white" />
+                    <ImageView
+                        android:id="@+id/image"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:src="@mipmap/banner_3" />
+                </androidx.cardview.widget.CardView>
 
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/positive"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/Accept_M"
-            android:background="@drawable/button"
-            android:backgroundTint="@color/white"
-            android:textColor="@color/black"
-            android:layout_marginVertical="15dp"
-            android:textStyle="bold"
-            android:textAllCaps="true" />
-    </LinearLayout>
+
+                <TextView
+                    android:id="@+id/title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:fontFamily="@font/poppins"
+                    android:includeFontPadding="false"
+                    android:text="1.0.16"
+                    android:textAlignment="center"
+                    android:textAllCaps="true"
+                    android:textColor="@color/white"
+                    android:textSize="22sp"
+                    android:textFontWeight="600" />
+
+                <TextView
+                    android:id="@+id/text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="15dp"
+                    android:text="Now we implement announcement to tell you about new changes, we redesign some views and we improve the chat and now is cooler than before \n\n- Redesing awaitings, chats and messages \n- Fix fatal error to devices android 12 and above\n- Announcements added \n-Design more simple"
+                    android:textColor="@color/white"
+                    android:textSize="15sp"
+                    android:layout_marginBottom="15dp"/>
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/positive"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="15dp"
+                    android:background="@drawable/button"
+                    android:backgroundTint="@color/white"
+                    android:text="@string/Accept_M"
+                    android:textAllCaps="true"
+                    android:textColor="@color/black"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.cardview.widget.CardView>
 
     <TextView
         android:id="@+id/negative"

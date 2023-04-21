@@ -23,6 +23,10 @@ public class PermissionDialog extends DialogFragment {
     private String titleDialog = "";
     private onResponseListener negative;
     private onResponseListener positive;
+    private onResponseListener neutral;
+    private String positiveText = "";
+    private String negativeText = "";
+    private String neutralText = "Neutral";
 
     public void setTextDialog(String txt) {
         this.textDialog = txt;
@@ -44,13 +48,29 @@ public class PermissionDialog extends DialogFragment {
         this.positive = positive;
     }
 
+    public void setNeutral(onResponseListener neutral) {
+        this.neutral = neutral;
+    }
+
+    public void setPositiveText(String positiveText) {
+        this.positiveText = positiveText;
+    }
+
+    public void setNegativeText(String negativeText) {
+        this.negativeText = negativeText;
+    }
+
+    public void setNeutralText(String neutralText) {
+        this.neutralText = neutralText;
+    }
+
     @NonNull
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireActivity());
 
         LayoutInflater inflater = requireActivity().getLayoutInflater();
-        View root = inflater.inflate(R.layout.permission_dialog_layout, null);
+        View root = inflater.inflate(R.layout.dialog_permission_layout, null);
         TextView title = root.findViewById(R.id.title_dialog);
         TextView text = root.findViewById(R.id.txt_dialog);
 
@@ -58,16 +78,28 @@ public class PermissionDialog extends DialogFragment {
         text.setText(textDialog);
 
 
+        if(negativeText.isEmpty()){
+            negativeText = requireActivity().getString(R.string.Cancel_M);
+        }
+
+        if(positiveText.isEmpty()){
+            positiveText = requireActivity().getString(R.string.Accept_M);
+        }
+
         ImageView draw = root.findViewById(R.id.drawable_dialog);
         draw.setImageDrawable(requireActivity().getDrawable(drawable));
 
         builder.setView(root);
         if (negative != null) {
-            builder.setNegativeButton(requireActivity().getString(R.string.Cancel_M), (dialogInterface, i) -> negative.onClick(dialogInterface, i));
+            builder.setNegativeButton(negativeText, (dialogInterface, i) -> negative.onClick(dialogInterface, i));
         }
 
         if (positive != null) {
-            builder.setPositiveButton(requireActivity().getString(R.string.Accept_M), (dialogInterface, i) -> positive.onClick(dialogInterface, i));
+            builder.setPositiveButton(positiveText, (dialogInterface, i) -> positive.onClick(dialogInterface, i));
+        }
+
+        if(neutral != null){
+            builder.setNeutralButton(neutralText,(dialogInterface, i) -> neutral.onClick(dialogInterface, i) );
         }
 
         return builder.create();

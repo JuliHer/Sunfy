@@ -22,11 +22,17 @@
         <item name="backgroundDialog">@color/white</item>
         <item name="backgroundAlert">@color/gray_900</item>
         <item name="backgroundBorder">@color/black</item>
-        <item name="subTextColor">@color/gray_400</item>
+        <item name="subTextColor">@color/gray_500</item>
         <item name="iconHint">#092B42</item>
+
         <item name="backgroundHint">@color/bluew_100</item>
         <item name="iMainColor">@color/blue_400</item>
+        <item name="colorThird">@color/red_500</item>
+        <item name="MainColor">@color/green_500</item>
+        <item name="borderLighting">@color/blue_500</item>
+        <item name="backgroundLighting">@color/light_blue_200</item>
 
+        <item name="highInputColor">@color/white</item>
         <item name="hintInputColor">@color/gray_900</item>
         <item name="hintViewGrayColor">@color/gray_800</item>
 
@@ -38,6 +44,8 @@
         <item name="textHighLightColor">@color/white</item>
         <item name="textHourColor">@color/gray_500</item>
 
+
+        <item name="backgroundChat">@mipmap/background_white_chat</item>
         <item name="android:dateTextAppearance">@color/gray_500</item>
 
         <!--colorful-->
@@ -47,6 +55,7 @@
         <item name="palette_red">@color/palette_red_n_700</item>
         <item name="palette_purple">@color/palette_purple_n_700</item>
         <item name="cardBackgroundColorTask">@color/white</item>
+        <item name="fontFamily">@font/inter</item>
     </style>
 
     <style name="ThemeDialogCustom">
@@ -56,8 +65,12 @@
         <item name="android:windowAnimationStyle">@android:style/Animation.Dialog</item>
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:colorBackgroundCacheHint">@null</item>
+
     </style>
 
+    <style name="poppinsFont">
+        <item name="fontFamily">@font/poppins</item>
+    </style>
 
     <style name="DialogAnimation">
         <item name="android:windowEnterAnimation">@anim/slide_in_bottom</item>
@@ -122,29 +135,17 @@
     </style>
 
     <style name="alarmColorBg">
-        <item name="android:background">@drawable/alarm_bg_night</item>
+        <item name="android:background">@color/blue_400</item>
     </style>
 
     <style name="alarmColorCardViewBg">
         <item name="background">@color/blue_500</item>
     </style>
 
-    <style name="Theme.AppWork.AppWidgetContainerParent" parent="@android:style/Theme.DeviceDefault">
-        <item name="appWidgetRadius">8dp</item>
-        <item name="appWidgetPadding">4dp</item>
-        <item name="appWidgetInnerRadius">4dp</item>
-    </style>
 
     <style name="IconColor">
         <item name="android:tint">@color/blue_400</item>
         <item name="android:textColor">@color/black</item>
-    </style>
-
-    <style name="Theme.AppWork.AppWidgetContainer" parent="Theme.AppWork.AppWidgetContainerParent">
-        <item name="android:colorBackground">#FFFF</item>
-        <item name="appWidgetRadius">15dp</item>
-        <item name="appWidgetPadding">2dp</item>
-        <item name="appWidgetInnerRadius">15dp</item>
     </style>
 
     <style name="Calendar">
@@ -162,5 +163,25 @@
     <style name="AveragesLineChart">
         <item name="hintColors">@color/gray_800</item>
         <item name="textValuesColor">@color/gray_600</item>
+    </style>
+
+    <style name="AudioBarStyle" parent="@android:style/Widget.SeekBar">
+        <item name="android:indeterminateOnly">false</item>
+        <item name="android:minHeight">3dp</item>
+        <item name="android:maxHeight">3dp</item>
+    </style>
+
+    <style name="Theme.AppWork.AppWidgetContainerParent" parent="@android:style/Theme.DeviceDefault">
+        <!-- Radius of the outer bound of widgets to make the rounded corners -->
+        <item name="appWidgetRadius">8dp</item>
+        <!--
+        Radius of the inner view's bound of widgets to make the rounded corners.
+        It needs to be 8dp or less than the value of appWidgetRadius
+        -->
+        <item name="appWidgetInnerRadius">8dp</item>
+    </style>
+
+    <style name="Theme.AppWork.AppWidgetContainer" parent="Theme.AppWork.AppWidgetContainerParent">
+        <item name="appWidgetPadding">0dp</item>
     </style>
 </resources>

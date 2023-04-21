@@ -15,26 +15,54 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="bottom"
-            android:padding="8dp">
+            android:paddingStart="16dp"
+            android:paddingEnd="8dp"
+            android:paddingVertical="4dp">
 
             <TextView
                 android:id="@+id/task_count"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="0"
-                android:textSize="32sp"
+                android:text="Buenas noches..."
+                android:textSize="24sp"
                 android:textFontWeight="500"
                 android:fontFamily="@font/poppins"
-                android:includeFontPadding="false" />
+                android:includeFontPadding="false"
+                android:layout_gravity="start|center_vertical" />
 
-            <TextView
-                android:id="@+id/pendingTaskTxt"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/pending_tasks"
-                android:layout_marginStart="4dp"
-                android:fontFamily="@font/poppins" />
+                android:gravity="end">
+
+                <ImageView
+                    android:id="@+id/chat_icon"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/message_circle"
+                    android:padding="8dp"
+                    app:tint="?backgroundBorder"
+                    android:layout_gravity="end" />
+
+                <ImageView
+                    android:visibility="gone"
+                    android:id="@+id/notification_icon"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/ic_bell"
+                    android:padding="8dp"
+                    app:tint="?backgroundBorder"
+                    android:layout_gravity="end" />
+
+                <ImageView
+                    android:id="@+id/settings_icon"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/ic_settings"
+                    android:padding="8dp"
+                    app:tint="?backgroundBorder"
+                    android:layout_gravity="end" />
+            </LinearLayout>
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 </LinearLayout>

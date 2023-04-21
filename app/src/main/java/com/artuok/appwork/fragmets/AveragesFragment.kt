@@ -1,6 +1,5 @@
 package com.artuok.appwork.fragmets
 
-import android.database.DatabaseUtils
 import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -23,7 +22,6 @@ import com.artuok.appwork.objects.AverageElement
 import com.artuok.appwork.objects.Item
 import com.faltenreich.skeletonlayout.Skeleton
 import com.faltenreich.skeletonlayout.applySkeleton
-import java.text.SimpleDateFormat
 import java.util.*
 
 
@@ -61,12 +59,10 @@ class AveragesFragment : Fragment() {
         recyclerView.isNestedScrollingEnabled = false
         recyclerView.adapter = adapter
 
-
         skeleton = recyclerView.applySkeleton(R.layout.skeleton_statistics_layout, 12)
-
-        val ta = requireActivity().obtainStyledAttributes(R.styleable.AppWidgetAttrs)
-        val shimmerColor = ta.getColor(R.styleable.AppWidgetAttrs_shimmerSkeleton, Color.GRAY)
-        val maskColor = ta.getColor(R.styleable.AppWidgetAttrs_maskSkeleton, Color.LTGRAY)
+        val ta = requireActivity().obtainStyledAttributes(R.styleable.AppCustomAttrs)
+        val shimmerColor = ta.getColor(R.styleable.AppCustomAttrs_shimmerSkeleton, Color.GRAY)
+        val maskColor = ta.getColor(R.styleable.AppCustomAttrs_maskSkeleton, Color.LTGRAY)
 
         skeleton.maskColor = maskColor
         skeleton.shimmerColor = shimmerColor
@@ -79,30 +75,24 @@ class AveragesFragment : Fragment() {
             override fun onExecute(b: Boolean) {
                 getWeeklyProgress()
                 setProgressSubject(b)
-                adapter.notifyDataSetChanged()
             }
 
             override fun onPostExecute(b: Boolean) {
-
+                adapter.notifyDataSetChanged()
                 skeleton.showOriginal()
             }
         })
 
 
 
-        task.exec(true)
+
+        if(!task.isExecuting){
+            task.exec(true)
+        }
 
 
 
         return root
-    }
-
-    override fun onStart() {
-
-        if (dataChanged) {
-            task.exec(false)
-        }
-        super.onStart()
     }
 
     fun getLineChartDataSet(): ArrayList<LineChartDataSet> {
@@ -112,17 +102,21 @@ class AveragesFragment : Fragment() {
         val data: ArrayList<LineChartDataSet> = ArrayList()
         for (i in 0..6) {
             val calendar = Calendar.getInstance()
+            calendar.set(Calendar.HOUR_OF_DAY, 0)
+            calendar.set(Calendar.MINUTE, 0)
+            calendar.set(Calendar.SECOND, 0)
             calendar.set(Calendar.DAY_OF_WEEK, i + 1)
 
-            val format = SimpleDateFormat("yyyy-MM-dd 00:00:00")
 
-            val date1 = format.format(calendar.time)
-            format.applyPattern("yyyy-MM-dd 23:59:59")
-            val date2 = format.format(calendar.time)
+            val date1 = calendar.timeInMillis
+            calendar.set(Calendar.HOUR_OF_DAY, 23)
+            calendar.set(Calendar.MINUTE, 59)
+            calendar.set(Calendar.SECOND, 59)
+            val date2 = calendar.timeInMillis
 
 
             val cursor = db.rawQuery(
-                "SELECT * FROM ${DbHelper.t_task} WHERE status = '1' AND date BETWEEN '$date1' AND '$date2'",
+                "SELECT * FROM ${DbHelper.T_TASK} WHERE status = '1' AND date > '$date1' AND date <= '$date2'",
                 null
             )
 
@@ -145,16 +139,17 @@ class AveragesFragment : Fragment() {
         for (i in 0..6) {
             val calendar = Calendar.getInstance()
             calendar.set(Calendar.DAY_OF_WEEK, i + 1)
-
-            val format = SimpleDateFormat("yyyy-MM-dd 00:00:00")
-
-            val date1 = format.format(calendar.time)
-            format.applyPattern("yyyy-MM-dd 23:59:59")
-            val date2 = format.format(calendar.time)
+            val yyyy = calendar.get(Calendar.YEAR)
+            val mm = calendar.get(Calendar.MONTH)
+            val dd = calendar.get(Calendar.DAY_OF_MONTH)
+            calendar.set(yyyy, mm,dd, 0,0,0)
+            val date1 = calendar.timeInMillis
+            calendar.set(yyyy, mm,dd, 23,59,59)
+            val date2 = calendar.timeInMillis
 
 
             val cursor = db.rawQuery(
-                "SELECT * FROM ${DbHelper.t_task} WHERE status = '0' AND end_date BETWEEN '$date1' AND '$date2'",
+                "SELECT * FROM ${DbHelper.T_TASK} WHERE status = '0' AND end_date > '$date1' AND end_date <= '$date2'",
                 null
             )
 
@@ -170,14 +165,16 @@ class AveragesFragment : Fragment() {
     }
 
     private fun getMinDayOfWeek(dayOfWeek: Int): String? {
+        if (isDetached)
+            return ""
         when (dayOfWeek) {
-            0 -> return context!!.getString(R.string.min_sunday)
-            1 -> return context!!.getString(R.string.min_monday)
-            2 -> return context!!.getString(R.string.min_tuesday)
-            3 -> return context!!.getString(R.string.min_wednesday)
-            4 -> return context!!.getString(R.string.min_thursday)
-            5 -> return context!!.getString(R.string.min_friday)
-            6 -> return context!!.getString(R.string.min_saturday)
+            0 -> return requireContext().getString(R.string.min_sunday)
+            1 -> return requireContext().getString(R.string.min_monday)
+            2 -> return requireContext().getString(R.string.min_tuesday)
+            3 -> return requireContext().getString(R.string.min_wednesday)
+            4 -> return requireContext().getString(R.string.min_thursday)
+            5 -> return requireContext().getString(R.string.min_friday)
+            6 -> return requireContext().getString(R.string.min_saturday)
         }
         return ""
     }
@@ -192,16 +189,18 @@ class AveragesFragment : Fragment() {
         val start = getStartEndOFWeek(week, year, true)
         val end = getStartEndOFWeek(week, year, false)
 
-
         var cursor = db.rawQuery(
-            "SELECT * FROM ${DbHelper.t_task} WHERE status = '1' AND date BETWEEN '$start' AND '$end'",
+            "SELECT * FROM ${DbHelper.T_TASK} WHERE status = '1' AND date > '$start' AND date <= '$end'",
             null
         )
 
         completedTask.text = cursor.count.toString()
         cursor.close()
 
-        cursor = db.rawQuery("SELECT * FROM ${DbHelper.t_task} WHERE status = '0' ", null)
+        cursor = db.rawQuery(
+            "SELECT * FROM ${DbHelper.T_TASK} WHERE status = '0' AND date > '$start' AND date <= '$end'",
+            null
+        )
         pendingTask.text = cursor.count.toString()
         cursor.close()
 
@@ -225,20 +224,17 @@ class AveragesFragment : Fragment() {
         lineChart.invalidate()
     }
 
-    fun getStartEndOFWeek(enterWeek: Int, enterYear: Int, start: Boolean): String {
+    fun getStartEndOFWeek(enterWeek: Int, enterYear: Int, start: Boolean): Long {
         val calendar: Calendar = Calendar.getInstance()
         calendar.clear()
         calendar.set(Calendar.WEEK_OF_YEAR, enterWeek)
         calendar.set(Calendar.YEAR, enterYear)
-        val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-        val startDate: Date = calendar.time
-        val startDateInStr: String = formatter.format(startDate)
+        val startDateInStr: Long = calendar.timeInMillis
         calendar.add(Calendar.DATE, 6)
         calendar.set(Calendar.HOUR_OF_DAY, 23)
         calendar.set(Calendar.MINUTE, 59)
         calendar.set(Calendar.SECOND, 59)
-        val enddate: Date = calendar.time
-        val endDaString: String = formatter.format(enddate)
+        val endDaString: Long = calendar.timeInMillis
 
         if (start) {
             return startDateInStr
@@ -248,9 +244,24 @@ class AveragesFragment : Fragment() {
     }
 
     fun notifyDataChanged() {
+        val task = AverageAsync(object : ListenerOnEvent {
+            override fun onPreExecute() {
+                skeleton.showSkeleton()
+            }
+
+            override fun onExecute(b: Boolean) {
+                getWeeklyProgress()
+                setProgressSubject(b)
+            }
+
+            override fun onPostExecute(b: Boolean) {
+                adapter.notifyDataSetChanged()
+                skeleton.showOriginal()
+            }
+        })
+
         task.exec(false)
     }
-
 
     fun setProgressSubject(isFirstTime: Boolean) {
         if (!isFirstTime) {
@@ -258,21 +269,20 @@ class AveragesFragment : Fragment() {
         }
         val dbHelper = DbHelper(requireActivity())
         val db = dbHelper.readableDatabase
-        val cursor = db.rawQuery("SELECT * FROM ${DbHelper.t_subjects}", null)
+        val cursor = db.rawQuery("SELECT * FROM ${DbHelper.t_subjects} ORDER BY name", null)
 
 
         if (cursor.moveToFirst()) {
             do {
-                val subject = DatabaseUtils.sqlEscapeString(cursor.getString(1))
+                val subject = cursor.getInt(0)
                 val color = cursor.getInt(2)
 
-
                 val completedTasks = db.rawQuery(
-                    "SELECT * FROM ${DbHelper.t_task} WHERE subject = $subject AND status = '1'",
+                    "SELECT * FROM ${DbHelper.T_TASK} WHERE subject = $subject AND status = '1'",
                     null
                 )
                 val totalTasks =
-                    db.rawQuery("SELECT * FROM ${DbHelper.t_task} WHERE subject = $subject", null)
+                    db.rawQuery("SELECT * FROM ${DbHelper.T_TASK} WHERE subject = $subject", null)
 
                 elements.add(
                     Item(

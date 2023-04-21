@@ -6,16 +6,25 @@ public class AverageAsync {
 
     private ListenerOnEvent executeListeners;
     private TaskAsync task;
+    private Boolean executing;
 
     public AverageAsync(ListenerOnEvent executeListeners) {
         task = new TaskAsync();
+        executing = false;
         this.executeListeners = executeListeners;
     }
 
     public void exec(boolean b) {
         if (task != null) {
-            task.execute(b);
+            if(!executing){
+                task.execute(b);
+                executing = true;
+            }
         }
+    }
+
+    public Boolean isExecuting() {
+        return executing;
     }
 
     public void stop(boolean mayInterruptIfRunning) {
@@ -38,6 +47,7 @@ public class AverageAsync {
 
         @Override
         protected void onPostExecute(Boolean aBoolean) {
+            executing = false;
             executeListeners.onPostExecute(aBoolean);
         }
     }

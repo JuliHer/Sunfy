@@ -5,13 +5,14 @@ import android.content.Context;
 import android.content.Intent;
 
 public class AlarmWorkManager extends BroadcastReceiver {
-    public static final String ACTION_NOTIFY = "NOTIFY";
-    public static final String ACTION_TIME_TO_DO_HOMEWORK = "HOMEWORK";
-    public static final String ACTION_POSTPONE = "POSTPONE";
-    public static final String ACTION_DISMISS = "DISMISS";
-    public static final String ACTION_EVENT = "EVENT";
-    public static final String ACTION_TOMORROW_EVENTS = "TEVENTS";
-    public static final String ACTION_TOMORROW_SUBJECTS = "TSUBJECTS";
+    public static final String ACTION_NOTIFY = "com.artuok.appwork.services.NOTIFY";
+    public static final String ACTION_TIME_TO_DO_HOMEWORK = "com.artuok.appwork.services.HOMEWORK";
+    public static final String ACTION_POSTPONE = "com.artuok.appwork.services.POSTPONE";
+    public static final String ACTION_DISMISS = "com.artuok.appwork.services.DISMISS";
+    public static final String ACTION_EVENT = "com.artuok.appwork.services.EVENT";
+    public static final String ACTION_TOMORROW_EVENTS = "com.artuok.appwork.services.TEVENTS";
+    public static final String ACTION_TOMORROW_SUBJECTS = "com.artuok.appwork.services.TSUBJECTS";
+    public static final String ACTION_MESSAGES = "com.artuok.appwork.services.MESSAGES";
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -34,6 +35,7 @@ public class AlarmWorkManager extends BroadcastReceiver {
                     break;
                 case ACTION_DISMISS:
                     intent1.setAction(ACTION_DISMISS);
+
                     context.startForegroundService(intent1);
                     break;
                 case ACTION_POSTPONE:
@@ -56,6 +58,11 @@ public class AlarmWorkManager extends BroadcastReceiver {
                 case ACTION_TOMORROW_SUBJECTS:
                     intent1.setAction(ACTION_TOMORROW_SUBJECTS);
                     context.startForegroundService(intent1);
+                    break;
+                case ACTION_MESSAGES:
+                    Intent intent2 = new Intent(context, ServiceManager.class);
+                    intent2.setAction(ACTION_MESSAGES);
+                    context.startForegroundService(intent2);
                     break;
             }
         }

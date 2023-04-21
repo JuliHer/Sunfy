@@ -7,7 +7,6 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.artuok.appwork.R;
@@ -76,32 +75,34 @@ public class SubjectAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         return mData.get(position).getType();
     }
 
-    class SubjectViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    class SubjectViewHolder extends RecyclerView.ViewHolder {
 
         TextView title;
-        CardView backgroud;
+        TextView desc;
+        View backgroud;
 
         public SubjectViewHolder(@NonNull View itemView) {
             super(itemView);
             title = itemView.findViewById(R.id.subject_name);
+            desc = itemView.findViewById(R.id.subject_statistics);
             backgroud = itemView.findViewById(R.id.background);
             PushDownAnim.setPushDownAnimTo(itemView)
-                    .setScale(PushDownAnim.MODE_SCALE, 0.95f)
+                    .setScale(PushDownAnim.MODE_SCALE, 0.98f)
                     .setDurationPush(100)
-                    .setOnClickListener(this);
+                    .setOnLongClickListener(view -> {
+                        listener.onClick(view, getLayoutPosition());
+                        return true;
+                    });
         }
 
         void onBindData(SubjectElement element) {
             title.setText(element.getName());
+            desc.setText(element.getDesc());
             if (backgroud != null) {
-                backgroud.setCardBackgroundColor(element.getColor());
+                backgroud.setBackgroundColor(element.getColor());
             }
         }
 
-        @Override
-        public void onClick(View view) {
-            listener.onClick(view, getLayoutPosition());
-        }
     }
 
     class ButtonViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {

@@ -19,13 +19,13 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.artuok.appwork.MainActivity;
 import com.artuok.appwork.R;
@@ -40,6 +40,7 @@ import com.faltenreich.skeletonlayout.Skeleton;
 import com.faltenreich.skeletonlayout.SkeletonLayoutUtils;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 public class SubjectsFragment extends Fragment {
@@ -50,6 +51,7 @@ public class SubjectsFragment extends Fragment {
     private LinearLayoutManager manager;
     private List<ItemSubjectElement> elements;
     private SubjectAdapter.SubjectClickListener listener;
+    private SwipeRefreshLayout refreshLayout;
 
     private Skeleton skeleton;
 
@@ -67,21 +69,31 @@ public class SubjectsFragment extends Fragment {
         });
         manager = new LinearLayoutManager(requireActivity().getApplicationContext(), LinearLayoutManager.VERTICAL, false);
         recyclerView = root.findViewById(R.id.subject_recycler);
+        refreshLayout = root.findViewById(R.id.refreshLayout);
+
+        TypedArray a = requireActivity().obtainStyledAttributes(R.styleable.AppCustomAttrs);
+
+        refreshLayout.setProgressBackgroundColorSchemeColor(a.getColor(R.styleable.AppCustomAttrs_backgroundDialog, 0));
+
+
+        refreshLayout.setColorSchemeColors(a.getColor(R.styleable.AppCustomAttrs_iMainColor, 0));
 
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(manager);
         recyclerView.setAdapter(adapter);
 
+        refreshLayout.setOnRefreshListener(() -> new TaskAsinc().execute(false));
+
         skeleton = SkeletonLayoutUtils.applySkeleton(recyclerView, R.layout.skeleton_subject_layout, 12);
 
-        TypedArray ta = requireActivity().obtainStyledAttributes(R.styleable.AppWidgetAttrs);
-        int shimmerColor = ta.getColor(R.styleable.AppWidgetAttrs_shimmerSkeleton, Color.GRAY);
-        int maskColor = ta.getColor(R.styleable.AppWidgetAttrs_maskSkeleton, Color.LTGRAY);
+        int shimmerColor = a.getColor(R.styleable.AppCustomAttrs_shimmerSkeleton, Color.GRAY);
+        int maskColor = a.getColor(R.styleable.AppCustomAttrs_maskSkeleton, Color.LTGRAY);
 
         skeleton.setMaskColor(maskColor);
         skeleton.setShimmerColor(shimmerColor);
-
+        a.recycle();
         new TaskAsinc().execute(true);
+
 
         return root;
     }
@@ -92,29 +104,23 @@ public class SubjectsFragment extends Fragment {
         dialog.setContentView(R.layout.bottom_subject_creator_layout);
 
         final TextView title = dialog.findViewById(R.id.title_subject);
-        Button cancel = dialog.findViewById(R.id.cancel_subject);
         Button accept = dialog.findViewById(R.id.accept_subject);
         colorD = dialog.findViewById(R.id.color_select);
-        TypedArray ta = requireActivity().getTheme().obtainStyledAttributes(R.styleable.AppWidgetAttrs);
-        color = ta.getColor(R.styleable.AppWidgetAttrs_palette_yellow, 0);
+        TypedArray ta = requireActivity().getTheme().obtainStyledAttributes(R.styleable.AppCustomAttrs);
+        color = ta.getColor(R.styleable.AppCustomAttrs_palette_yellow, 0);
         colorD.setColorFilter(color);
         ta.recycle();
         LinearLayout color = dialog.findViewById(R.id.color_picker);
 
-        color.setOnClickListener(view -> {
-            showColorPicker();
-        });
-
-        cancel.setOnClickListener(view -> {
-            dialog.dismiss();
-        });
-
+        color.setOnClickListener(view -> showColorPicker());
         accept.setOnClickListener(view -> {
-            if (!title.getText().toString().isEmpty() || !title.getText().toString().equals("")) {
+            String msg = checkMessage(title.getText().toString());
+            if (!msg.isEmpty()) {
                 dialog.dismiss();
-                insertSubject(title.getText().toString());
+                insertSubject(msg);
             } else {
-                Toast.makeText(requireContext(), R.string.name_is_empty, Toast.LENGTH_SHORT).show();
+                dialog.dismiss();
+                ((MainActivity) requireActivity()).showSnackbar(getString(R.string.name_is_empty));
             }
         });
 
@@ -123,6 +129,28 @@ public class SubjectsFragment extends Fragment {
         dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         dialog.getWindow().getAttributes().windowAnimations = R.style.DialogAnimation;
         dialog.getWindow().setGravity(Gravity.BOTTOM);
+    }
+
+    private String checkMessage(String text) {
+        int length = text.length();
+        int start = 0;
+        if (length > 0) {
+            String last = text.substring(length - 1, length);
+            while (last.equals(" ") && length > 0) {
+                length--;
+                last = text.substring(length - 1, length);
+            }
+            String first = text.substring(start, start+1);
+            while(first.equals(" ") && (length - start) > 0){
+                start++;
+                first = text.substring(start, start+1);
+            }
+
+            if ((length - start) > 0) {
+                return text.substring(start, length);
+            }
+        }
+        return "";
     }
 
     public void insertSubject(String name) {
@@ -136,6 +164,10 @@ public class SubjectsFragment extends Fragment {
         new TaskAsinc().execute(false);
     }
 
+    public void onNotifyDataChanged() {
+        new TaskAsinc().execute(false);
+    }
+
     void loadSubjects() {
         elements.clear();
         elements.add(new ItemSubjectElement(1, (view, position) -> {
@@ -143,15 +175,47 @@ public class SubjectsFragment extends Fragment {
         }));
         DbHelper helper = new DbHelper(requireActivity().getApplicationContext());
         SQLiteDatabase db = helper.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.t_subjects + " ORDER BY name ASC", null);
+        Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.t_subjects + " ORDER BY name COLLATE NOCASE ASC", null);
         if (cursor.moveToFirst()) {
             do {
-                elements.add(new ItemSubjectElement(new SubjectElement(cursor.getString(1), cursor.getInt(2)), 0));
+                int subject = cursor.getInt(0);
+                String statistic = getStatisticsSubject(subject);
+                elements.add(new ItemSubjectElement(new SubjectElement(cursor.getString(1), statistic, cursor.getInt(2)), 0));
             } while (cursor.moveToNext());
         }
 
 
         cursor.close();
+    }
+
+    private String getStatisticsSubject(int id) {
+        String status = "";
+        if (isAdded()) {
+            DbHelper helper = new DbHelper(requireActivity().getApplicationContext());
+            SQLiteDatabase db = helper.getReadableDatabase();
+            Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.T_TASK + " WHERE subject = '" + id + "'", null);
+            status = "0 " + requireActivity().getString(R.string.pending) + " • 0 " + requireActivity().getString(R.string.overdue) + " • 0 " + requireActivity().getString(R.string.done_string);
+            int pending = 0, overdue = 0, done = 0;
+            if (cursor.moveToFirst()) {
+                do {
+                    boolean taskDone = cursor.getInt(5) == 1;
+                    if (taskDone) {
+                        done++;
+                    } else {
+                        long today = Calendar.getInstance().getTimeInMillis();
+                        boolean taskPending = cursor.getLong(2) > today;
+                        if (taskPending) {
+                            pending++;
+                        } else {
+                            overdue++;
+                        }
+                    }
+                } while (cursor.moveToNext());
+                status = pending + " " + requireActivity().getString(R.string.pending) + " • " + overdue + " " + requireActivity().getString(R.string.overdue) + " • " + done + " " + requireActivity().getString(R.string.done_string);
+            }
+            cursor.close();
+        }
+        return status;
     }
 
     ColorSelectAdapter adapterC;
@@ -184,6 +248,7 @@ public class SubjectsFragment extends Fragment {
 
         colorSelector.show();
     }
+
 
     public List<ColorSelectElement> getColors() {
         List<ColorSelectElement> e = new ArrayList<>();
@@ -223,7 +288,7 @@ public class SubjectsFragment extends Fragment {
             idSubject = c.getInt(0);
         }
         if (idSubject >= 0) {
-            db.delete(DbHelper.t_task, "subject = " + subject, null);
+            db.delete(DbHelper.T_TASK, "subject = " + subject, null);
             db.delete(DbHelper.t_event, "subject = '" + idSubject + "'", null);
             db.delete(DbHelper.t_subjects, "name = " + subject, null);
             ((MainActivity) requireActivity()).notifyAllChanged();
@@ -234,9 +299,9 @@ public class SubjectsFragment extends Fragment {
 
     public void notifyDelete(String subject) {
         PermissionDialog dialog = new PermissionDialog();
-        dialog.setTitleDialog("Delete Subject");
-        dialog.setTextDialog(subject + " will be deleted, along with its task and schedules");
-        dialog.setDrawable(R.drawable.ic_trash);
+        dialog.setTitleDialog(requireActivity().getString(R.string.delete)+" "+subject);
+        dialog.setTextDialog(subject + " " + requireActivity().getString(R.string.subject_delete));
+        dialog.setDrawable(R.drawable.bookmark);
         dialog.setPositive((view, which) -> {
             deleteSubject(subject);
             dialog.dismiss();
@@ -266,6 +331,7 @@ public class SubjectsFragment extends Fragment {
         protected void onPostExecute(Boolean b) {
             adapter.notifyDataSetChanged();
             skeleton.showOriginal();
+            refreshLayout.setRefreshing(false);
         }
     }
 }

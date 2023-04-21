@@ -7,6 +7,7 @@ import android.graphics.Paint;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -14,7 +15,8 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.artuok.appwork.R;
-import com.artuok.appwork.objects.AwaitingElement;
+import com.artuok.appwork.objects.AnnouncesElement;
+import com.artuok.appwork.objects.AwaitElement;
 import com.artuok.appwork.objects.Item;
 import com.artuok.appwork.objects.StatisticsElement;
 import com.artuok.appwork.objects.TextElement;
@@ -39,7 +41,6 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         if (viewType == 0) {
             View view = mInflater.inflate(R.layout.item_awaiting_layout, parent, false);
-
             return new AwaitingViewHolder(view);
         } else if (viewType == 1) {
             View view = mInflater.inflate(R.layout.recurrence_layout, parent, false);
@@ -47,6 +48,12 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         } else if (viewType == 2) {
             View view = mInflater.inflate(R.layout.item_text_layout, parent, false);
             return new TextViewHolder(view);
+        }else if(viewType == 3){
+            View view = mInflater.inflate(R.layout.item_awaiting_grid_layout, parent, false);
+            return new AwaitingGridViewHolder(view);
+        } else if(viewType == 12){
+            View view = mInflater.inflate(R.layout.item_ad_awaiting_layout, parent, false);
+            return new AwaitingAdViewHolder(view);
         }
         return null;
     }
@@ -55,7 +62,7 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         int type = getItemViewType(position);
         if (type == 0) {
-            AwaitingElement element = (AwaitingElement) mData.get(position).getObject();
+            AwaitElement element = (AwaitElement) mData.get(position).getObject();
             ((AwaitingViewHolder) holder).onBindData(element);
         } else if (type == 1) {
             StatisticsElement element = (StatisticsElement) mData.get(position).getObject();
@@ -63,6 +70,12 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         } else if (type == 2) {
             TextElement element = (TextElement) mData.get(position).getObject();
             ((TextViewHolder) holder).onBindData(element);
+        } else if (type == 3) {
+            AwaitElement element = (AwaitElement) mData.get(position).getObject();
+            ((AwaitingGridViewHolder) holder).onBindData(element);
+        } else if(type == 12){
+            AnnouncesElement element = (AnnouncesElement) mData.get(position).getObject();
+            ((AwaitingAdViewHolder) holder).onBindData(element);
         }
     }
 
@@ -96,11 +109,53 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         }
     }
 
+    class AwaitingGridViewHolder extends RecyclerView.ViewHolder{
+        TextView title, status, date, time, subject;
+        ImageView subjectIcon;
+
+        public AwaitingGridViewHolder(@NonNull View itemView) {
+            super(itemView);
+            title = itemView.findViewById(R.id.title_card);
+            subjectIcon = itemView.findViewById(R.id.subject_color);
+            subject = itemView.findViewById(R.id.subject);
+            status = itemView.findViewById(R.id.status_card);
+            date = itemView.findViewById(R.id.date_card);
+            time = itemView.findViewById(R.id.time);
+
+        }
+
+        void onBindData(AwaitElement element){
+            TypedArray ta = mInflater.getContext().obtainStyledAttributes(R.styleable.AppCustomAttrs);
+            int color = ta.getColor(R.styleable.AppCustomAttrs_backgroundBorder, Color.WHITE);
+            int colorSub = ta.getColor(R.styleable.AppCustomAttrs_subTextColor, Color.WHITE);
+            title.setText(element.getTitle());
+            title.setPaintFlags(title.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
+            title.setTextColor(color);
+
+            subjectIcon.setColorFilter(element.getTaskColor());
+
+            status.setText(element.getStatus());
+            status.setBackgroundColor(element.getStatusColor());
+
+            if(element.isDone()){
+                title.setPaintFlags(title.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+                title.setTextColor(colorSub);
+            }
+
+            subject.setText(element.getSubject());
+
+            date.setText(element.getDate());
+            time.setText(element.getTime());
+            ta.recycle();
+        }
+    }
+
     class AwaitingViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-        TextView title, status, date;
+        TextView title, status, date, time;
 
         LinearLayout subject;
+        ImageView liked;
 
         public AwaitingViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -108,63 +163,40 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             subject = itemView.findViewById(R.id.subject_color);
             status = itemView.findViewById(R.id.status_card);
             date = itemView.findViewById(R.id.date_card);
+            time = itemView.findViewById(R.id.time);
+            liked = itemView.findViewById(R.id.task_liked);
             PushDownAnim.setPushDownAnimTo(itemView)
                     .setDurationPush(100)
                     .setScale(PushDownAnim.MODE_SCALE, 0.98f)
                     .setOnClickListener(this);
         }
 
-        void onBindData(AwaitingElement element) {
-
-            String t = element.getTitle().equals("") ? element.getDescription() : element.getTitle() + ": " + element.getDescription();
-            t = t.substring(0, 1).toUpperCase() + t.substring(1).toLowerCase();
-
-            title.setText(t);
+        void onBindData(AwaitElement element){
+            TypedArray ta = mInflater.getContext().obtainStyledAttributes(R.styleable.AppCustomAttrs);
+            int color = ta.getColor(R.styleable.AppCustomAttrs_backgroundBorder, Color.WHITE);
+            int colorSub = ta.getColor(R.styleable.AppCustomAttrs_subTextColor, Color.WHITE);
+            title.setText(element.getTitle());
             title.setPaintFlags(title.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
-            subject.setBackgroundColor(element.getColorSubject());
-
-            String d = element.getStatus() + " " + mInflater.getContext().getString(R.string.day_left);
-
-            if (element.isOpen()) {
-                if (Integer.parseInt(element.getStatus()) == 1) {
-                    d = mInflater.getContext().getString(R.string.tomorrow);
-                } else if (Integer.parseInt(element.getStatus()) == 0) {
-                    d = mInflater.getContext().getString(R.string.today);
-                }
-            }
-            status.setText(d);
-            date.setText(element.getDate());
-            TypedArray ta = mInflater.getContext().obtainStyledAttributes(R.styleable.AppWidgetAttrs);
-
-            int color = ta.getColor(R.styleable.AppWidgetAttrs_backgroundBorder, Color.WHITE);
-
-
             title.setTextColor(color);
 
-            if (element.isStatusB()) {
-                status.setText(R.string.done_string);
-                status.setBackgroundColor(mInflater.getContext().getColor(R.color.blue_400));
+            subject.setBackgroundColor(element.getTaskColor());
 
+            status.setText(element.getStatus());
+            status.setBackgroundColor(element.getStatusColor());
+
+            if(element.isDone()){
                 title.setPaintFlags(title.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
-
-                color = ta.getColor(R.styleable.AppWidgetAttrs_subTextColor, Color.WHITE);
-
-
-                title.setTextColor(color);
-            } else {
-                if (element.isOpen()) {
-                    if (Integer.parseInt(element.getStatus()) > 2) {
-                        status.setBackgroundColor(mInflater.getContext().getColor(R.color.green_500));
-                    } else {
-                        status.setBackgroundColor(mInflater.getContext().getColor(R.color.yellow_700));
-                    }
-                    status.setText(d);
-                } else {
-                    status.setText(R.string.task_is_close);
-                    status.setBackgroundColor(mInflater.getContext().getColor(R.color.red_500));
-                }
+                title.setTextColor(colorSub);
             }
 
+            if(element.isLiked()){
+                liked.setVisibility(View.VISIBLE);
+            }else{
+                liked.setVisibility(View.GONE);
+            }
+
+            date.setText(element.getDate());
+            time.setText(element.getTime());
             ta.recycle();
         }
 
@@ -193,6 +225,38 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             onHold.setText(o);
             String l = "" + element.getLosed();
             losed.setText(l);
+        }
+    }
+
+    class AwaitingAdViewHolder extends RecyclerView.ViewHolder{
+
+        TextView title, body, announser, price, action;
+        ImageView content, icon;
+        public AwaitingAdViewHolder(@NonNull View itemView) {
+            super(itemView);
+
+            title = itemView.findViewById(R.id.title_card);
+            body = itemView.findViewById(R.id.body_card);
+            announser = itemView.findViewById(R.id.announser_card);
+            price = itemView.findViewById(R.id.price_card);
+            content = itemView.findViewById(R.id.image_content);
+            icon = itemView.findViewById(R.id.icon);
+            action = itemView.findViewById(R.id.action);
+        }
+
+        public void onBindData(AnnouncesElement element){
+            title.setText(element.getTitle());
+            body.setText(element.getBody());
+            announser.setText(element.getAnnounser());
+            price.setText(element.getPrice());
+            action.setText(element.getAction());
+
+            if(element.getIcon() != null){
+                icon.setImageDrawable(element.getIcon().getDrawable());
+            }
+
+            if(element.getImages() != null)
+                content.setImageDrawable(element.getImages().get(0).getDrawable());
         }
     }
 
