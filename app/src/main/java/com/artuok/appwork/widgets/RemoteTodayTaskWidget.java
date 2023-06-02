@@ -57,9 +57,10 @@ public class RemoteTodayTaskWidget extends RemoteViewsService {
             AwaitingElement awaiting = mData.get(i);
             RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.item_widget_tt_list);
             views.setTextViewText(R.id.title_card, awaiting.getTitle());
+            views.setTextViewText(R.id.day_card, awaiting.getSubject());
             views.setTextViewText(R.id.date_card, awaiting.getDate());
             views.setTextViewText(R.id.time_card, awaiting.getTime());
-            views.setTextViewText(R.id.day_card, awaiting.getSubject());
+
             return views;
         }
 

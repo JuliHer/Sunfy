@@ -669,6 +669,7 @@ class ChatActivity : AppCompatActivity() {
         val values = ContentValues()
 
         values.put("date", evt.date)
+        values.put("completed_date", evt.date)
         values.put("end_date", evt.endDate)
         values.put("subject", s)
         values.put("description", evt.title)

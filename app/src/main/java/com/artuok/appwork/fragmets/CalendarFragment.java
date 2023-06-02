@@ -69,7 +69,7 @@ public class CalendarFragment extends Fragment {
         calendar = root.findViewById(R.id.calendar);
         recyclerView = root.findViewById(R.id.recyclerdate);
         defaultColor = schedule.getTextColors().getDefaultColor();
-
+        registLaunchers();
         LinearLayoutManager manager = new LinearLayoutManager(requireActivity(), RecyclerView.VERTICAL, false);
         recyclerView.setLayoutManager(manager);
         recyclerView.setHasFixedSize(true);
@@ -152,6 +152,20 @@ public class CalendarFragment extends Fragment {
         }
 
         resultLauncher.launch(intent);
+    }
+
+    private void registLaunchers() {
+        resultLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        Intent data = result.getData();
+                        if (data.getIntExtra("requestCode", 0) == 1) {
+                            NotifyChanged();
+                        }
+                    }
+                }
+        );
     }
 
     ActivityResultLauncher<Intent> resultLauncher = registerForActivityResult(

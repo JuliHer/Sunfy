@@ -9,7 +9,8 @@ import androidx.annotation.Nullable;
 import com.google.firebase.auth.FirebaseAuth;
 
 public class DbHelper extends SQLiteOpenHelper {
-    private static final int DatabaseVersion = 17;
+    public static final int DatabaseVersion = 20;
+    public static final int DatabaseOldVersion = 1;
     private static final String DatabaseName = "Calendar";
     public static final String t_subjects = "subjects";
     @Deprecated
@@ -27,6 +28,10 @@ public class DbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
+        createTables(sqLiteDatabase);
+    }
+
+    public static void createTables(SQLiteDatabase sqLiteDatabase) {
         sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS " + t_subjects + "(" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "name TEXT NOT NULL," +
@@ -39,7 +44,9 @@ public class DbHelper extends SQLiteOpenHelper {
                 "description VARCHAR(500)," +
                 "status INTEGER(1) NOT NULL," +
                 "user TEXT NOT NULL," +
-                "favorite INTEGER NOT NULL)");
+                "favorite INTEGER NOT NULL," +
+                "completed_date LONG NOT NULL" +
+                ")");
         sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS " + t_event + "(" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "title TEXT NOT NULL," +
@@ -67,6 +74,10 @@ public class DbHelper extends SQLiteOpenHelper {
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
         if (i <= 16) {
             sqLiteDatabase.execSQL("ALTER TABLE  " + T_TASK + " ADD COLUMN favorite DEFAULT (0) NOT NULL");
+        }
+        if (i <= 20) {
+            sqLiteDatabase.execSQL("DROP TABLE " + T_PHOTOS);
+            sqLiteDatabase.execSQL("DROP TABLE " + T_TASK);
         }
         onCreate(sqLiteDatabase);
     }

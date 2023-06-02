@@ -445,7 +445,7 @@ class ViewActivity : AppCompatActivity() {
             if(sa){
                 val format = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
                 val dat = format.format(Date())
-                values.put("date", dat)
+                values.put("completed_date", dat)
                 values.put("status", !s)
                 val db2 = dbHelper.writableDatabase
                 db2.update(DbHelper.T_TASK, values, " id = '$id'", null)
@@ -453,7 +453,7 @@ class ViewActivity : AppCompatActivity() {
             }else{
                 val format = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
                 val dat = format.format(Date())
-                values.put("date", dat)
+                values.put("completed_date", dat)
                 values.put("status", !s)
                 val db2 = dbHelper.writableDatabase
                 db2.update(DbHelper.T_TASK, values, " id = '$id'", null)

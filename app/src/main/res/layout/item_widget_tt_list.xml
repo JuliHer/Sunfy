@@ -6,144 +6,62 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:layout_margin="5dp">
+        android:background="@drawable/textinput_background"
+        android:backgroundTint="@color/white"
+        android:paddingVertical="5dp"
+        android:paddingHorizontal="10dp"
+        android:elevation="5dp"
+        android:layout_marginHorizontal="5dp"
+        android:layout_marginVertical="2dp"
+        android:orientation="vertical">
+
         <TextView
-            android:id="@+id/date_card"
-            android:layout_width="30dp"
+            android:id="@+id/title_card"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="date"
-            android:layout_marginHorizontal="5dp"
-            android:textColor="@color/gray_800"
-            android:textAlignment="center"/>
+            android:text="She"
+            android:textFontWeight="500"
+            android:textSize="20sp"
+            android:textColor="@color/black" />
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            >
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/date_card"
+
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/textinput_background"
+                android:paddingVertical="2dp"
+                android:paddingHorizontal="5dp"
+                android:includeFontPadding="false"
+                android:text="Monday"
+                android:textFontWeight="600"
+                android:textSize="10sp"
+                android:textColor="@color/white"
+                android:backgroundTint="@color/gray_500" />
 
             <TextView
                 android:id="@+id/day_card"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="23 may 2023"
+                android:layout_marginStart="5dp"
+                android:textSize="12sp"
+                android:textColor="@color/gray_500" />
+
+            <TextView
+                android:id="@+id/time_card"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/monday"
-                android:textFontWeight="500"
-                android:fontFamily="@font/poppins"
-                android:includeFontPadding="false"
-                android:layout_marginHorizontal="5dp"
-                android:textColor="@color/gray_500"/>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:layout_marginHorizontal="5dp"
-                android:layout_marginBottom="5dp"
-                android:background="@drawable/textinput_background"
-                android:backgroundTint="@color/blue_400">
-                <TextView
-                    android:id="@+id/title_card"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Title"
-                    android:textSize="16sp"
-                    android:layout_weight="1"
-                    android:layout_marginEnd="10dp"
-                    android:fadeScrollbars="false"
-                    android:lines="1"
-                    android:textColor="@color/white"
-                    android:scrollHorizontally="true"
-                    android:singleLine="true"
-                    android:paddingStart="10dp"
-                    android:paddingEnd="5dp"
-                    android:paddingVertical="5dp"
-                    />
-                <TextView
-                    android:id="@+id/time_card"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="1:00 p. m."
-                    android:paddingEnd="10dp"
-                    android:textColor="@color/gray_700"/>
-
-            </LinearLayout>
-
-
+                android:text="HH:mm p.m."
+                android:textSize="12sp"
+                android:textColor="@color/gray_500" />
         </LinearLayout>
     </LinearLayout>
-
-    <!--<LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_margin="5dp">
-
-            <LinearLayout
-                android:id="@+id/subject_color"
-                android:layout_width="6dp"
-                android:layout_height="match_parent"
-                android:background="@drawable/textinput_background"
-                android:backgroundTint="?iMainColor"
-                android:orientation="horizontal" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="5dp">
-
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:layout_margin="5dp">
-
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="5dp"
-                    android:gravity="center_vertical">
-
-
-                    <TextView
-                        android:id="@+id/status_card"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/textinput_background"
-                        android:backgroundTint="@color/green_500"
-                        android:paddingHorizontal="10dp"
-                        android:paddingTop="2dp"
-                        android:paddingBottom="3dp"
-                        android:text="Open"
-                        android:textColor="@color/white" />
-                    <TextView
-                        android:id="@+id/date_card"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="5dp"
-                        android:text="Date"
-                        android:textColor="?subTextColor"/>
-                    <TextView
-                        android:id="@+id/time_card"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="time"
-                        android:layout_weight="1"
-                        android:textAlignment="textEnd"
-                        android:textColor="?subTextColor"
-                        android:layout_marginEnd="15dp"/>
-                </LinearLayout>
-            </LinearLayout>
-        </LinearLayout>-->
 </LinearLayout>

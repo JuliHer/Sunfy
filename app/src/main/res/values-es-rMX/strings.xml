@@ -101,8 +101,8 @@
     <string name="add">Agregar</string>
     <string name="made_by_artwork_studios">Creado por ARTWORK STUDIOS</string>
     <string name="menu">Menu</string>
-    <string name="pending_tasks">Tareas Pendientes</string>
-    <string name="completed_tasks">Tareas Completadas</string>
+    <string name="pending_tasks">Tareas atrasadas</string>
+    <string name="completed_tasks">Tareas completadas</string>
     <string name="weekly_summary">Resumen Semanal</string>
     <string name="tasks_alarm">Alarmas de tareas</string>
     <string name="uncheck">Desmarcar</string>
@@ -155,7 +155,7 @@
     <string name="task">Tarea</string>
     <string name="v_unstable">Versión inestable</string>
     <string name="contact_with_progr_unstable_v">Esta versión puede ser inestable y puede producir error (se cierra la aplicación o es inservible), en este caso contacta con el programador y cuentale sobre el problema.</string>
-    <string name="version_changes">Ahora, la aplicación fue simplificada, el IU (Interfaz de usuario) fue rediseñado para ser mas amigable. La alerta de tareas ahora tiene una alarma para recordarte cuando tienes que hacer tarea. \nCambios de la Versión 1.2.0\n- UI mas Amigable.\n- Alarma para hacer tarea\n- Resumen semanal ahora en la página principal\n- Anuncios añadidos\nVersión 1.2.2\n- Función de crear chat grupal habilitada\n- Mensages optimizados\n- Más Rediseños!</string>
+    <string name="version_changes">¡Atención usuarios de Sunfy! ¡Tenemos una emocionante actualización para ti!</string>
     <string name="del_4_all">Eliminar para todos</string>
     <string name="nchat">Nuevo chat</string>
     <string name="appwidget_text">EJEMPLO</string>
@@ -182,4 +182,34 @@
     <string name="group_name">Nombre del grupo</string>
     <string name="new_group">Nuevo grupo</string>
     <string name="create">Crear</string>
+    <string name="averaged_tasks">Tiempo promedio para completar una tarea</string>
+    <string name="ct_note1">Establece objetivos claros y específicos para cada tarea.</string>
+    <string name="ct_note2">Prioriza tus tareas en función de su importancia y urgencia.</string>
+    <string name="ct_note3">Asigna una fecha límite realista para cada tarea.</string>
+    <string name="ct_note4">Divide las tareas grandes en tareas más pequeñas y manejables.</string>
+    <string name="ct_note5">Usa una descripción clara y concisa para cada tarea.</string>
+    <string name="ct_note6">Asigna etiquetas a las tareas para clasificarlas según su categoría.</string>
+    <string name="ct_note7">Utiliza recordatorios para no olvidar las tareas importantes.</string>
+    <string name="ct_note8">Asegúrate de que cada tarea tenga una acción clara y definida.</string>
+    <string name="ct_note9">Revisa tus tareas regularmente para asegurarte de que sigues en el camino correcto.</string>
+    <string name="ct_note10">Celebra tus logros y avances para mantenerte motivado.</string>
+    <string name="tip">Nota</string>
+
+    <string name="a_note1">Establece prioridades y enfócate en las tareas más importantes.</string>
+    <string name="a_note2">Planifica tu día con antelación para maximizar tu tiempo.</string>
+    <string name="a_note3">Utiliza técnicas de gestión del tiempo como el método Pomodoro para aumentar tu productividad.</string>
+    <string name="a_note4">Divide las tareas en pequeñas partes para que sean más manejables.</string>
+    <string name="a_note5">Establece plazos realistas para cada tarea y respétalos.</string>
+    <string name="a_note6">Utiliza recordatorios y alarmas para no olvidar tareas importantes.</string>
+    <string name="a_note7">Elimina las distracciones y concéntrate en lo que estás haciendo.</string>
+    <string name="a_note8">Haz pausas regulares para evitar el cansancio y aumentar tu creatividad.</string>
+    <string name="a_note9">Delega tareas cuando sea posible y no intentes hacerlo todo por ti mismo.</string>
+    <string name="a_note10">Celebra tus logros y mantén una actitud positiva para mantener la motivación.</string>
+    <string name="bakcup_manager_desc">Administra, crea y recupera copias de seguridad en el dispositivo y en la nube</string>
+    <string name="backup_manager">Administrador de Copias de Seguridad</string>
+    <string name="create_backup">Crear Copia de Seguridad</string>
+    <string name="create_backup_desc">Haz una copia de seguridad de tus tareas y temas en el dispositivo. Puedes restaurarlos cuando quieras o cuando reinstales Sunfy</string>
+    <string name="restore_backup">Restaurar la ultima Copia de Seguridad</string>
+    <string name="restore_backup_desc">Restaura tu copia de seguridad. Esto eliminará los datos actuales, incluidas las tareas, los temas y los horarios que asignó anteriormente</string>
+    <string name="backup">Copia de Seguridad</string>
 </resources>

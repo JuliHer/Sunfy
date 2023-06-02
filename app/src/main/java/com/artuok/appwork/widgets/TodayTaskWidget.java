@@ -49,10 +49,7 @@ public class TodayTaskWidget extends AppWidgetProvider {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-
         final String action = intent.getAction();
-
-
         if(ACTION_APPWIDGET_UPDATE.equals(action)){
             int[] ids = intent.getIntArrayExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS);
             AppWidgetManager manager = AppWidgetManager.getInstance(context);

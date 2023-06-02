@@ -2,6 +2,7 @@ package com.artuok.appwork.fragmets
 
 import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -36,7 +37,7 @@ class AveragesFragment : Fragment() {
     private lateinit var elements: ArrayList<Item>
     private lateinit var skeleton: Skeleton
     private lateinit var task: AverageAsync
-    private var dataChanged: Boolean = false
+    private lateinit var averagedTask: TextView
 
 
     override fun onCreateView(
@@ -47,6 +48,7 @@ class AveragesFragment : Fragment() {
 
         completedTask = root.findViewById(R.id.completedTasks)
         pendingTask = root.findViewById(R.id.pendingTasks)
+        averagedTask = root.findViewById(R.id.averageTasks)
         lineChart = root.findViewById(R.id.line_chart)
         recyclerView = root.findViewById(R.id.average_recycler)
 
@@ -116,11 +118,12 @@ class AveragesFragment : Fragment() {
 
 
             val cursor = db.rawQuery(
-                "SELECT * FROM ${DbHelper.T_TASK} WHERE status = '1' AND date > '$date1' AND date <= '$date2'",
+                "SELECT * FROM ${DbHelper.T_TASK} WHERE status = '1' AND completed_date > '$date1' AND completed_date <= '$date2'",
                 null
             )
 
             if (cursor.moveToFirst()) {
+
                 data.add(LineChartDataSet(getMinDayOfWeek(i), cursor.count))
             } else {
                 data.add(LineChartDataSet(getMinDayOfWeek(i), 0))
@@ -149,16 +152,21 @@ class AveragesFragment : Fragment() {
 
 
             val cursor = db.rawQuery(
-                "SELECT * FROM ${DbHelper.T_TASK} WHERE status = '0' AND end_date > '$date1' AND end_date <= '$date2'",
+                "SELECT * FROM ${DbHelper.T_TASK} WHERE status = '0' AND end_date > '$date1' AND end_date < '$date2'",
                 null
             )
 
             if (cursor.moveToFirst()) {
+                Log.d(
+                    "catto",
+                    "Task Pending " + cursor.getString(cursor.getColumnIndex("description"))
+                )
                 data.add(LineChartDataSet(getMinDayOfWeek(i), cursor.count))
             } else {
                 data.add(LineChartDataSet(getMinDayOfWeek(i), 0))
             }
 
+            cursor.close()
         }
 
         return data
@@ -180,6 +188,8 @@ class AveragesFragment : Fragment() {
     }
 
     fun getWeeklyProgress() {
+        if (!isAdded)
+            return
         val dbHelper = DbHelper(requireActivity())
         val db = dbHelper.readableDatabase
         val c = Calendar.getInstance();
@@ -190,7 +200,7 @@ class AveragesFragment : Fragment() {
         val end = getStartEndOFWeek(week, year, false)
 
         var cursor = db.rawQuery(
-            "SELECT * FROM ${DbHelper.T_TASK} WHERE status = '1' AND date > '$start' AND date <= '$end'",
+            "SELECT * FROM ${DbHelper.T_TASK} WHERE status = '1' AND completed_date > '$start' AND completed_date <= '$end' AND completed_date < end_date",
             null
         )
 
@@ -198,11 +208,45 @@ class AveragesFragment : Fragment() {
         cursor.close()
 
         cursor = db.rawQuery(
-            "SELECT * FROM ${DbHelper.T_TASK} WHERE status = '0' AND date > '$start' AND date <= '$end'",
+            "SELECT * FROM ${DbHelper.T_TASK} WHERE status = '1' AND end_date > '$start' AND end_date <= '$end' AND completed_date >= end_date",
             null
         )
         pendingTask.text = cursor.count.toString()
         cursor.close()
+
+        cursor = db.rawQuery("SELECT * FROM ${DbHelper.T_TASK} WHERE status = '1'", null)
+
+        if (cursor.moveToFirst()) {
+            var deltaTime = 0L
+            var i = 0
+            do {
+                val created = cursor.getLong(1)
+                val finished = cursor.getLong(8)
+                deltaTime += finished - created
+                i++
+            } while (cursor.moveToNext())
+
+            val averagedTime = deltaTime / i
+
+            val day = averagedTime / 1000 / 60 / 60 / 24
+            val hour = averagedTime / 1000 / 60 / 60 % 24
+            val minute = averagedTime / 1000 / 60 % 60
+
+            var dates = ""
+            dates = if (day > 0) {
+                "${day}d ${hour}h ${minute}m"
+            } else if (hour > 0) {
+                "${hour}h ${minute}m"
+            } else if (minute > 0) {
+                "${minute}m"
+            } else {
+                val second = averagedTime / 1000 % 60
+                "${second}s"
+            }
+
+            averagedTask.text = dates
+        }
+
 
         val data: ArrayList<LineChartData> = ArrayList()
 

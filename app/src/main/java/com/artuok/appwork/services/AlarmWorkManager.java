@@ -13,11 +13,14 @@ public class AlarmWorkManager extends BroadcastReceiver {
     public static final String ACTION_TOMORROW_EVENTS = "com.artuok.appwork.services.TEVENTS";
     public static final String ACTION_TOMORROW_SUBJECTS = "com.artuok.appwork.services.TSUBJECTS";
     public static final String ACTION_MESSAGES = "com.artuok.appwork.services.MESSAGES";
+    public static final String ACTION_SET_BACKUP = "com.artuok.appwork.services.SETBACKUP";
+    public static final String ACTION_RESTORE_BACKUP = "com.artuok.appwork.services.RESTOREBACKUP";
 
     @Override
     public void onReceive(Context context, Intent intent) {
 
         Intent intent1 = new Intent(context, NotificationService.class);
+        Intent intent2 = new Intent(context, ServiceManager.class);
         if (intent.getAction() != null) {
             switch (intent.getAction()) {
                 case ACTION_NOTIFY:
@@ -60,10 +63,18 @@ public class AlarmWorkManager extends BroadcastReceiver {
                     context.startForegroundService(intent1);
                     break;
                 case ACTION_MESSAGES:
-                    Intent intent2 = new Intent(context, ServiceManager.class);
                     intent2.setAction(ACTION_MESSAGES);
                     context.startForegroundService(intent2);
                     break;
+                case ACTION_SET_BACKUP:
+                    intent2.setAction(ACTION_SET_BACKUP);
+                    context.startForegroundService(intent2);
+                    break;
+                case ACTION_RESTORE_BACKUP:
+                    intent2.setAction(ACTION_RESTORE_BACKUP);
+                    context.startForegroundService(intent2);
+                    break;
+
             }
         }
     }

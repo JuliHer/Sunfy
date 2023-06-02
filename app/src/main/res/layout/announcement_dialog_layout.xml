@@ -18,16 +18,18 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <ImageView
-                android:id="@+id/close_x"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:src="@drawable/x"
-                android:padding="8dp"
+            <View
+                android:id="@+id/gradient"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:background="@drawable/background_gradient_tlbr"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:tint="?subTextColor" />
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
             <LinearLayout
+                android:id="@+id/linearLayout5"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
@@ -37,59 +39,76 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
 
-                <androidx.cardview.widget.CardView
+                <com.artuok.appwork.library.AspectRatioView
                     android:id="@+id/cardView"
-                    android:layout_width="200dp"
-                    android:layout_height="200dp"
-                    android:layout_marginTop="15dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="60dp"
+                    android:layout_marginVertical="25dp"
+                    app:aspectRatio="1:1"
+                    app:cardBackgroundColor="@android:color/transparent"
                     app:cardCornerRadius="5dp"
-                    app:cardElevation="0dp"
-                    app:cardBackgroundColor="@android:color/transparent">
+                    app:cardElevation="9dp"
+                    app:orientationRatio="vertical">
 
                     <ImageView
                         android:id="@+id/image"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
+                        android:scaleType="centerCrop"
                         android:src="@mipmap/banner_3" />
-                </androidx.cardview.widget.CardView>
+                </com.artuok.appwork.library.AspectRatioView>
 
 
                 <TextView
                     android:id="@+id/title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="5dp"
-                    android:fontFamily="@font/poppins"
+                    android:layout_marginBottom="15dp"
                     android:includeFontPadding="false"
                     android:text="1.0.16"
                     android:textAlignment="center"
                     android:textAllCaps="true"
                     android:textColor="@color/white"
-                    android:textSize="22sp"
-                    android:textFontWeight="600" />
+                    android:textFontWeight="700"
+                    android:textSize="28sp" />
 
                 <TextView
                     android:id="@+id/text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="15dp"
-                    android:text="Now we implement announcement to tell you about new changes, we redesign some views and we improve the chat and now is cooler than before \n\n- Redesing awaitings, chats and messages \n- Fix fatal error to devices android 12 and above\n- Announcements added \n-Design more simple"
+                    android:text="Now we implement announcement to tell you about new changes, we redesign some views and we improve the chat and now is cooler than before"
+                    android:textAlignment="center"
                     android:textColor="@color/white"
-                    android:textSize="15sp"
-                    android:layout_marginBottom="15dp"/>
+                    android:textSize="18sp" />
 
-                <androidx.appcompat.widget.AppCompatButton
+                <TextView
                     android:id="@+id/positive"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="15dp"
-                    android:background="@drawable/button"
+                    android:layout_marginVertical="25dp"
+                    android:background="@drawable/background_button"
+                    android:paddingHorizontal="20dp"
+                    android:paddingVertical="10dp"
                     android:backgroundTint="@color/white"
                     android:text="@string/Accept_M"
                     android:textAllCaps="true"
-                    android:textColor="@color/black"
-                    android:textStyle="bold" />
+                    android:textColor="@color/gray_100"
+                    android:textFontWeight="700"
+                    android:textSize="20sp" />
+
             </LinearLayout>
+
+            <ImageView
+                android:id="@+id/close_x"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/x"
+                android:padding="8dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:tint="@color/white" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </androidx.cardview.widget.CardView>
@@ -101,6 +120,7 @@
         android:text="DISMISS"
         android:textColor="@color/white"
         android:textSize="18sp"
+        android:layout_marginTop="25dp"
         android:textStyle="bold"
         android:fontFamily="@font/poppins"
         android:textAllCaps="true" />

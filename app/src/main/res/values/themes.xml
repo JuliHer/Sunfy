@@ -184,4 +184,7 @@
     <style name="Theme.AppWork.AppWidgetContainer" parent="Theme.AppWork.AppWidgetContainerParent">
         <item name="appWidgetPadding">0dp</item>
     </style>
+
+
+    <!--DatePicker Dialog Styles-->
 </resources>

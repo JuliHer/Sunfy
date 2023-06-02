@@ -1,13 +1,29 @@
 package com.artuok.appwork
 
+import android.content.Context
+import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
-import android.widget.EditText
-import android.widget.LinearLayout
-import android.widget.Spinner
-import android.widget.TextView
+import android.view.KeyEvent
+import android.view.View
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.FirebaseException
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.PhoneAuthCredential
+import com.google.firebase.auth.PhoneAuthOptions
 import com.google.firebase.auth.PhoneAuthProvider
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
+import com.google.firebase.ktx.Firebase
+import com.thekhaeng.pushdownanim.PushDownAnim
+import io.michaelrocks.libphonenumber.android.NumberParseException
+import io.michaelrocks.libphonenumber.android.PhoneNumberUtil
+import java.util.*
+import java.util.concurrent.TimeUnit
 
 class LoginActivity : AppCompatActivity() {
     private lateinit var spinner: Spinner
@@ -30,7 +46,7 @@ class LoginActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
-        /*spinner = findViewById(R.id.country)
+        spinner = findViewById(R.id.country)
         cc = findViewById(R.id.countryCodes)
         phoneEdit = findViewById(R.id.editTextPhone)
         enterBtn = findViewById(R.id.enterBtn)
@@ -616,19 +632,19 @@ class LoginActivity : AppCompatActivity() {
                 val code = codeInput.text.toString()
                 verifyCode(code)
             }
-        loginWithNumberPhone()*/
+        loginWithNumberPhone()
     }
 
-    /*private fun loginWithNumberPhone(): Boolean{
+    private fun loginWithNumberPhone(): Boolean {
         val sharedPreferences: SharedPreferences =
             getSharedPreferences("chat", Context.MODE_PRIVATE)
         val login = sharedPreferences.getBoolean("logged", false)
 
-        if(login){
+        if (login) {
             return true
-        }else{
+        } else {
             val timeRestant = sharedPreferences.getLong("verifyTimeOut", 0)
-            if (Calendar.getInstance().timeInMillis >= timeRestant){
+            if (Calendar.getInstance().timeInMillis >= timeRestant) {
                 this.login.visibility = View.VISIBLE
                 this.verify.visibility = View.GONE
                 this.wait.visibility = View.GONE
@@ -642,20 +658,22 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun verifyCode(code: String) {
+
         if (storedVerificationId.isEmpty() || storedVerificationId == "") {
             val shared = getSharedPreferences("chat", Context.MODE_PRIVATE)
             storedVerificationId = shared.getString("VerificationId", "")!!
         }
 
-        Log.d("cattoConsed", "$code $storedVerificationId")
-        if(storedVerificationId.isNotEmpty() && storedVerificationId != ""){
-            val credential = PhoneAuthProvider.getCredential(storedVerificationId, code)
-            signInWithPhoneAuthCredential(credential)
-        }
+
+        if (code.isNotEmpty())
+            if (storedVerificationId.isNotEmpty() && storedVerificationId != "") {
+                val credential = PhoneAuthProvider.getCredential(storedVerificationId, code)
+                signInWithPhoneAuthCredential(credential)
+            }
     }
 
     private fun onClickEnterPhone(phoneN : String, iso : String){
-        val phoneUtil = PhoneNumberUtil.getInstance()
+        val phoneUtil = PhoneNumberUtil.createInstance(this)
         try {
             val phoneNumber = phoneUtil.parse(phoneN, iso)
             if (phoneUtil.isValidNumber(phoneNumber)) {
@@ -704,37 +722,52 @@ class LoginActivity : AppCompatActivity() {
                     val phone = user?.phoneNumber
                     if (phone != null) {
                         loginUser(user!!.uid, phone)
+
                     }
                 }
+            }.addOnFailureListener {
+                it.printStackTrace()
             }
     }
 
     private fun loginUser(userId: String, number : String) {
         val userBase = FirebaseDatabase.getInstance().reference.child("user").child(userId)
-        FirebaseDatabase.getInstance().reference.orderByChild("user").equalTo(number)
+        val user = FirebaseDatabase.getInstance().reference.child("user");
+
+        user.orderByChild("phone").equalTo(number)
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    val userHash = mapOf(
-                        "name" to "",
-                        "phone" to auth.currentUser?.phoneNumber,
-                        "region" to userCodePhoneNumber
-                    )
+                    if (snapshot.exists()) {
+                        val userHash = mapOf(
+                            "name" to "",
+                            "phone" to auth.currentUser?.phoneNumber,
+                            "region" to userCodePhoneNumber,
+                            "updated" to Calendar.getInstance().timeInMillis
+                        )
 
-                    userBase.updateChildren(userHash)
+                        user.child(snapshot.key!!).updateChildren(userHash)
 
+                        val sharedPreferences: SharedPreferences =
+                            getSharedPreferences("chat", Context.MODE_PRIVATE)
+                        val editor = sharedPreferences.edit()
+                        editor.putBoolean("logged", true)
+                        editor.putLong("verifyTimeOut", 0)
+                        editor.putString("regionCode", userCodePhoneNumber)
+                        editor.apply()
+                        val i = Intent(this@LoginActivity, MainActivity::class.java)
 
-                    val sharedPreferences: SharedPreferences =
-                        getSharedPreferences("chat", Context.MODE_PRIVATE)
-                    val editor = sharedPreferences.edit()
-                    editor.putBoolean("logged", true)
-                    editor.putLong("verifyTimeOut", 0)
-                    editor.putString("regionCode", userCodePhoneNumber)
-                    editor.apply()
+                        startActivity(i)
+                        finish()
+                    } else {
+                        val userHash = mapOf(
+                            "name" to "",
+                            "phone" to auth.currentUser?.phoneNumber,
+                            "region" to userCodePhoneNumber,
+                            "updated" to Calendar.getInstance().timeInMillis
+                        )
 
-                    val i = Intent(this@LoginActivity, MainActivity::class.java)
-
-                    startActivity(i)
-                    finish()
+                        userBase.updateChildren(userHash)
+                    }
                 }
 
                 override fun onCancelled(error: DatabaseError) {
@@ -742,5 +775,18 @@ class LoginActivity : AppCompatActivity() {
                 }
 
             })
-    }*/
+
+        FirebaseDatabase.getInstance().reference.orderByChild("phone").equalTo(number)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+
+
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+
+                }
+
+            })
+    }
 }

@@ -11,10 +11,11 @@
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
 
     <uses-feature
         android:name="android.hardware.camera"
@@ -40,6 +41,9 @@
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-5838551368289900~3235231874" />
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyAl4iuX6t-UUBKC-qEhJX3-VwyArM4JOrU" />
         <!--
 <meta-data
 
@@ -47,6 +51,19 @@
         <meta-data
 
             android:value="ca-app-pub-3940256099942544/2247696110"/>
+
+            {
+            "code" : 401,
+            "errors" : [ {
+            "domain" : "global",
+            "location" : "Authorization",
+            "locationType" : "header",
+            "message" : "Invalid Credentials",
+            "reason" : "authError"
+            } ],
+            "message" : "Request had invalid authentication credentials. Expected OAuth 2 access token, login cookie or other valid authentication credential. See https://developers.google.com/identity/sign-in/web/devconsole-project.",
+            status" : "UNAUTHENTICATED"
+            }
         -->
         <activity
             android:name=".CreateGroupActivity"

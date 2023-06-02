@@ -20,6 +20,7 @@ import com.artuok.appwork.objects.AwaitElement;
 import com.artuok.appwork.objects.Item;
 import com.artuok.appwork.objects.StatisticsElement;
 import com.artuok.appwork.objects.TextElement;
+import com.google.android.gms.ads.nativead.NativeAdView;
 import com.thekhaeng.pushdownanim.PushDownAnim;
 
 import java.util.List;
@@ -232,6 +233,7 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
         TextView title, body, announser, price, action;
         ImageView content, icon;
+        NativeAdView adView;
         public AwaitingAdViewHolder(@NonNull View itemView) {
             super(itemView);
 
@@ -242,6 +244,7 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             content = itemView.findViewById(R.id.image_content);
             icon = itemView.findViewById(R.id.icon);
             action = itemView.findViewById(R.id.action);
+            adView = itemView.findViewById(R.id.adView);
         }
 
         public void onBindData(AnnouncesElement element){
@@ -251,12 +254,22 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             price.setText(element.getPrice());
             action.setText(element.getAction());
 
-            if(element.getIcon() != null){
+            if (element.getIcon() != null) {
                 icon.setImageDrawable(element.getIcon().getDrawable());
             }
 
-            if(element.getImages() != null)
+            if (element.getImages() != null)
                 content.setImageDrawable(element.getImages().get(0).getDrawable());
+
+            adView.setHeadlineView(title);
+            adView.setAdvertiserView(announser);
+            adView.setBodyView(body);
+            adView.setIconView(icon);
+            adView.setPriceView(price);
+            adView.setCallToActionView(action);
+            adView.setImageView(content);
+
+            adView.setNativeAd(element.getNativeAd());
         }
     }
 

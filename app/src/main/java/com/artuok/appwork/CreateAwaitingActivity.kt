@@ -60,6 +60,7 @@ class CreateAwaitingActivity : AppCompatActivity() {
     private lateinit var textSubject: TextView
     private lateinit var datetext: TextView
     private lateinit var timeText: TextView
+    private lateinit var tipText: TextView
     private lateinit var datePicker: LinearLayout
     private lateinit var cameraPicker: CardView
     private lateinit var imgPreview: ImageView
@@ -96,6 +97,7 @@ class CreateAwaitingActivity : AppCompatActivity() {
         cameraPicker = findViewById(R.id.camera)
         recyclerView = findViewById(R.id.imagesRecycler)
         progressUpload = findViewById(R.id.on_activity_upload)
+        tipText = findViewById(R.id.tip)
 
         is24HourFormat = DateFormat.is24HourFormat(this)
 
@@ -139,7 +141,33 @@ class CreateAwaitingActivity : AppCompatActivity() {
         val cancel: ImageView = findViewById(R.id.cancel_awaiting)
         val accept: Button = findViewById(R.id.accept_awaiting)
 
+        val rand = Random()
 
+        val numero = rand.nextInt(10)
+
+        val tip = if (numero == 0) {
+            getString(R.string.ct_note1)
+        } else if (numero == 1) {
+            getString(R.string.ct_note2)
+        } else if (numero == 2) {
+            getString(R.string.ct_note3)
+        } else if (numero == 3) {
+            getString(R.string.ct_note4)
+        } else if (numero == 4) {
+            getString(R.string.ct_note5)
+        } else if (numero == 5) {
+            getString(R.string.ct_note6)
+        } else if (numero == 6) {
+            getString(R.string.ct_note7)
+        } else if (numero == 7) {
+            getString(R.string.ct_note8)
+        } else if (numero == 8) {
+            getString(R.string.ct_note9)
+        } else {
+            getString(R.string.ct_note10)
+        }
+
+        tipText.text = "${getString(R.string.tip)}: $tip"
 
         datetext.setOnClickListener {
             val calendar = Calendar.getInstance()
@@ -147,9 +175,11 @@ class CreateAwaitingActivity : AppCompatActivity() {
             val mm = calendar[Calendar.MONTH]
             val aaaa = calendar[Calendar.YEAR]
 
-            val timePicker = TimePickerDialog(this@CreateAwaitingActivity, { timePicker1: TimePicker?, i: Int, i1: Int ->
-                val a = if (i1 < 10) "0$i1" else i1.toString() + ""
-                val e = if (i < 10) "0$i" else i.toString() + ""
+            val timePicker = TimePickerDialog(
+                this@CreateAwaitingActivity,
+                { timePicker1: TimePicker?, i: Int, i1: Int ->
+                    val a = if (i1 < 10) "0$i1" else i1.toString() + ""
+                    val e = if (i < 10) "0$i" else i.toString() + ""
                 timeMilis = ((i * 60 * 60) + (i1 * 60)) * 1000L
                 datetime = dateMilis + timeMilis
                 val s = if (is24HourFormat) {
@@ -521,14 +551,15 @@ class CreateAwaitingActivity : AppCompatActivity() {
         val now = Calendar.getInstance().timeInMillis
         val values = ContentValues()
         values.put("date", now)
+        values.put("completed_date", now)
         values.put("end_date", date)
         values.put("subject", subject)
         values.put("description", name)
         values.put("status", false)
+        values.put("favorite", 0)
 
         if(isLogin()){
             values.put("user", auth.currentUser?.uid)
-            Log.d("CattoUser", auth.currentUser?.uid+"")
         }else{
             values.put("user", "noUser")
         }

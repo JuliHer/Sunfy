@@ -7,6 +7,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.text.format.DateFormat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -37,6 +38,7 @@ import com.google.android.gms.ads.AdLoader;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.LoadAdError;
 import com.google.android.gms.ads.nativead.NativeAd;
+import com.google.android.gms.ads.nativead.NativeAdOptions;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -225,8 +227,8 @@ public class homeFragment extends Fragment {
                 String title = dow - 1 == dayWeek ? requireActivity().getString(R.string.today) : getDayOfWeek(requireActivity(), dow);
                 title = dow - 1 == (dayWeek + 1) % 7 ? requireActivity().getString(R.string.tomorrow) : title;
 
-                int inApp = new Random().nextInt() % 15;
-                if (inApp == 8 && i > 1) {
+                int inApp = new Random().nextInt() % 10;
+                if (inApp == 4 && i > 1) {
                     setAnnounce(elements.size());
                 }
 
@@ -267,7 +269,7 @@ public class homeFragment extends Fragment {
                     List<NativeAd.Image> images = nativeAd.getImages();
                     NativeAd.Image icon = nativeAd.getIcon();
                     advirments--;
-                    AnnouncesElement element = new AnnouncesElement(title, body, advertiser, images, icon);
+                    AnnouncesElement element = new AnnouncesElement(nativeAd, title, body, advertiser, images, icon);
                     element.setAction(nativeAd.getCallToAction());
                     element.setPrice(price);
                     elements.add(finalPos, new Item(element, 12));
@@ -282,7 +284,11 @@ public class homeFragment extends Fragment {
                     public void onAdLoaded() {
                         super.onAdLoaded();
                     }
-                }).build();
+                }).withNativeAdOptions(new NativeAdOptions.Builder()
+                        .setMediaAspectRatio(NativeAdOptions.NATIVE_MEDIA_ASPECT_RATIO_LANDSCAPE)
+                        .setRequestMultipleImages(false)
+                        .setAdChoicesPlacement(NativeAdOptions.ADCHOICES_BOTTOM_LEFT)
+                        .build()).build();
         adLoader.loadAd(new AdRequest.Builder().build());
     }
 
@@ -437,15 +443,17 @@ public class homeFragment extends Fragment {
 
 
             Cursor cursor = db.rawQuery(
-                    "SELECT * FROM " + DbHelper.T_TASK + " WHERE status = '1' AND date > '" + date1 + "' AND date <= '" + date2 + "'",
+                    "SELECT * FROM " + DbHelper.T_TASK + " WHERE status = '1' AND completed_date > '" + date1 + "' AND completed_date <= '" + date2 + "'",
                     null
             );
 
+            Log.d("cattoAwaiting", date1 + " < completed_date < " + date2);
             if (cursor.moveToFirst()) {
                 data.add(new LineChart.LineChartDataSet(getMinDayOfWeek(i), cursor.getCount()));
             } else {
                 data.add(new LineChart.LineChartDataSet(getMinDayOfWeek(i), 0));
             }
+            cursor.close();
 
         }
 

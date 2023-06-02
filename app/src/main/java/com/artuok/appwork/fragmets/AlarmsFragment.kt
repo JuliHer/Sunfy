@@ -34,9 +34,27 @@ class AlarmsFragment : Fragment() {
     private lateinit var nDETimer: TextView
     private lateinit var nDSTimer: TextView
 
-    private val TimeToDoHomework : String = "TTDH"
+    private val TimeToDoHomework: String = "TTDH"
     private val TomorrowEvent = "TE"
     private val TomorrowSubjects = "TS"
+
+    private var requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean? ->
+        if (isGranted == true) {
+            setAlarmPendingTask(true)
+        }
+    }
+
+    fun registrate() {
+        requestPermissionLauncher = registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { isGranted: Boolean? ->
+            if (isGranted == true) {
+                setAlarmPendingTask(true)
+            }
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -48,7 +66,7 @@ class AlarmsFragment : Fragment() {
         nDETimer = root.findViewById(R.id.nextDayEvents)
         nDSTimer = root.findViewById(R.id.nextDaySubjects)
         switch = root.findViewById(R.id.ATP)
-
+        registrate()
         prepareAlarm()
         setAlarm()
         activateAlarms()
@@ -237,6 +255,7 @@ class AlarmsFragment : Fragment() {
 
         return root
     }
+
 
     private fun getAlarmStatus() {
         val s = requireActivity().getSharedPreferences("settings", Context.MODE_PRIVATE)

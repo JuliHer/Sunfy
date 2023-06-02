@@ -15,6 +15,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
@@ -31,6 +32,7 @@ import com.artuok.appwork.dialogs.PermissionDialog;
 import com.artuok.appwork.fragmets.AlarmsFragment;
 import com.artuok.appwork.fragmets.AveragesFragment;
 import com.artuok.appwork.fragmets.AwaitingFragment;
+import com.artuok.appwork.fragmets.BackupsFragment;
 import com.artuok.appwork.fragmets.CalendarFragment;
 import com.artuok.appwork.fragmets.ChatFragment;
 import com.artuok.appwork.fragmets.SettingsFragment;
@@ -59,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
     public BottomNavigationView navigation;
     public Fragment currentFragment;
     private NavigationView navigationView;
-    public static int CURRENT_VERSION = 18;
+    public static int CURRENT_VERSION = 21;
 
 
     //fragments
@@ -72,6 +74,7 @@ public class MainActivity extends AppCompatActivity {
     public AveragesFragment averagesFragment = new AveragesFragment();
     public AlarmsFragment alarmsFragment = new AlarmsFragment();
     public SettingsFragment settingsFragment = new SettingsFragment();
+    public BackupsFragment backupsFragment = new BackupsFragment();
 
 
     Fragment firstCurrentFragment = homefragment;
@@ -88,6 +91,8 @@ public class MainActivity extends AppCompatActivity {
 
     //Dialog
     Calendar alarmset;
+
+    private OnBackPressedCallback onBackPressedCallback;
 
     private static MainActivity instance;
 
@@ -184,16 +189,34 @@ public class MainActivity extends AppCompatActivity {
             //showErrorAnnouncement();
         }
 
+
         if (!isActualVersion()) {
             showAnnouncement();
             //setWarning(false);
             setVersion(CURRENT_VERSION);
         }
+
+        if (!SettingsFragment.isLogged(this)) {
+            showAnnouncementChat();
+        }
+
+        onBackPressedCallback = new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (position != 0) {
+                    navigateTo(0);
+                }
+            }
+        };
+
+        // Registra el callback
+        getOnBackPressedDispatcher().addCallback(this, onBackPressedCallback);
     }
 
+
     @SuppressLint("RestrictedApi")
-    public void showSnackbar(String text){
-        CoordinatorLayout layout = (CoordinatorLayout)findViewById(R.id.coordinadorers);
+    public void showSnackbar(String text) {
+        CoordinatorLayout layout = (CoordinatorLayout) findViewById(R.id.coordinadorers);
         Snackbar snackbar = Snackbar.make(layout, "", BaseTransientBottomBar.LENGTH_LONG);
 
         View customSnack = getLayoutInflater().inflate(R.layout.snack_notification_layout, null);
@@ -203,18 +226,12 @@ public class MainActivity extends AppCompatActivity {
         Snackbar.SnackbarLayout snackbarLayout = (Snackbar.SnackbarLayout) snackbar.getView();
 
         snackbarLayout.setPadding(0, 0, 0, 0);
-
         CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) snackbarLayout.getLayoutParams();
-
         params.setMargins(0, 0, 0, 185);
-
         snackbarLayout.setLayoutParams(params);
         TextView dialog = customSnack.findViewById(R.id.textdialog);
         dialog.setText(text);
-
         snackbarLayout.addView(customSnack, 0);
-
-
 
         snackbar.show();
     }
@@ -233,14 +250,19 @@ public class MainActivity extends AppCompatActivity {
         se.apply();
     }
 
-    public boolean isWarning(){
+    public boolean isWarning() {
         SharedPreferences s = getSharedPreferences("settings", Context.MODE_PRIVATE);
         return !s.getBoolean("acceptWarning", false);
     }
 
-    public boolean isActualVersion(){
+    public boolean isActualVersion() {
         SharedPreferences s = getSharedPreferences("settings", Context.MODE_PRIVATE);
         return s.getInt("version", 0) == CURRENT_VERSION;
+    }
+
+    public int getVersion() {
+        SharedPreferences s = getSharedPreferences("settings", Context.MODE_PRIVATE);
+        return s.getInt("version", 0);
     }
 
     public ActivityResultLauncher<Intent> resultLaunchers = registerForActivityResult(
@@ -303,6 +325,11 @@ public class MainActivity extends AppCompatActivity {
                     position = 8;
                     LoadTextFragment(settingsFragment, getString(R.string.settings_menu));
                     break;
+                case 8:
+                    navigation.setSelectedItemId(R.id.homefragment);
+                    position = 9;
+                    LoadTextFragment(backupsFragment, getString(R.string.backup));
+                    break;
             }
         else
             switch (n) {
@@ -338,6 +365,11 @@ public class MainActivity extends AppCompatActivity {
                     position = 8;
                     LoadTextFragment(settingsFragment, getString(R.string.settings_menu));
                     break;
+                case 8:
+                    navigation.setSelectedItemId(R.id.homefragment);
+                    position = 9;
+                    LoadTextFragment(backupsFragment, getString(R.string.backup));
+                    break;
             }
     }
 
@@ -360,9 +392,8 @@ public class MainActivity extends AppCompatActivity {
     );
 
 
-
-    public void loadChatFragment(){
-        if(chatFragment.isAdded()){
+    public void loadChatFragment() {
+        if (chatFragment.isAdded()) {
             chatFragment.loadChatsMessage();
         }
     }
@@ -371,9 +402,40 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    public void showAnnouncementChat() {
+        AnnouncementDialog dialog = new AnnouncementDialog();
+        dialog.setTitle("Sunfy chat");
+        dialog.setText("Únete a la comunidad de Sunfy y chatea con tu equipo y amigos.");
+
+        TypedArray a = obtainStyledAttributes(R.styleable.AppCustomAttrs);
+        int color = a.getColor(R.styleable.AppCustomAttrs_backgroundDialog, Color.WHITE);
+        int textColor = a.getColor(R.styleable.AppCustomAttrs_backgroundBorder, Color.WHITE);
+
+        a.recycle();
+
+        dialog.setBackgroundCOlor(color);
+        dialog.setTextColor(textColor);
+
+        dialog.setImage(R.mipmap.ad_chat);
+
+        dialog.setAgree(true);
+
+        dialog.setOnPositiveClickListener(getString(R.string.Accept_M), view -> {
+            Intent i = new Intent(MainActivity.this, LoginActivity.class);
+
+            startActivity(i);
+        });
+
+        dialog.setOnNegativeClickListener(getString(R.string.dismiss), view -> {
+            dialog.dismiss();
+        });
+
+        dialog.show(getSupportFragmentManager(), "Chat Announcement");
+    }
+
     public void showAnnouncement() {
         AnnouncementDialog dialog = new AnnouncementDialog();
-        dialog.setTitle( getString(R.string.new_string)+" "+getString(R.string.version_code));
+        dialog.setTitle(getString(R.string.version) + " " + getString(R.string.version_code));
         dialog.setText(getString(R.string.version_changes));
 
         TypedArray a = obtainStyledAttributes(R.styleable.AppCustomAttrs);
@@ -404,9 +466,13 @@ public class MainActivity extends AppCompatActivity {
 
         dialog.setImage(banner);
 
-        dialog.setAgree(false);
+        dialog.setAgree(true);
 
         dialog.setOnPositiveClickListener(getString(R.string.Accept_M), view -> {
+            dialog.dismiss();
+        });
+
+        dialog.setOnNegativeClickListener(getString(R.string.dismiss), view -> {
             dialog.dismiss();
         });
 

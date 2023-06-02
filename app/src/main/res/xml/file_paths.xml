@@ -6,4 +6,7 @@
     <files-path
         name="Image"
         path="Media/Sunfy Images" />
+    <files-path
+        name="Backups"
+        path="Media/Sunfy Backup" />
 </paths>

@@ -259,8 +259,7 @@
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/more_views"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingHorizontal="5dp" />
+                android:layout_height="wrap_content" />
         </LinearLayout>
 </androidx.core.widget.NestedScrollView>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

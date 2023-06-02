@@ -117,7 +117,6 @@ public class NotificationService extends Service {
         NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         if (manager != null) {
             manager.cancel(2);
-
         }
     }
 

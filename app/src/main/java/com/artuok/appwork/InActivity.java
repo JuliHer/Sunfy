@@ -87,6 +87,7 @@ public class InActivity extends AppCompatActivity {
         new Handler().postDelayed(() -> loadMain(), 500);
     }
 
+
     private void getContacts() {
         ContentResolver cr = getContentResolver();
         Uri table = ContactsContract.CommonDataKinds.Phone.CONTENT_URI;
@@ -254,8 +255,6 @@ public class InActivity extends AppCompatActivity {
 
 
     private void updateContactPublicKey(String publicKey, String p, SQLiteDatabase dbw) {
-
-
         ContentValues cv = new ContentValues();
         cv.put("publicKey", publicKey);
         dbw.update(DbChat.T_CHATS_LOGGED, cv, "number = '" + p + "'", null);
@@ -307,6 +306,8 @@ public class InActivity extends AppCompatActivity {
         notificationChannel5.setDescription("Subjects tomorrow");
         NotificationChannel notificationChannel6 = new NotificationChannel(CHANNEL_ID_6, "Chat Notifications", NotificationManager.IMPORTANCE_HIGH);
         notificationChannel6.setDescription("Chat Messages");
+
+
         notificationChannel1.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
         notificationChannel2.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
         notificationChannel3.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);

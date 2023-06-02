@@ -21,9 +21,11 @@ import com.artuok.appwork.objects.Item;
 import com.artuok.appwork.objects.LineChartElement;
 import com.artuok.appwork.objects.TasksElement;
 import com.google.android.gms.ads.nativead.NativeAd;
+import com.google.android.gms.ads.nativead.NativeAdView;
 import com.thekhaeng.pushdownanim.PushDownAnim;
 
 import java.util.List;
+import java.util.Random;
 
 public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
@@ -134,19 +136,50 @@ public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         LineChart lineChart;
         CardView btn;
         LineChartElement.OnClickListener viewMoreListener;
+        TextView tipText;
 
         public WeeklySummaryViewHolder(@NonNull View itemView) {
             super(itemView);
             lineChart = itemView.findViewById(R.id.line_chart);
             btn = itemView.findViewById(R.id.view_more_btn);
+            tipText = itemView.findViewById(R.id.tip);
         }
 
 
         public void onBindData(LineChartElement element) {
             lineChart.setData(element.getData());
             lineChart.invalidate();
-
             viewMoreListener = element.getViewMore();
+
+            Random rand = new Random();
+
+            int numero = rand.nextInt(10);
+
+            String tip = "";
+            if (numero == 0) {
+                tip = mInflater.getContext().getString(R.string.a_note1);
+            } else if (numero == 1) {
+                tip = mInflater.getContext().getString(R.string.a_note2);
+            } else if (numero == 2) {
+                tip = mInflater.getContext().getString(R.string.a_note3);
+            } else if (numero == 3) {
+                tip = mInflater.getContext().getString(R.string.a_note4);
+            } else if (numero == 4) {
+                tip = mInflater.getContext().getString(R.string.a_note5);
+            } else if (numero == 5) {
+                tip = mInflater.getContext().getString(R.string.a_note6);
+            } else if (numero == 6) {
+                tip = mInflater.getContext().getString(R.string.a_note7);
+            } else if (numero == 7) {
+                tip = mInflater.getContext().getString(R.string.a_note8);
+            } else if (numero == 8) {
+                tip = mInflater.getContext().getString(R.string.a_note9);
+            } else {
+                tip = mInflater.getContext().getString(R.string.a_note10);
+            }
+
+            String tiptip = mInflater.getContext().getString(R.string.tip) + ": " + tip;
+            tipText.setText(tiptip);
 
             PushDownAnim.setPushDownAnimTo(btn)
                     .setDurationPush(100)
@@ -222,8 +255,8 @@ public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
 
     class TasksAdViewHolder extends RecyclerView.ViewHolder {
         TextView title, body, announser, price, cta;
-        ImageView content1, content2, content3, icon;
-        LinearLayout content;
+        ImageView content, icon;
+        NativeAdView adView;
 
         public TasksAdViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -231,12 +264,10 @@ public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             body = itemView.findViewById(R.id.body_card);
             announser = itemView.findViewById(R.id.announser_card);
             price = itemView.findViewById(R.id.price_card);
-            content1 = itemView.findViewById(R.id.image_content);
-            content2 = itemView.findViewById(R.id.content_second);
-            content3 = itemView.findViewById(R.id.content_third);
-            content = itemView.findViewById(R.id.images_content);
+            content = itemView.findViewById(R.id.image_content);
             cta = itemView.findViewById(R.id.call_to_action);
             icon = itemView.findViewById(R.id.icon);
+            adView = itemView.findViewById(R.id.nativeAd);
         }
 
         public void onBindData(AnnouncesElement element) {
@@ -250,23 +281,18 @@ public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
                 icon.setImageDrawable(element.getIcon().getDrawable());
 
             List<NativeAd.Image> images = element.getImages();
-            if (images != null) {
-                if (images.size() >= 3) {
-                    content1.setImageDrawable(images.get(0).getDrawable());
-                    content2.setImageDrawable(images.get(1).getDrawable());
-                    content3.setImageDrawable(images.get(2).getDrawable());
-                    content.setVisibility(View.VISIBLE);
-                    content3.setVisibility(View.VISIBLE);
-                } else if (images.size() == 2) {
-                    content1.setImageDrawable(images.get(0).getDrawable());
-                    content2.setImageDrawable(images.get(1).getDrawable());
-                    content3.setVisibility(View.GONE);
-                    content.setVisibility(View.VISIBLE);
-                } else if (images.size() == 1) {
-                    content1.setImageDrawable(images.get(0).getDrawable());
-                    content.setVisibility(View.GONE);
-                }
-            }
+            if (images != null)
+                content.setImageDrawable(images.get(0).getDrawable());
+
+            adView.setHeadlineView(title);
+            adView.setAdvertiserView(announser);
+            adView.setBodyView(body);
+            adView.setIconView(icon);
+            adView.setPriceView(price);
+            adView.setCallToActionView(cta);
+            adView.setImageView(content);
+            adView.setNativeAd(element.getNativeAd());
+
         }
     }
 

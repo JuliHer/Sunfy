@@ -114,8 +114,9 @@
     <string name="made_by_artwork_studios">Created by ARTWORK STUDIOS</string>
     <string name="menu">Menu</string>
 
-    <string name="pending_tasks">Pending Tasks</string>
-    <string name="completed_tasks">Completed tasks</string>
+    <string name="pending_tasks">Overdue tasks completed</string>
+    <string name="completed_tasks">Tasks completed</string>
+    <string name="averaged_tasks">Average time to complete a task</string>
     <string name="weekly_summary">Weekly Summary</string>
     <string name="tasks_alarm">Tasks Alarms</string>
     <string name="uncheck">Uncheck</string>
@@ -168,8 +169,8 @@
     <string name="you">You</string>
     <string name="task">Task</string>
 
-    <string name="version_changes">Now, the app was simplified, the UI was redesign to be more friendly. The task alert now has an alarm to remember when you have to do homework. \nVersion Changes 1.2.0\n- UI more friendly.\n- Alarm to do homework added.\n- Weekly summary now in the main page\n- ads added\nVersion 1.2.2\n- Create chat group function enabled\n- Messages optimized\n- More redesign</string>
-    <string name="version_code" translatable="false">1.2.2</string>
+    <string name="version_changes">Attention Sunfy users! We have an exciting update for you!</string>
+    <string name="version_code" translatable="false">1.3.1</string>
 
     <string name="v_unstable">Unstable version</string>
     <string name="contact_with_progr_unstable_v">This version could be unstable and may produce error (closes the app or app useless), in this case contact with tha programmer and tell him the problem.</string>
@@ -188,10 +189,40 @@
     <string name="good_morning">Good morning!</string>
     <string name="good_afternoon">Good afternoon</string>
     <string name="good_night">Good night…</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="share">Share</string>
     <string name="group_name">Group\'s name</string>
     <string name="new_group">New group</string>
     <string name="create">Create</string>
+    <string name="tip">Tip</string>
+
+    <!-- Tips for creating a task -->
+    <string name="ct_note1">Define clear and specific objectives for each task</string>
+    <string name="ct_note2">Prioritize tasks based on urgency and importance</string>
+    <string name="ct_note3">Assign a realistic deadline for each task.</string>
+    <string name="ct_note4">Break large tasks into smaller, more manageable tasks.</string>
+    <string name="ct_note5">Use a clear and concise description for each task.</string>
+    <string name="ct_note6">Assign tags to tasks to classify them according to their category.</string>
+    <string name="ct_note7">Use reminders so you don\'t forget important tasks.</string>
+    <string name="ct_note8">Make sure each task has a clear and defined action.</string>
+    <string name="ct_note9">Review your tasks regularly to make sure you\'re staying on track.</string>
+    <string name="ct_note10">Celebrate your achievements and progress to stay motivated.</string>
+
+    <string name="a_note1">Set priorities and focus on the most important tasks.</string>
+    <string name="a_note2">Plan your day in advance to maximize your time.</string>
+    <string name="a_note3">Use time management techniques like the Pomodoro method to increase your productivity.</string>
+    <string name="a_note4">Break tasks down into smaller parts to make them more manageable.</string>
+    <string name="a_note5">Set realistic deadlines for each task and stick to them.</string>
+    <string name="a_note6">Use reminders and alarms to not forget important tasks.</string>
+    <string name="a_note7">Eliminate distractions and focus on what you\'re doing.</string>
+    <string name="a_note8">Take regular breaks to avoid fatigue and increase your creativity.</string>
+    <string name="a_note9">Delegate tasks when possible and don\'t try to do everything yourself.</string>
+    <string name="a_note10">Celebrate your achievements and maintain a positive attitude to stay motivated.</string>
+
+    <string name="backup">Backup</string>
+    <string name="backup_manager">Backup Manager</string>
+    <string name="bakcup_manager_desc">Manage, create and recover backups on the device and in the cloud</string>
+    <string name="create_backup">Create backup</string>
+    <string name="create_backup_desc">Back up your tasks and subjects on your device. You can restore them whenever you want or when you reinstall Sunfy</string>
+    <string name="restore_backup">Restore the latest backup</string>
+    <string name="restore_backup_desc">Restore your backup. This will delete your current data, including the tasks, topics, and times you previously assigned</string>
 </resources>

@@ -62,7 +62,7 @@ import io.michaelrocks.libphonenumber.android.Phonenumber;
 public class SettingsFragment extends Fragment {
     Switch darkTheme, savermode;
     SharedPreferences sharedPreferences;
-    LinearLayout session, conversation, userSession, notifications;
+    LinearLayout session, conversation, userSession, notifications, backup;
     TextView logint;
     ImageView photo;
     FirebaseAuth auth = FirebaseAuth.getInstance();
@@ -88,6 +88,7 @@ public class SettingsFragment extends Fragment {
         userSession = root.findViewById(R.id.loginSetting);
         photo = root.findViewById(R.id.photo);
         notifications = root.findViewById(R.id.notifications_layout);
+        backup = root.findViewById(R.id.backup_layout);
 
         photo.setOnClickListener(view -> {
             if (isLogged(requireActivity())) {
@@ -108,6 +109,13 @@ public class SettingsFragment extends Fragment {
             }
         });
 
+        PushDownAnim
+                .setPushDownAnimTo(backup)
+                .setDurationPush(100)
+                .setScale(PushDownAnim.MODE_SCALE, 0.98f)
+                .setOnClickListener(view -> {
+                    ((MainActivity) requireActivity()).loadExternalFragment(((MainActivity) requireActivity()).backupsFragment, requireActivity().getString(R.string.backup));
+                });
         PushDownAnim
                 .setPushDownAnimTo(notifications)
                 .setDurationPush(100)

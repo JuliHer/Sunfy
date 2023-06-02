@@ -15,7 +15,6 @@ import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.text.format.DateFormat;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -50,6 +49,7 @@ import com.google.android.gms.ads.AdLoader;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.LoadAdError;
 import com.google.android.gms.ads.nativead.NativeAd;
+import com.google.android.gms.ads.nativead.NativeAdOptions;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -387,7 +387,7 @@ public class AwaitingFragment extends Fragment {
                 int minute = c.get(Calendar.MINUTE);
 
                 int inApp = new Random().nextInt() % 5;
-                if(inApp == 8){
+                if (inApp == 4) {
                     setAnnounce(elements.size());
                 }
                 String dd = day < 10 ? "0" + day : "" + day;
@@ -521,12 +521,11 @@ public class AwaitingFragment extends Fragment {
                     NativeAd.Image icon = nativeAd.getIcon();
 
                     advirments--;
-                    AnnouncesElement element = new AnnouncesElement(title, body, advertiser, images, icon);
+                    AnnouncesElement element = new AnnouncesElement(nativeAd, title, body, advertiser, images, icon);
                     element.setAction(nativeAd.getCallToAction());
                     element.setPrice(price);
                     elements.add(finalPos, new Item(element, 12));
                     adapter.notifyItemInserted(finalPos);
-                    Log.d("CattoAwaiting", "AD loaded");
                 }).withAdListener(new AdListener() {
                     @Override
                     public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
@@ -537,7 +536,11 @@ public class AwaitingFragment extends Fragment {
                     public void onAdLoaded() {
                         super.onAdLoaded();
                     }
-                }).build();
+                }).withNativeAdOptions(new NativeAdOptions.Builder()
+                        .setMediaAspectRatio(NativeAdOptions.NATIVE_MEDIA_ASPECT_RATIO_SQUARE)
+                        .setRequestMultipleImages(false)
+                        .setAdChoicesPlacement(NativeAdOptions.ADCHOICES_BOTTOM_RIGHT)
+                        .build()).build();
         adLoader.loadAd(new AdRequest.Builder().build());
     }
 
@@ -628,7 +631,7 @@ public class AwaitingFragment extends Fragment {
             do {
                 Calendar c = Calendar.getInstance();
                 boolean e = true;
-                long date = cursor.getLong(2);
+                long date = cursor.getLong(8);
                 c.setTimeInMillis(date);
                 int day = c.get(Calendar.DAY_OF_MONTH);
                 int month = c.get(Calendar.MONTH);
@@ -639,7 +642,7 @@ public class AwaitingFragment extends Fragment {
                     hour = c.get(Calendar.HOUR) == 0 ? 12 : c.get(Calendar.HOUR);
                 int minute = c.get(Calendar.MINUTE);
                 int inApp = new Random().nextInt() % 5;
-                if(inApp == 8){
+                if (inApp == 4) {
                     setAnnounce(elements.size());
                 }
                 String dd = day < 10 ? "0" + day : "" + day;
@@ -674,6 +677,9 @@ public class AwaitingFragment extends Fragment {
                 eb.setDone(done);
                 eb.setLiked(liked);
                 eb.setSubject(subject);
+                //1682056800632
+                //1682090966565
+                //1682143199632
                 elements.add(new Item(eb, 0));
             } while (cursor.moveToNext());
         }
@@ -758,7 +764,7 @@ public class AwaitingFragment extends Fragment {
 
                         long dat = Calendar.getInstance().getTimeInMillis();
 
-                        values.put("date", dat);
+                        values.put("completed_date", dat);
                         values.put("status", false);
                         SQLiteDatabase db2 = dbHelper.getWritableDatabase();
                         db2.update(DbHelper.T_TASK, values, " id = '" + id + "'", null);
@@ -789,7 +795,7 @@ public class AwaitingFragment extends Fragment {
 
                     long dat = Calendar.getInstance().getTimeInMillis();
 
-                    values.put("date", dat);
+                    values.put("completed_date", dat);
                     values.put("status", true);
                     SQLiteDatabase db2 = dbHelper.getWritableDatabase();
                     db2.update(DbHelper.T_TASK, values, " id = '" + id + "'", null);
