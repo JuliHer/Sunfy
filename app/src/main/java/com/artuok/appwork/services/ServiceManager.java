@@ -19,8 +19,10 @@ import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.os.Binder;
 import android.os.IBinder;
+import android.util.Log;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.Person;
@@ -31,9 +33,12 @@ import com.artuok.appwork.R;
 import com.artuok.appwork.db.DbChat;
 import com.artuok.appwork.db.DbHelper;
 import com.artuok.appwork.fragmets.SettingsFragment;
-import com.artuok.appwork.library.MessageSender;
+import com.artuok.appwork.library.Constants;
+import com.artuok.appwork.library.MessageControler;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DatabaseError;
+import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -84,7 +89,7 @@ public class ServiceManager extends Service {
                     destroy();
                     break;
                 case AlarmWorkManager.ACTION_SET_BACKUP:
-                    exportCSV();
+                    createCSV();
                     destroy();
                     break;
                 case AlarmWorkManager.ACTION_RESTORE_BACKUP:
@@ -135,7 +140,7 @@ public class ServiceManager extends Service {
         manager.notify(600000, notification);
     }
 
-    private void importCSV() {
+    private void readCSV(){
         File carpet = new File(getExternalFilesDir("Media"), "Sunfy Backup");
         if (carpet.exists())
             try {
@@ -148,36 +153,60 @@ public class ServiceManager extends Service {
                 String line;
                 DbHelper helper = new DbHelper(this);
                 SQLiteDatabase db = helper.getWritableDatabase();
+                db.execSQL("DROP TABLE " + DbHelper.t_subjects);
                 db.execSQL("DROP TABLE " + DbHelper.T_TASK);
                 DbHelper.createTables(db);
                 int i = 0;
+                boolean isTasks = false;
                 while ((line = reader.readLine()) != null) {
-                    if (i != 0) {
-                        String[] taskData = line.split(",");
-                        long date = Long.parseLong(taskData[0]);
-                        long end_date = Long.parseLong(taskData[1]);
-                        int subject = (int) checkSubject(taskData[2]);
-                        String desc = taskData[3];
-                        int status = Integer.parseInt(taskData[4]);
-                        String user = taskData[5];
-                        int favorite = Integer.parseInt(taskData[6]);
-                        long completed_date = Long.parseLong(taskData[7]);
-                        ContentValues values = new ContentValues();
-                        values.put("date", date);
-                        values.put("end_date", end_date);
-                        values.put("subject", subject);
-                        values.put("description", desc);
-                        values.put("status", status);
-                        values.put("user", user);
-                        values.put("favorite", favorite);
-                        values.put("completed_date", completed_date);
-                        db.insert(DbHelper.T_TASK, null, values);
+                    if(line.equals("../../../..")){
+                        isTasks = true;
+                        i = 0;
                     }
+                    if(isTasks){
+                        if (i > 1) {
+                            String[] taskData = line.split(",");
+                            int id = Integer.parseInt(taskData[0]);
+                            long date = Long.parseLong(taskData[1]);
+                            long end_date = Long.parseLong(taskData[2]);
+                            int subject = Integer.parseInt(taskData[3]);
+                            String desc = taskData[4];
+                            int status = Integer.parseInt(taskData[5]);
+                            String user = taskData[6];
+                            int favorite = Integer.parseInt(taskData[7]);
+                            long completed_date = Long.parseLong(taskData[8]);
+                            ContentValues values = new ContentValues();
+                            values.put("id", id);
+                            values.put("date", date);
+                            values.put("end_date", end_date);
+                            values.put("subject", subject);
+                            values.put("description", desc);
+                            values.put("status", status);
+                            values.put("user", user);
+                            values.put("favorite", favorite);
+                            values.put("completed_date", completed_date);
+                            db.insert(DbHelper.T_TASK, null, values);
+                        }
+                    }else{
+                        if(i != 0){
+                            String[] subjectData = line.split(",");
+                            int id = Integer.parseInt(subjectData[0]);
+                            String name = subjectData[1];
+                            int color = Integer.parseInt(subjectData[2]);
+                            ContentValues values = new ContentValues();
+                            values.put("id", id);
+                            values.put("name", name);
+                            values.put("color", color);
+                            db.insert(DbHelper.t_subjects, null, values);
+                        }
+                    }
+
+
                     i++;
                 }
                 db.close();
                 reader.close();
-                Toast.makeText(this, "Tasks restored successfully!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.tasks_restored_successfully), Toast.LENGTH_SHORT).show();
             } catch (IOException e) {
                 e.printStackTrace();
                 Toast.makeText(this, "Task restoration failed.", Toast.LENGTH_SHORT).show();
@@ -204,7 +233,7 @@ public class ServiceManager extends Service {
     }
 
     private void downloadFromFirestore() throws IOException {
-        if (SettingsFragment.isLogged(this)) {
+        if (SettingsFragment.isLogged(this) && Constants.isInternetAvailable(this)) {
             File carpet = new File(getExternalFilesDir("Media"), "Sunfy Backup");
 
             if (!carpet.exists())
@@ -219,18 +248,23 @@ public class ServiceManager extends Service {
 
             FirebaseAuth auth = FirebaseAuth.getInstance();
             FirebaseStorage ref = FirebaseStorage.getInstance();
-            StorageReference reference = ref.getReference().child("chats/" + auth.getCurrentUser().getUid() + "/backups/sunfy_backup.csv");
+            StorageReference reference = ref.getReference().child("chats").child(auth.getCurrentUser().getUid())
+                    .child("backups").child("sunfy_backup.csv");
+
+
             reference.getFile(backupFile)
-                    .addOnSuccessListener(taskSnapshot -> {
+                    .addOnCompleteListener(task -> {
                         NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
                         if (manager != null) {
                             manager.cancel(600000);
                         }
-                        importCSV();
+                        if(task.isSuccessful()){
+                            readCSV();
+                        }
                     })
                     .addOnProgressListener(snapshot -> setNotification((int) (100 / snapshot.getTotalByteCount() * snapshot.getBytesTransferred()), 100, "Downloading backup..."));
         } else {
-            importCSV();
+            readCSV();
         }
     }
 
@@ -251,7 +285,7 @@ public class ServiceManager extends Service {
         }
     }
 
-    private void exportCSV() {
+    private void createCSV(){
         try {
             File carpet = new File(getExternalFilesDir("Media"), "Sunfy Backup");
             if (!carpet.exists())
@@ -265,47 +299,59 @@ public class ServiceManager extends Service {
 
             DbHelper helper = new DbHelper(this);
             SQLiteDatabase db = helper.getReadableDatabase();
-            Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.T_TASK, null);
+            Cursor tasks = db.rawQuery("SELECT * FROM " + DbHelper.T_TASK, null);
+            Cursor subjects = db.rawQuery("SELECT * FROM " + DbHelper.t_subjects, null);
+
 
             FileWriter writer = new FileWriter(backupFile);
-
-            // Escribir los datos en el archivo CSV
-            int numColumns = cursor.getColumnCount();
-            for (int i = 1; i < numColumns; i++) {
-                writer.write(cursor.getColumnName(i) + ",");
-            }
-            writer.write("\n");
-
-            int i = 0;
-            int max = cursor.getCount();
-
-            while (cursor.moveToNext()) {
-                long date = cursor.getLong(cursor.getColumnIndexOrThrow("date"));
-                long end_date = cursor.getLong(cursor.getColumnIndexOrThrow("end_date"));
-                int subjectId = cursor.getInt(cursor.getColumnIndexOrThrow("subject"));
-                String subjectT = "";
-                Cursor c = db.rawQuery("SELECT * FROM " + DbHelper.t_subjects + " WHERE id = '" + subjectId + "'", null);
-                if (c.moveToFirst()) {
-                    subjectT = c.getString(c.getColumnIndexOrThrow("name"));
+            if(tasks.moveToFirst() && subjects.moveToFirst()){
+                int numColumns = subjects.getColumnCount();
+                for (int i = 1; i < numColumns; i++) {
+                    writer.write(subjects.getColumnName(i) + ",");
                 }
-                c.close();
-                String desc = cursor.getString(cursor.getColumnIndexOrThrow("description"));
-                int status = cursor.getInt(cursor.getColumnIndexOrThrow("status"));
-                String user = cursor.getString(cursor.getColumnIndexOrThrow("user"));
-                int favorite = cursor.getInt(cursor.getColumnIndexOrThrow("favorite"));
-                long completed_date = cursor.getLong(cursor.getColumnIndexOrThrow("completed_date"));
-                String taskData = date + "," + end_date + "," + subjectT + "," + desc + "," + status + "," + user + "," + favorite + "," + completed_date + "\n";
-                setNotification(i, max, "Creating backup...");
-                writer.write(taskData);
+                writer.write("\n");
+
+                int max = tasks.getCount() + subjects.getCount();
+                int i = 0;
+                do {
+                    int id = subjects.getInt(0);
+                    String name = subjects.getString(1);
+                    int color = subjects.getInt(2);
+                    String subjectData = id+","+name+","+color+"\n";
+                    setNotification(i, max, getString(R.string.creating_backup));
+                    writer.write(subjectData);
+                }while(subjects.moveToNext());
+                writer.write("../../../..\n");
+                numColumns = subjects.getColumnCount();
+                for (int j = 1; j < numColumns; j++) {
+                    writer.write(subjects.getColumnName(j) + ",");
+                }
+                writer.write("\n");
+                do {
+                    int id = tasks.getInt(0);
+                    long date = tasks.getLong(1);
+                    long end_date = tasks.getLong(2);
+                    int subjectId = tasks.getInt(3);
+
+                    String desc = tasks.getString(4);
+                    int status = tasks.getInt(5);
+                    String user = tasks.getString(6);
+                    int favorite = tasks.getInt(7);
+                    long completed_date = tasks.getLong(8);
+                    String taskData = id + "," + date + "," + end_date + "," + subjectId + "," + desc + "," + status + "," + user + "," + favorite + "," + completed_date + "\n";
+                    setNotification(i, max, getString(R.string.creating_backup));
+                    writer.write(taskData);
+                }while(tasks.moveToNext());
+                NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                if (manager != null) {
+                    manager.cancel(600000);
+                }
+                uploadToFirestore(backupFile);
+                tasks.close();
+                subjects.close();
+                writer.close();
+                Toast.makeText(this, "Backup created successfully!", Toast.LENGTH_SHORT).show();
             }
-            NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-            if (manager != null) {
-                manager.cancel(600000);
-            }
-            uploadToFirestore(backupFile);
-            cursor.close();
-            writer.close();
-            Toast.makeText(this, "Backup created successfully!", Toast.LENGTH_SHORT).show();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -319,28 +365,15 @@ public class ServiceManager extends Service {
         if (!login)
             return;
 
-        MessageSender ms = new MessageSender(this);
-        ms.loadGlobalChats();
-
-        ms.loadGlobalMessages(new MessageSender.OnLoadMessagesListener() {
-            @Override
-            public void onLoadMessages(boolean newMessages) {
-                if (newMessages) {
-                    notifyUnreadedMessages();
-                }
-            }
-
-            @Override
-            public void onFailure(DatabaseError databaseError) {
-
-            }
+        MessageControler.restateUserChat(this, () -> {
+            notifyUnreadedMessages();
         });
     }
 
     private void notifyUnreadedMessages() {
         DbChat dbChat = new DbChat(this);
         SQLiteDatabase db = dbChat.getReadableDatabase();
-        Cursor chat = db.rawQuery("SELECT * FROM " + DbChat.T_CHATS_MSG + " WHERE status < '3' AND me = '1' GROUP BY chat", null);
+        Cursor chat = db.rawQuery("SELECT * FROM " + DbChat.T_CHATS_MSG + " WHERE status < '3' AND type = '1' GROUP BY chat", null);
 
         if (chat.moveToFirst()) {
             Notification notification = new NotificationCompat.Builder(this, InActivity.CHANNEL_ID_6)
@@ -356,39 +389,41 @@ public class ServiceManager extends Service {
             int ic = 0;
             do {
                 ic++;
-                int idChat = chat.getInt(8);
+                int idChat = chat.getInt(7);
                 Cursor dataChat = db.rawQuery("SELECT * FROM " + DbChat.T_CHATS + " WHERE id = '" + idChat + "'", null);
                 if (dataChat.moveToFirst()) {
                     String name = dataChat.getString(1);
+                    if(!name.isEmpty()){
+                        Bitmap iconB = BitmapFactory.decodeResource(getResources(), R.mipmap.usericon);
+                        IconCompat icon = IconCompat.createWithBitmap(getCroppedBitMap(iconB));
+                        Person person = new Person.Builder()
+                                .setName(name)
+                                .setIcon(icon)
+                                .build();
+                        NotificationCompat.MessagingStyle m = new NotificationCompat.MessagingStyle(person);
+                        Cursor messages = db.rawQuery("SELECT * FROM " + DbChat.T_CHATS_MSG + " WHERE chat = '" + idChat + "' AND status < '3' AND type = '1'", null);
+                        if (messages.moveToFirst()) {
+                            do {
+                                String message = messages.getString(1);
+                                long time = messages.getLong(3);
 
-                    Bitmap iconB = BitmapFactory.decodeResource(getResources(), R.mipmap.usericon);
-                    IconCompat icon = IconCompat.createWithBitmap(getCroppedBitMap(iconB));
-                    Person person = new Person.Builder()
-                            .setName(name)
-                            .setIcon(icon)
-                            .build();
-                    NotificationCompat.MessagingStyle m = new NotificationCompat.MessagingStyle(person);
-                    Cursor messages = db.rawQuery("SELECT * FROM " + DbChat.T_CHATS_MSG + " WHERE chat = '" + idChat + "' AND status < '3' AND me = '1'", null);
-                    if (messages.moveToFirst()) {
-                        do {
-                            String message = messages.getString(1);
-                            long time = messages.getLong(3);
+                                if (message.equals(" 1"))
+                                    message = getString(R.string.task);
+                                m.addMessage(message, time, person);
+                            } while (messages.moveToNext());
+                        }
+                        Notification notificationMessage = new NotificationCompat.Builder(this, InActivity.CHANNEL_ID_6)
+                                .setSmallIcon(R.drawable.ic_stat_name)
+                                .setColor(Color.parseColor("#1982C4"))
+                                .setGroup(InActivity.GROUP_MESSAGES)
+                                .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+                                .setStyle(m)
+                                .build();
 
-                            if (message.equals(" 1"))
-                                message = getString(R.string.task);
-                            m.addMessage(message, time, person);
-                        } while (messages.moveToNext());
+                        manager.notify(ni + ic, notificationMessage);
+                        messages.close();
                     }
-                    Notification notificationMessage = new NotificationCompat.Builder(this, InActivity.CHANNEL_ID_6)
-                            .setSmallIcon(R.drawable.ic_stat_name)
-                            .setColor(Color.parseColor("#1982C4"))
-                            .setGroup(InActivity.GROUP_MESSAGES)
-                            .setCategory(NotificationCompat.CATEGORY_MESSAGE)
-                            .setStyle(m)
-                            .build();
 
-                    manager.notify(ni + ic, notificationMessage);
-                    messages.close();
                 }
                 dataChat.close();
             } while (chat.moveToNext());

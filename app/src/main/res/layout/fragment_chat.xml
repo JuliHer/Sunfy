@@ -5,128 +5,24 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".fragmets.ChatFragment">
-
     <LinearLayout
-        android:id="@+id/chatRecycler"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:visibility="gone">
-
+        android:orientation="vertical">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/chat"
+            android:textSize="25sp"
+            android:paddingHorizontal="10dp"
+            android:textFontWeight="700"
+            android:layout_marginTop="25dp"/>
         <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recycler_chats"
+            android:id="@+id/recycler"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:paddingBottom="65dp"
-            android:clipToPadding="false" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/login"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:gravity="center">
-
-        <ImageView
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:src="@drawable/log_in"
-            app:tint="?backgroundBorder" />
-
-        <TextView
-            android:layout_width="300dp"
-            android:layout_height="wrap_content"
-            android:text="@string/Log_In"
-            android:textFontWeight="500"
-            android:fontFamily="@font/poppins"
-            android:includeFontPadding="false"
-            android:textAlignment="center" />
-        <TextView
-            android:layout_width="300dp"
-            android:layout_height="wrap_content"
-            android:textColor="?subTextColor"
-            android:text="@string/register_text"
-            android:textAlignment="center" />
-
-        <TextView
-            android:id="@+id/loginButon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/Log_In"
-            android:textSize="18sp"
-            android:textAllCaps="true"
-            android:background="@drawable/button"
-            android:textColor="@color/white"
-            android:backgroundTint="?iMainColor"
-            android:paddingHorizontal="16dp"
-            android:paddingVertical="6dp"
-            android:layout_marginTop="10dp" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/contactsPermissions"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:visibility="gone">
-
-        <ImageView
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:src="@drawable/ic_users"
-            app:tint="?backgroundBorder" />
-        <TextView
-            android:layout_width="300dp"
-            android:layout_height="wrap_content"
-            android:text="@string/permission_contacts"
-            android:fontFamily="@font/poppins"
-            android:includeFontPadding="false"
-            android:textFontWeight="500"
-            android:textAlignment="center"
-            android:textAllCaps="true" />
-        <TextView
-            android:layout_width="300dp"
-            android:layout_height="wrap_content"
-            android:text="@string/permissions_read_contacts_description"
-            android:textAlignment="center"
-            android:textSize="12sp"
-            android:textColor="?subTextColor"
-            android:textAllCaps="true" />
-
-        <TextView
-            android:id="@+id/contactAllowPermissions"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/allow"
-            android:textSize="18sp"
-            android:textAllCaps="true"
-            android:background="@drawable/button"
-            android:textColor="@color/white"
-            android:backgroundTint="?iMainColor"
-            android:paddingHorizontal="20dp"
-            android:paddingVertical="8dp"
-            android:layout_marginTop="10dp" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/disconnect_wifi"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:visibility="gone">
-        <ImageView
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:src="@drawable/wifi_off"
-            app:tint="?backgroundBorder" />
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textAlignment="center"
-            android:text="WiFi Disconnected"
-            android:fontFamily="@font/poppins"/>
+            android:layout_height="0dp"
+            android:clipToPadding="false"
+            android:paddingBottom="80dp"
+            android:layout_weight="1"/>
     </LinearLayout>
 </FrameLayout>

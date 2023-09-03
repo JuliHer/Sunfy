@@ -4,6 +4,7 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -131,13 +132,13 @@ public class SubjectAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     class SubjectSelectViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         TextView title;
+        ImageView color;
 
 
         public SubjectSelectViewHolder(@NonNull View itemView) {
             super(itemView);
-
             title = itemView.findViewById(R.id.title_subject);
-
+            color = itemView.findViewById(R.id.status_item_task);
             PushDownAnim.setPushDownAnimTo(itemView)
                     .setScale(PushDownAnim.MODE_SCALE, 0.98f)
                     .setDurationPush(100)
@@ -146,7 +147,7 @@ public class SubjectAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
         void onBindData(SubjectElement element) {
             title.setText(element.getName());
-
+            color.setColorFilter(element.getColor());
 
         }
 

@@ -154,20 +154,17 @@ public class AnnouncementDialog extends DialogFragment {
             if (p.getVibrantSwatch() != null) {
                 secondColor = true;
                 scolor = p.getVibrantSwatch().getRgb();
-                Log.d("CattoColor", "Color");
             }
 
             if (!firstColor || !secondColor) {
                 if (p.getLightMutedSwatch() != null) {
                     firstColor = true;
                     fcolor = p.getLightMutedSwatch().getRgb();
-                    Log.d("CattoColor", "Color");
                 }
 
                 if (p.getMutedSwatch() != null) {
                     secondColor = true;
                     scolor = p.getMutedSwatch().getRgb();
-                    Log.d("CattoColor", "Color");
                 }
             }
 
@@ -175,13 +172,11 @@ public class AnnouncementDialog extends DialogFragment {
                 if (p.getDarkMutedSwatch() != null) {
                     firstColor = true;
                     fcolor = p.getDarkMutedSwatch().getRgb();
-                    Log.d("CattoColor", "Color");
                 }
 
                 if (p.getDarkVibrantSwatch() != null) {
                     secondColor = true;
                     scolor = p.getDarkVibrantSwatch().getRgb();
-                    Log.d("CattoColor", "Color");
                 }
 
             }
@@ -282,7 +277,6 @@ public class AnnouncementDialog extends DialogFragment {
         }else {
             image.setImageDrawable(requireActivity().getDrawable(imageId));
             image.setColorFilter(Color.WHITE);
-
             if (backgroundColor != -23) {
                 ColorStateList myColorStateList = new ColorStateList(
                         new int[][]{
@@ -293,7 +287,11 @@ public class AnnouncementDialog extends DialogFragment {
                         }
                 );
 
+                CardView view = root.findViewById(R.id.cardView);
+                View v = root.findViewById(R.id.gradient);
                 bg.setBackgroundTintList(myColorStateList);
+                v.setBackgroundTintList(myColorStateList);
+                view.setCardElevation(0);
             }
         }
 

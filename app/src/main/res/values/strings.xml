@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name" translatable="false">Sunfy</string>
     <string name="home_fragment_menu">Home</string>
-    <string name="awaiting_fragment_menu">Awaiting</string>
+    <string name="awaiting_fragment_menu">To Do</string>
     <string name="subjects_fragment_menu">Subjects</string>
     <string name="average_fragment_menu">Averages</string>
     <string name="subject">Subject</string>
@@ -28,8 +28,9 @@
     <string name="tomorrow">Tomorrow</string>
     <string name="today">Today</string>
     <string name="you_have">You have</string>
-    <string name="pending_activities">pending activities</string>
-    <string name="pending_activity">pending activity</string>
+    <string name="pending_activities">activities to do</string>
+    <string name="in_process_activities">in process activities</string>
+    <string name="pending_activity">activity to do</string>
     <string name="its_time_to_do_homework">It\'s time to do HOMEWORK!</string>
     <string name="dont_forgot">Don\'t forgot, it\'s time to do homework</string>
     <string name="didnt_you_do">Didn\'t you do your homework? ¡it\'s time to do!</string>
@@ -114,7 +115,7 @@
     <string name="made_by_artwork_studios">Created by ARTWORK STUDIOS</string>
     <string name="menu">Menu</string>
 
-    <string name="pending_tasks">Overdue tasks completed</string>
+    <string name="pending_tasks">To do tasks</string>
     <string name="completed_tasks">Tasks completed</string>
     <string name="averaged_tasks">Average time to complete a task</string>
     <string name="weekly_summary">Weekly Summary</string>
@@ -130,7 +131,7 @@
     <string name="tomorrows_tasks_sound">Tomorrow\'s Tasks\'s Tone</string>
     <string name="tomorrows_subjects_sound">Tomorrow\'s Subjects\'s Tone</string>
     <string name="pending_tasks_sound">Pending Tasks\'s Tone</string>
-    <string name="will_end">Will End At</string>
+    <string name="will_end">will end tomorrow at</string>
     <string name="yht_for_tomorrow">You Haven\'t Tasks For Tomorrow</string>
     <string name="notifications">Notifications</string>
     <string name="dismiss">Dismiss</string>
@@ -169,8 +170,8 @@
     <string name="you">You</string>
     <string name="task">Task</string>
 
-    <string name="version_changes">Attention Sunfy users! We have an exciting update for you!</string>
-    <string name="version_code" translatable="false">1.3.1</string>
+    <string name="version_changes">We hope you enjoy this new update!</string>
+    <string name="version_code" translatable="false">1.4.0</string>
 
     <string name="v_unstable">Unstable version</string>
     <string name="contact_with_progr_unstable_v">This version could be unstable and may produce error (closes the app or app useless), in this case contact with tha programmer and tell him the problem.</string>
@@ -181,15 +182,15 @@
     <string name="want_delete_message">Do you want delete this message?</string>
     <string name="want_delete_messages">Do you want delete that messages?</string>
     <string name="perntesis_deadline" />
-    <string name="no_task_tomorrow">You haven\'t subjects tomorrow</string>
-    <string name="pending">pending</string>
+    <string name="no_themes_tomorrow">You haven\'t subjects tomorrow</string>
+    <string name="pending">To do</string>
     <string name="overdue">overdue</string>
     <string name="ad">Ad</string>
 
     <string name="good_morning">Good morning!</string>
     <string name="good_afternoon">Good afternoon</string>
     <string name="good_night">Good night…</string>
-    <string name="share">Share</string>
+    <string name="share">Share to</string>
     <string name="group_name">Group\'s name</string>
     <string name="new_group">New group</string>
     <string name="create">Create</string>
@@ -225,4 +226,70 @@
     <string name="create_backup_desc">Back up your tasks and subjects on your device. You can restore them whenever you want or when you reinstall Sunfy</string>
     <string name="restore_backup">Restore the latest backup</string>
     <string name="restore_backup_desc">Restore your backup. This will delete your current data, including the tasks, topics, and times you previously assigned</string>
+    <string name="example_email">usermail\@email.com</string>
+    <string name="email">Email</string>
+    <string name="example_password">Enter your password here</string>
+    <string name="password">Password</string>
+    <string name="example_confirm_password">The same password</string>
+    <string name="confirm_password">Confirm password</string>
+    <string name="welcome">Welcome</string>
+    <string name="signintocontinue">Sign in to continue</string>
+    <string name="login">Sign in</string>
+    <string name="signin">Sign up</string>
+    <string name="ohno">Oh no</string>
+    <string name="create_account_error">An error occurred while creating the account! Please try again later.</string>
+    <string name="oops">Oops</string>
+    <string name="signing_in_error">There was an error while signing in. Please try again!</string>
+    <string name="verify_email">We just need to verify that it\'s you! We\'ve sent a verification email.</string>
+    <string name="almost_there">Almost There!</string>
+    <string name="username_input">Write your username!</string>
+    <string name="description_input">Share your tale with us, tell us about yourself!</string>
+    <string name="create_account">Create account</string>
+    <string name="write_hint">Write...</string>
+
+    <string name="following">Following</string>
+    <string name="followers">Followers</string>
+
+    <string name="title_activity_profile">ProfileActivity</string>
+    <string name="follow">Follow</string>
+    <string name="unfollow">Unfollow</string>
+    <string name="update_your_picture">Update your Picture</string>
+    <string name="upload_a_photo">Upload a photo to share with the world</string>
+    <string name="save">Save</string>
+    <string name="change_your_password">Change your password</string>
+    <string name="profile_edit">Profile Edit</string>
+    <string name="upload">Upload</string>
+    <string name="edit">Edit</string>
+    <string name="search">Search</string>
+    <string name="search_users">Search Users</string>
+    <string name="login_to_find">You need to log in to find your team</string>
+    <string name="we_are">We\'re</string>
+    <string name="we_are_organization">Organization.</string>
+    <string name="we_are_efficiency">Efficiency.</string>
+    <string name="we_are_productivity">Productivity.</string>
+    <string name="we_are_simplification">Simplification.</string>
+    <string name="we_are_focus">Focus.</string>
+    <string name="we_are_management">Management.</string>
+    <string name="we_are_prioritization">Prioritization.</string>
+    <string name="we_are_effectiveness">Effectiveness.</string>
+    <string name="we_are_planning">Planning.</string>
+    <string name="we_are_coordination">Coordination.</string>
+    <string name="we_are_monitoring">Monitoring.</string>
+    <string name="we_are_progress">Progress.</string>
+    <string name="we_are_reminders">Reminders.</string>
+    <string name="we_are_tasks">Tasks.</string>
+    <string name="we_are_accomplishment">Accomplishment.</string>
+    <string name="signin_join">sign up</string>
+    <string name="back">Back</string>
+    <string name="creating_backup">Creating backup...</string>
+    <string name="tasks_restored_successfully">Tasks restored successfully!</string>
+    <string name="donate">Donate</string>
+    <string name="help_us">Help us improve the application and add new features.</string>
+    <string name="ask_delete_all">Are you sure you want to delete the entire app on this device?</string>
+    <string name="deleted">deleted</string>
+    <string name="task_to_do">Task To Do</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="in_process">In Process</string>
+    <string name="kanban_table">Kanban Table</string>
 </resources>

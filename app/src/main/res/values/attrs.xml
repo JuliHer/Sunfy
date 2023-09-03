@@ -16,6 +16,7 @@
         <attr name="iMainColor" format="color" />
         <attr name="borderLighting" format="color" />
         <attr name="backgroundLighting" format="color" />
+        <attr name="backgroundSub" format="color"/>
 
         <attr name="palette_blue" format="color" />
         <attr name="palette_green" format="color" />

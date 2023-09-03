@@ -22,8 +22,9 @@
 
                 android:layout_width="50dp"
                 android:layout_height="50dp"
-                app:cardCornerRadius="0dp"
-                android:layout_marginHorizontal="8dp"
+                app:cardCornerRadius="4dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginStart="4dp"
                 app:cardElevation="1dp"
                 app:cardBackgroundColor="@android:color/transparent">
 
@@ -32,7 +33,7 @@
                     android:layout_height="match_parent">
 
                     <LinearLayout
-                        android:background="?hintInputColor"
+                        android:background="?backgroundDialog"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:paddingStart="1dp"
@@ -43,6 +44,7 @@
                         app:layout_constraintTop_toTopOf="parent">
 
                         <ImageView
+                            android:id="@+id/bookmark"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:alpha="0.5"
@@ -50,15 +52,6 @@
                             android:src="@drawable/bookmark"
                             app:tint="?subTextColor" />
                     </LinearLayout>
-
-                    <View
-                        android:id="@+id/cardColor"
-                        android:background="@color/red_500"
-                        android:layout_width="5dp"
-                        android:layout_height="match_parent"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </com.artuok.appwork.library.AspectRatioView>
 

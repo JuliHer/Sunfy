@@ -6,6 +6,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -28,6 +29,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -42,11 +44,17 @@ import com.artuok.appwork.MainActivity;
 import com.artuok.appwork.PhotoSelectActivity;
 import com.artuok.appwork.R;
 import com.artuok.appwork.db.DbChat;
+import com.artuok.appwork.db.DbHelper;
 import com.artuok.appwork.dialogs.ImagePreviewDialog;
 import com.artuok.appwork.dialogs.PermissionDialog;
+import com.artuok.appwork.ProfileActivity;
+import com.artuok.appwork.library.Constants;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
 import com.thekhaeng.pushdownanim.PushDownAnim;
 
 import java.io.File;
@@ -62,7 +70,7 @@ import io.michaelrocks.libphonenumber.android.Phonenumber;
 public class SettingsFragment extends Fragment {
     Switch darkTheme, savermode;
     SharedPreferences sharedPreferences;
-    LinearLayout session, conversation, userSession, notifications, backup;
+    LinearLayout session, conversation, userSession, notifications, backup, deleteAll, donate;
     TextView logint;
     ImageView photo;
     FirebaseAuth auth = FirebaseAuth.getInstance();
@@ -74,7 +82,7 @@ public class SettingsFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        View root = inflater.inflate(R.layout.settings_fragment, container, false);
+        View root = inflater.inflate(R.layout.fragment_settings, container, false);
 
         darkTheme = root.findViewById(R.id.change_theme);
         savermode = root.findViewById(R.id.saver_mode);
@@ -89,6 +97,9 @@ public class SettingsFragment extends Fragment {
         photo = root.findViewById(R.id.photo);
         notifications = root.findViewById(R.id.notifications_layout);
         backup = root.findViewById(R.id.backup_layout);
+        deleteAll = root.findViewById(R.id.delete_all);
+        donate = root.findViewById(R.id.donate);
+        ((TextView)root.findViewById(R.id.version_code)).setText(Constants.VERSION_CODE);
 
         photo.setOnClickListener(view -> {
             if (isLogged(requireActivity())) {
@@ -96,18 +107,52 @@ public class SettingsFragment extends Fragment {
             }
         });
 
-        /*version.setOnClickListener(view -> {
-
-        });*/
-
         userSession.setOnClickListener(view -> {
             if (isLogged(requireActivity())) {
-                selectPhoto();
+                Intent i = new Intent(requireActivity(), ProfileActivity.class);
+                i.putExtra("name", "UsuarioPromedio");
+                i.putExtra("id", auth.getCurrentUser().getUid());
+                startActivity(i);
             } else {
                 Intent i = new Intent(requireActivity(), LoginActivity.class);
                 startActivity(i);
             }
         });
+
+        PushDownAnim.setPushDownAnimTo(donate)
+                        .setOnClickListener(view -> {
+                            String url = "https://www.paypal.com/paypalme/ArtworkStudiosDev";
+                            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                            startActivity(intent);
+                        });
+
+        PushDownAnim
+                .setPushDownAnimTo(deleteAll)
+                        .setOnClickListener(view -> {
+                            PermissionDialog dialog = new PermissionDialog();
+                            dialog.setTitleDialog(getString(R.string.delete));
+                            dialog.setTextDialog(getString(R.string.ask_delete_all));
+                            dialog.setDrawable(R.drawable.ic_trash);
+                            dialog.setPositiveText(getString(R.string.Accept_M));
+                            dialog.setNegativeText(getString(R.string.Cancel_M));
+                            dialog.setPositive((view13, which) -> {
+                                DbHelper dbHelper = new DbHelper(requireActivity());
+                                SQLiteDatabase db = dbHelper.getWritableDatabase();
+                                db.delete(DbHelper.t_subjects, null, null);
+                                db.delete(DbHelper.t_event, null, null);
+                                db.delete(DbHelper.t_alarm, null, null);
+                                db.delete(DbHelper.T_PHOTOS, null, null);
+                                db.delete(DbHelper.T_TASK, null, null);
+                                DbChat dbChat = new DbChat(requireActivity());
+                                SQLiteDatabase dbc = dbChat.getWritableDatabase();
+                                dbc.delete(DbChat.T_CHATS, null, null);
+                                dbc.delete(DbChat.T_CHATS_EVENT, null, null);
+                                dbc.delete(DbChat.T_CHATS_MSG, null, null);
+                                Toast.makeText(requireActivity(), getString(R.string.deleted), Toast.LENGTH_SHORT).show();
+                            });
+                            dialog.setNegative((view14, which) -> dialog.dismiss());
+                            dialog.show(requireActivity().getSupportFragmentManager(), getString(R.string.delete));
+                        });
 
         PushDownAnim
                 .setPushDownAnimTo(backup)
@@ -156,7 +201,7 @@ public class SettingsFragment extends Fragment {
                         deleteAllConversations();
                     });
                     dialog.setNegative((view1, which) -> dialog.dismiss());
-                    dialog.show(requireActivity().getSupportFragmentManager(), "Conversation");
+                    dialog.show(requireActivity().getSupportFragmentManager(), getString(R.string.delete));
                     notifyChatChanged();
                 });
 
@@ -167,11 +212,7 @@ public class SettingsFragment extends Fragment {
             logint.setText(requireActivity().getString(R.string.Log_In));
         }else{
             session.setVisibility(View.VISIBLE);
-            try {
-                logint.setText(numberPhoneSetter(auth.getCurrentUser().getPhoneNumber()));
-            } catch (NumberParseException e) {
-                e.printStackTrace();
-            }
+            logint.setText(auth.getCurrentUser().getEmail());
         }
 
         darkThemeSetter();
@@ -228,10 +269,8 @@ public class SettingsFragment extends Fragment {
                 }
             }
 
-            if (!isPhotoProfile(requireActivity()))
-                if (!isMobileData(requireActivity()) || !isSaverModeActive(requireActivity())) {
-                    updatedPhotoProfile(requireActivity());
-                }
+
+            updatedPhotoProfile(requireActivity());
         }
     }
 
@@ -246,43 +285,7 @@ public class SettingsFragment extends Fragment {
         se.putBoolean("isPhotoProfile", has).apply();
     }
 
-    public static void updatedPhotoProfile(Context context) {
-        String user = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
-        StorageReference ref = FirebaseStorage.getInstance().getReference().child("chats").child(user).child("profile-photo.jpg");
-        File root = context.getExternalFilesDir("Media");
-        String appName = context.getString(R.string.app_name).toUpperCase();
-        File myDir = new File(root, appName + " Profile");
-        if (!myDir.exists()) {
-            boolean m = myDir.mkdirs();
-            if (m) {
-                File nomedia = new File(myDir, ".nomedia");
-                try {
-                    nomedia.createNewFile();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        String fname = appName + "-USER-IMG.jpg";
-        File file = new File(myDir, fname);
-        try {
-            file.createNewFile();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-
-        if (file.exists()) {
-            ref.getFile(file).addOnSuccessListener(it -> {
-                Log.d("cattoUser", "Downloaded");
-                SettingsFragment.setPhotoProfile(context, true);
-            }).addOnFailureListener(it -> {
-                it.printStackTrace();
-                SettingsFragment.deletePhoto(context, user);
-            });
-        }
-    }
 
     public static void deletePhoto(Context context, String u) {
         File root = context.getExternalFilesDir("Media");
@@ -497,12 +500,7 @@ public class SettingsFragment extends Fragment {
         SQLiteDatabase db = dbChat.getWritableDatabase();
         db.delete(DbChat.T_CHATS_MSG, "", null);
         db.delete(DbChat.T_CHATS_EVENT, "", null);
-    }
-    void deleteAllContacts() {
-        DbChat dbChat = new DbChat(requireActivity());
-        SQLiteDatabase db = dbChat.getWritableDatabase();
-
-        db.delete(DbChat.T_CHATS_LOGGED, "", null);
+        db.delete(DbChat.T_CHATS, "", null);
     }
 
     void saverModeSetter(){
@@ -623,5 +621,95 @@ public class SettingsFragment extends Fragment {
         saveTempImg(tempImage);
         return FileProvider.getUriForFile(requireActivity(), "com.artuok.android.fileprovider", file);
     }
-    //Images functions end
+    //modern functions
+    public static void updatedPhotoProfile(Context context) {
+        if(FirebaseAuth.getInstance().getCurrentUser() == null) return;
+        String user = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+        FirebaseDatabase.getInstance().getReference().child("user").child(user).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if(snapshot.exists()){
+                    if(snapshot.child("photo").exists()){
+                        String photo = snapshot.child("photo").getValue().toString();
+                        setPicture(context, user, photo, false);
+
+                        SettingsFragment.setPhotoProfile(context, true);
+                    }else{
+                        deleteBitmapPicture(context);
+                        SettingsFragment.setPhotoProfile(context, false);
+
+                    }
+
+                }
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+    }
+
+    private static void deleteBitmapPicture(Context context){
+        File root = context.getExternalFilesDir("Media");
+        String appName = context.getString(R.string.app_name).toUpperCase();
+        File myDir = new File(root, appName + " Profile");
+
+        if(myDir.exists()){
+            String fname = appName + "-USER-IMG.jpg";
+            File file = new File(myDir, fname);
+            if(file.exists())
+                file.delete();
+        }
+    }
+
+    private static void setPicture(Context context, String user, String name, boolean cache){
+        File file = null;
+
+        if(cache){
+            file = new File(context.getCacheDir(), name+".jpg");
+        }else{
+            String appName = context.getString(R.string.app_name).toUpperCase();
+            File media = context.getExternalFilesDir("Media");
+            File root = new File(media, appName+" Profile");
+            if(!root.exists()) {
+                if (root.mkdirs()) {
+                    file = new File(root, appName + "-USER-IMG.jpg");
+                }
+            } else {
+                file = new File(root, appName+"-USER-IMG.jpg");
+            }
+        }
+
+        if(file != null)
+            if(!file.exists()){
+                try {
+                    file.createNewFile();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            FirebaseStorage.getInstance().getReference().child("chats").child(user).child(name+".jpg")
+                .getFile(file).addOnCompleteListener(task -> {
+                    if(task.isSuccessful()){
+
+                    }
+                });
+    }
+
+    private static Bitmap getBitmapPicture(Context context){
+        File root = context.getExternalFilesDir("Media");
+        String appName = context.getString(R.string.app_name).toUpperCase();
+        File myDir = new File(root, appName + " Profile");
+
+        if(myDir.exists()){
+            String fname = appName + "-USER-IMG.jpg";
+            File file = new File(myDir, fname);
+            if(file.exists())
+                return BitmapFactory.decodeFile(file.getPath());
+        }
+        return null;
+    }
 }

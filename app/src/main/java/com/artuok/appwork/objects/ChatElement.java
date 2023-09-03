@@ -6,129 +6,64 @@ import android.graphics.drawable.Drawable;
 import androidx.annotation.Nullable;
 
 public class ChatElement {
-    String id;
-    String name;
-    String number;
-    String chat;
-    String desc;
-    String numberInternational;
-    Bitmap image;
-    boolean Log;
-    String publicKey;
-    long timestamp;
-    boolean group;
-    Drawable contentIcon;
-    int status = -1;
+    private String name;
+    private String desc;
+    private String chatId;
+    private String publicKey;
+    private String pictureName;
+    private Bitmap picture;
+    private int status = -1;
+    private long timestamp = 0;
 
-    public ChatElement(String id, String name, String desc, String chat, String number, String ISO, boolean hasLog, long timestamp) {
-        this.id = id;
+
+    public ChatElement(String name, String desc, String chatId, String publicKey, String pictureName, Bitmap picture, int status, long timestamp) {
         this.name = name;
-        this.chat = chat;
         this.desc = desc;
-        this.number = number;
-        this.numberInternational = ISO;
-        this.Log = hasLog;
+        this.chatId = chatId;
+        this.publicKey = publicKey;
+        this.picture = picture;
+        this.pictureName = pictureName;
+        this.status = status;
         this.timestamp = timestamp;
     }
 
-    public Drawable getContentIcon() {
-        return contentIcon;
+    public String getPictureName() {
+        return pictureName;
     }
 
-    public void setContentIcon(Drawable contentIcon) {
-        this.contentIcon = contentIcon;
-    }
-
-    public int getStatus() {
-        return status;
-    }
-
-    public void setStatus(int status) {
-        this.status = status;
-    }
-
-    public boolean isGroup() {
-        return this.group;
-    }
-
-    public void setGroup(boolean group) {
-        this.group = group;
-    }
-
-    public void setImage(Bitmap image) {
-        this.image = image;
+    public void setPictureName(String pictureName) {
+        this.pictureName = pictureName;
     }
 
     public long getTimestamp() {
         return timestamp;
     }
 
-    public String getPublicKey() {
-        return publicKey;
-    }
-
-    public String getChat() {
-        return chat;
-    }
-
-    public void setChat(String chat) {
-        this.chat = chat;
+    public String getName() {
+        return name;
     }
 
     public String getDesc() {
         return desc;
     }
 
-    public void setDesc(String desc) {
-        this.desc = desc;
-    }
-
-    public boolean isLog() {
-        return Log;
-    }
-
-    public void setLog(boolean hasLog) {
-        this.Log = hasLog;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
     public void setName(String name) {
         this.name = name;
     }
 
-    public String getNumberInternational() {
-        return numberInternational;
+    public String getChatId() {
+        return chatId;
     }
 
-    public void setNumberInternational(String numberInternational) {
-        this.numberInternational = numberInternational;
+    public String getPublicKey() {
+        return publicKey;
     }
 
-    public String getNumber() {
-        return number;
+    public Bitmap getPicture() {
+        return picture;
     }
 
-    public void setNumber(String number) {
-        this.number = number;
-    }
-
-    public Bitmap getImage() {
-        return image;
-    }
-
-
-    public void setPublicKey(String publicKey) {
-        this.publicKey = publicKey;
+    public int getStatus() {
+        return status;
     }
 }

@@ -182,7 +182,7 @@ public class NotificationService extends Service {
                     .setSmallIcon(R.drawable.ic_stat_name)
                     .setColor(Color.parseColor("#1982C4"))
                     .setContentTitle(getString(R.string.congratulations))
-                    .setContentText(getString(R.string.no_task_tomorrow))
+                    .setContentText(getString(R.string.no_themes_tomorrow))
                     .setShowWhen(true)
                     .setOnlyAlertOnce(false)
                     .build();

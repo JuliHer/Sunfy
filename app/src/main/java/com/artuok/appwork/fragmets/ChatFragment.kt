@@ -1,298 +1,231 @@
 package com.artuok.appwork.fragmets
 
-import android.Manifest
-import android.app.Activity
-import android.content.Context
+import android.content.ContentValues
 import android.content.Intent
-import android.content.SharedPreferences
-import android.content.pm.PackageManager
+import android.database.sqlite.SQLiteDatabase
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
-import android.widget.TextView
-import androidx.activity.result.ActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.content.res.AppCompatResources
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.*
-import androidx.work.WorkManager
 import com.artuok.appwork.ChatActivity
-import com.artuok.appwork.MainActivity
 import com.artuok.appwork.R
 import com.artuok.appwork.adapters.ChatAdapter
 import com.artuok.appwork.db.DbChat
-import com.artuok.appwork.dialogs.PermissionDialog
-import com.artuok.appwork.library.MessageSender
-import com.artuok.appwork.library.MessageSender.OnLoadMessagesListener
+import com.artuok.appwork.library.MessageControler
 import com.artuok.appwork.objects.ChatElement
 import com.artuok.appwork.objects.Item
-import com.faltenreich.skeletonlayout.Skeleton
-import com.faltenreich.skeletonlayout.applySkeleton
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.ktx.auth
+import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
-import com.google.firebase.ktx.Firebase
-import com.thekhaeng.pushdownanim.PushDownAnim
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
+import com.google.firebase.storage.FirebaseStorage
 import java.io.File
 
 
 class ChatFragment : Fragment() {
-
-    private lateinit var recycler: RecyclerView
-    private lateinit var adapter: ChatAdapter
-    private var elements: ArrayList<Item> = ArrayList()
-    private lateinit var task: AverageAsync
-    private lateinit var skeleton: Skeleton
-    private lateinit var contactsPermission: LinearLayout
-    private lateinit var chatRecycler: LinearLayout
-    private lateinit var loginView: LinearLayout
-    private lateinit var btnAllowPermissions: TextView
-    private lateinit var btnLogin: TextView
-
-    private lateinit var auth: FirebaseAuth
-
-    private var resultLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result: ActivityResult ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val data = result.data
-            if (data!!.getIntExtra("requestCode", 0) == 2) {
-                loadChatsMessage()
-            }
-
-            if (data.getIntExtra("awaitingCode", 0) == 2) {
-                (requireActivity() as MainActivity).notifyAllChanged()
-            }
-        }
-    }
-
-    private var requestPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean? ->
-        if (isGranted == true) {
-            contactsPermission.visibility = GONE
-            chatRecycler.visibility = VISIBLE
-            loadChats()
-        } else {
-            contactsPermission.visibility = VISIBLE
-        }
-    }
-
-    private fun registResultLauncher() {
-        resultLauncher = registerForActivityResult(
-            ActivityResultContracts.StartActivityForResult()
-        ) { result: ActivityResult ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                val data = result.data
-                if (data!!.getIntExtra("requestCode", 0) == 2) {
-                    loadChatsMessage()
-                }
-
-                if (data.getIntExtra("awaitingCode", 0) == 2) {
-                    (requireActivity() as MainActivity).notifyAllChanged()
-                }
-            }
-        }
-
-        requestPermissionLauncher = registerForActivityResult(
-            ActivityResultContracts.RequestPermission()
-        ) { isGranted: Boolean? ->
-            if (isGranted == true) {
-                contactsPermission.visibility = GONE
-                chatRecycler.visibility = VISIBLE
-                loadChats()
-            } else {
-                contactsPermission.visibility = VISIBLE
-            }
-        }
-    }
-
+    private lateinit var recycler : RecyclerView
+    private lateinit var adapter : ChatAdapter
+    private lateinit var manager : LinearLayoutManager
+    private val chats = ArrayList<Item>()
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
         val root = inflater.inflate(R.layout.fragment_chat, container, false)
-
-        auth = Firebase.auth
-
-        elements.clear()
-        registResultLauncher()
-        adapter = ChatAdapter(requireActivity(), elements) { _, pos ->
-            val chat = (elements[pos].`object` as ChatElement).id
-            val intent = Intent(requireActivity(), ChatActivity::class.java)
-
-            intent.putExtra("id", chat.toInt())
-            intent.putExtra("first", false)
-            resultLauncher.launch(intent)
-        }
-
-        val manager = LinearLayoutManager(requireActivity(), VERTICAL, false)
-        contactsPermission = root.findViewById(R.id.contactsPermissions)
-        chatRecycler = root.findViewById(R.id.chatRecycler)
-        loginView = root.findViewById(R.id.login)
-        recycler = root.findViewById(R.id.recycler_chats)
-        btnAllowPermissions = root.findViewById(R.id.contactAllowPermissions)
-        btnLogin = root.findViewById(R.id.loginButon)
-
-        PushDownAnim.setPushDownAnimTo(btnAllowPermissions)
-            .setDurationPush(100)
-            .setScale(PushDownAnim.MODE_SCALE, 0.98f)
-            .setOnClickListener {
-                requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
-            }
-
-        recycler.setHasFixedSize(true)
-        recycler.layoutManager = manager
-        recycler.adapter = adapter
-
-        validateUserAndContacts()
-
-        skeleton = recycler.applySkeleton(R.layout.skeleton_chat_layout, 20)
-
-        val ta = requireActivity().obtainStyledAttributes(R.styleable.AppCustomAttrs)
-        val shimmerColor = ta.getColor(R.styleable.AppCustomAttrs_shimmerSkeleton, Color.GRAY)
-        val maskColor = ta.getColor(R.styleable.AppCustomAttrs_maskSkeleton, Color.LTGRAY)
-        ta.recycle()
-
-        skeleton.maskColor = maskColor
-        skeleton.shimmerColor = shimmerColor
-        skeleton.maskCornerRadius = 150f
-
-        val workManager = WorkManager.getInstance(requireActivity())
-        val sharedPreferences: SharedPreferences =
-            requireActivity().getSharedPreferences("chat", Context.MODE_PRIVATE)
-        val login = sharedPreferences.getBoolean("logged", false)
-        if (!login) {
-            workManager.cancelUniqueWork("messagePeriodic")
-        }
-
-        //task.exec(false)
+        initilizateViews(root)
+        setupRecycler()
+        loadChats()
+        getAllChatsAndUpdate()
         return root
     }
 
-    private fun validateUserAndContacts() {
-        loginView.visibility = GONE
-        contactsPermission.visibility = VISIBLE
-        if (ContextCompat.checkSelfPermission(
-                requireActivity(),
-                Manifest.permission.READ_CONTACTS
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            contactsPermission.visibility = GONE
-
-            chatRecycler.visibility = VISIBLE
-            loadChats()
-        } else if (shouldShowRequestPermissionRationale(Manifest.permission.READ_CONTACTS)) {
-            showInContextUI()
-        } else {
-            requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
-        }
+    private fun initilizateViews(root : View){
+        recycler = root.findViewById(R.id.recycler)
     }
 
-    private fun showInContextUI() {
-        val dialog = PermissionDialog()
-        dialog.setTitleDialog(requireActivity().getString(R.string.required_permissions))
-        dialog.setTextDialog(requireActivity().getString(R.string.permissions_read_contacts_description))
-        dialog.setPositive { it, i ->
-            requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
+    private fun setupRecycler(){
+        adapter = ChatAdapter(requireActivity(), chats) { it, pos ->
+            val chatElement = chats[pos].`object` as ChatElement
+            val i = Intent(requireActivity(), ChatActivity::class.java)
+            i.putExtra("name", chatElement.name)
+            i.putExtra("id", chatElement.chatId)
+            i.putExtra("cachePicture", chatElement.pictureName)
+            i.putExtra("chatType", 1)
+            startActivity(i)
         }
-
-        dialog.setNegative { _, _ ->
-            contactsPermission.visibility = VISIBLE
-        }
-
-        dialog.setDrawable(R.drawable.ic_users)
-        dialog.show(requireActivity().supportFragmentManager, "permissions")
+        manager = LinearLayoutManager(requireActivity(), VERTICAL, false)
+        recycler.layoutManager = manager
+        recycler.adapter = adapter
     }
 
-    private fun loadChats() {
-        if (!isAdded)
-            return
-        val dbChat = DbChat(requireActivity())
-        val db = dbChat.readableDatabase
-        val cursor = db.rawQuery(
-            "SELECT * FROM ${DbChat.T_CHATS_MSG} GROUP BY chat ORDER BY timeSend DESC",
-            null
-        )
+    private fun loadChats(){
+        val chatData = DbChat(requireActivity())
+        val db = chatData.readableDatabase
 
-        if (cursor.moveToFirst()) {
+        chats.clear()
+        val query = "SELECT * FROM ${DbChat.T_CHATS_MSG} WHERE timestamp IN " +
+                "(SELECT MAX(timestamp) FROM ${DbChat.T_CHATS_MSG} GROUP BY chat) " +
+                "ORDER BY timestamp DESC"
+        val chats = db.rawQuery(query, null)
+        var i = 0
+        if(chats.moveToFirst()){
             do {
-                val chat = cursor.getInt(8)
-                val message = cursor.getString(1)
-                val query = db.rawQuery("SELECT * FROM ${DbChat.T_CHATS} WHERE id = '$chat'", null)
-                val timestamp = cursor.getLong(3)
-                val status = cursor.getInt(5)
-                val who = cursor.getInt(2)
-                if (query.moveToFirst() && query.count == 1) {
-                    val name = query.getString(1)
-                    val chatId = query.getString(4)
-                    val image = query.getString(5)
+                val id = chats.getInt(7)
+                val message = chats.getString(1)
+                val timestamp = chats.getLong(3)
+                var status = chats.getInt(5)
+                val type = chats.getInt(2)
 
-                    //query.getString(5)
-                    val chatElement =
-                        ChatElement("$chat", name, message, chatId, "", "", true, timestamp)
-                    if (message == " 1") {
-                        chatElement.desc = requireActivity().getString(R.string.task)
-                        chatElement.contentIcon =
-                            AppCompatResources.getDrawable(requireActivity(), R.drawable.ic_book)
-                    }
-
-                    val root = requireActivity().getExternalFilesDir("Media")
-                    val path = File(root, ".Profiles")
-                    val appName =
-                        requireActivity().getString(R.string.app_name).uppercase()
-                    val fileName = "CHAT-$image-$appName.jpg"
-                    val file = File(path, fileName)
-                    Log.d("CattoPath", file.path)
-                    if (file.exists()) {
-                        val bitmap = BitmapFactory.decodeFile(file.path)
-                        chatElement.image = bitmap
-                    }
-
-                    if (who == 0) {
-                        chatElement.status = status
-                    } else {
-                        chatElement.status = -1
-                    }
-                    elements.add(Item(chatElement, 0))
-                    adapter.notifyItemInserted(elements.size - 1)
+                if(type == 1){
+                    status = -1
                 }
-                query.close()
-            } while (cursor.moveToNext())
+                val msg = MessageControler.Message.Builder(message)
+                    .setStatus(status)
+                    .setTimestamp(timestamp)
+                    .build()
+
+
+                val chatElement = getChatById(id, db, msg)
+                if(chatElement != null){
+                    this.chats.add(Item(chatElement, 0))
+                }
+
+                i++
+            }while (chats.moveToNext())
         }
-        cursor.close()
-        loadGlobalChats()
-    }
-
-    private fun loadGlobalChats() {
-        val messageSender = MessageSender(requireActivity())
-        messageSender.loadGlobalChats();
-
-        messageSender.loadGlobalMessages(object : OnLoadMessagesListener {
-            override fun onLoadMessages(newMessages: Boolean) {
-                if (newMessages)
-                    loadChatsMessage()
-            }
-
-            override fun onFailure(databaseError: DatabaseError?) {
-
-            }
-
-        })
-    }
-
-    public fun loadChatsMessage() {
-        elements.clear()
         adapter.notifyDataSetChanged()
-        loadChats()
+        chats.close()
+    }
+
+    private fun getChatById(chat : Int, db : SQLiteDatabase, msg : MessageControler.Message) : ChatElement?{
+        val chats = db.rawQuery("SELECT * FROM ${DbChat.T_CHATS} WHERE id = '$chat'", null)
+        if(chats.moveToFirst()){
+            val name = chats.getString(1)
+            val chatId = chats.getString(4)
+            val publicKey = chats.getString(6)
+            val pictureName = chats.getString(5)
+            val picture = getPicture(pictureName)
+
+            chats.close()
+            return ChatElement(name, msg.message, chatId, publicKey, pictureName, picture, msg.status, msg.timestamp)
+        }
+        chats.close()
+        return null
+    }
+
+    private fun getPicture(photo: String) : Bitmap?{
+        val root: String = requireActivity().externalCacheDir.toString()
+        val fName = "$photo.jpg"
+        val file = File(root, fName)
+
+        if (file.exists()) {
+            return BitmapFactory.decodeFile(file.path)
+        }
+        return null
+    }
+
+    private fun getAllChatsAndUpdate(){
+        val dbChat = DbChat(requireActivity())
+        val dbr = dbChat.readableDatabase
+        val c = dbr.rawQuery("SELECT * FROM ${DbChat.T_CHATS}", null)
+        val database = FirebaseDatabase.getInstance().reference
+        val id = FirebaseAuth.getInstance().currentUser!!.uid
+        if(c.moveToFirst()){
+            do {
+                val code = c.getString(3)
+                database
+                    .child("chat")
+                    .child(code)
+                    .addListenerForSingleValueEvent(object : ValueEventListener{
+                        override fun onDataChange(snapshot: DataSnapshot) {
+                            if(snapshot.exists()){
+                                if(snapshot.child("users").exists() && snapshot.child("type").value.toString().toInt() == 0)
+                                    for(user in snapshot.child("users").children){
+                                        if(user.key.toString() != id)
+                                            getUserAndDownloadPicture(database, user.key.toString(), code)
+                                    }
+                            }
+                        }
+
+                        override fun onCancelled(error: DatabaseError) {
+                            if(error.code == -3){
+                                deleteChatInDevice(code)
+                            }
+                        }
+
+                    })
+            }while (c.moveToNext())
+        }
+        c.close()
+    }
+
+    private fun deleteChatInDevice(code : String){
+        val dbChat = DbChat(requireActivity())
+        val dbw = dbChat.writableDatabase
+        val values = ContentValues()
+        dbw.delete(DbChat.T_CHATS, "chat = '$code'", null)
+    }
+
+    private fun getUserAndDownloadPicture(database: DatabaseReference, user: String, code : String){
+        database.child("user")
+            .child(user)
+            .addListenerForSingleValueEvent(object : ValueEventListener{
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    if(snapshot.exists()){
+                        val picture = snapshot.child("photo").value.toString()
+                        val name = snapshot.child("name").value.toString()
+                        changeInDatabase(code, picture, name)
+                        downloadPhoto(user, picture)
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+
+                }
+
+            })
+    }
+
+    private fun downloadPhoto(user: String, photo : String){
+        if(!isAdded)
+            return
+        val picture = FirebaseStorage.getInstance().reference.child("chats").child(user).child("$photo.jpg")
+        val root: String = requireActivity().externalCacheDir.toString()
+        val fName = "$photo.jpg"
+        val file = File(root, fName)
+
+        if (!file.exists()) {
+            picture.getFile(file).addOnCompleteListener {
+                if (it.isSuccessful) {
+                    loadChats()
+                }
+            }
+        }
+
+    }
+
+    private fun changeInDatabase(uid: String, image : String, name : String){
+        if(!isAdded) return
+        val dbChat = DbChat(requireActivity())
+        val dbw = dbChat.writableDatabase
+        val values = ContentValues()
+        values.put("image", image)
+        values.put("name", name)
+        dbw.update(DbChat.T_CHATS, values, "chat = '$uid'", null)
+
+    }
+
+    private interface OnFinishUpdateChats{
+        fun onUpdate()
     }
 }

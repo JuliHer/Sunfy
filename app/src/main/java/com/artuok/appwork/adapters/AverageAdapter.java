@@ -14,6 +14,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.artuok.appwork.R;
 import com.artuok.appwork.objects.AverageElement;
 import com.artuok.appwork.objects.Item;
+import com.artuok.appwork.objects.ItemSubjectElement;
+import com.thekhaeng.pushdownanim.PushDownAnim;
 
 import java.util.List;
 
@@ -21,10 +23,17 @@ public class AverageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     List<Item> mData;
     LayoutInflater mInflater;
+    SubjectAdapter.SubjectClickListener listener;
 
     public AverageAdapter(Context context, List<Item> mData) {
         this.mData = mData;
         this.mInflater = LayoutInflater.from(context);
+    }
+
+    public AverageAdapter(Context context, List<Item> mData, SubjectAdapter.SubjectClickListener listener) {
+        this.mData = mData;
+        this.mInflater = LayoutInflater.from(context);
+        this.listener = listener;
     }
 
     @NonNull
@@ -34,6 +43,9 @@ public class AverageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             View view = mInflater.inflate(R.layout.item_average_layout, parent, false);
 
             return new AverageViewHolder(view);
+        }else if (viewType == 1){
+            View view = mInflater.inflate(R.layout.button_subject_layout, parent, false);
+            return new ButtonViewHolder(view);
         }
         return null;
     }
@@ -43,6 +55,9 @@ public class AverageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         if (getItemViewType(position) == 0) {
             AverageElement element = (AverageElement) mData.get(position).getObject();
             ((AverageViewHolder) holder).onBindData(element);
+        } else if (getItemViewType(position) == 1) {
+            SubjectAdapter.SubjectClickListener listener = ((ItemSubjectElement)mData.get(position).getObject()).getListener();
+            ((ButtonViewHolder) holder).onBindData(listener);
         }
     }
 
@@ -56,25 +71,53 @@ public class AverageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         return mData.get(position).getType();
     }
 
+    class ButtonViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+
+        SubjectAdapter.SubjectClickListener listenert;
+
+        public ButtonViewHolder(@NonNull View itemView) {
+            super(itemView);
+
+            PushDownAnim.setPushDownAnimTo(itemView)
+                    .setScale(PushDownAnim.MODE_SCALE, 0.95f)
+                    .setDurationPush(100)
+                    .setOnClickListener(this);
+        }
+
+        void onBindData(SubjectAdapter.SubjectClickListener listener) {
+            this.listenert = listener;
+        }
+
+        @Override
+        public void onClick(View view) {
+            listenert.onClick(view, getLayoutPosition());
+        }
+    }
+
     class AverageViewHolder extends RecyclerView.ViewHolder {
         TextView title;
         ProgressBar progressBar;
-        View card;
-        ImageView imageView;
+        ImageView imageView, bookmark;
 
         public AverageViewHolder(@NonNull View itemView) {
             super(itemView);
 
             title = itemView.findViewById(R.id.title_subject);
             progressBar = itemView.findViewById(R.id.progress_circular);
-            card = itemView.findViewById(R.id.cardColor);
+            bookmark = itemView.findViewById(R.id.bookmark);
             imageView = itemView.findViewById(R.id.status_subject);
-
+            PushDownAnim.setPushDownAnimTo(itemView)
+                    .setScale(PushDownAnim.MODE_SCALE, 0.98f)
+                    .setDurationPush(100)
+                    .setOnLongClickListener(view -> {
+                        listener.onClick(view, getLayoutPosition());
+                        return true;
+                    });
         }
 
         void onBindData(AverageElement element) {
             title.setText(element.getSubject());
-            card.setBackgroundColor(element.getColor());
+            bookmark.setColorFilter(element.getColor());
 
             if (element.getMax() == 0) {
                 progressBar.setProgressDrawable(mInflater.getContext().getDrawable(R.drawable.circle_progress_green));

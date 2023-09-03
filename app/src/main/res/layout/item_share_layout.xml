@@ -4,11 +4,9 @@
     android:orientation="vertical"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content">
-    <com.artuok.appwork.library.AspectRatioView
+    <androidx.cardview.widget.CardView
         android:layout_width="80dp"
-        android:layout_height="0dp"
-        app:aspectRatio="1:1"
-        app:orientationRatio="vertical"
+        android:layout_height="80dp"
         app:cardBackgroundColor="@android:color/transparent"
         app:cardElevation="0dp">
         <androidx.constraintlayout.widget.ConstraintLayout
@@ -39,11 +37,12 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                android:background="@drawable/textinput_background"
+                android:background="@drawable/background_rounded"
                 android:paddingHorizontal="5dp"
                 android:paddingVertical="2dp"
                 android:layout_margin="5dp"
                 />
         </androidx.constraintlayout.widget.ConstraintLayout>
-    </com.artuok.appwork.library.AspectRatioView>
+    </androidx.cardview.widget.CardView>
+
 </LinearLayout>

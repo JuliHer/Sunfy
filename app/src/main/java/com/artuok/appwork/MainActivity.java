@@ -6,7 +6,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -21,9 +20,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
-import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
@@ -31,17 +28,17 @@ import com.artuok.appwork.dialogs.AnnouncementDialog;
 import com.artuok.appwork.dialogs.PermissionDialog;
 import com.artuok.appwork.fragmets.AlarmsFragment;
 import com.artuok.appwork.fragmets.AveragesFragment;
-import com.artuok.appwork.fragmets.AwaitingFragment;
+import com.artuok.appwork.fragmets.TasksFragment;
 import com.artuok.appwork.fragmets.BackupsFragment;
 import com.artuok.appwork.fragmets.CalendarFragment;
 import com.artuok.appwork.fragmets.ChatFragment;
 import com.artuok.appwork.fragmets.SettingsFragment;
-import com.artuok.appwork.fragmets.SubjectsFragment;
+import com.artuok.appwork.fragmets.SocialFragment;
 import com.artuok.appwork.fragmets.homeFragment;
 import com.artuok.appwork.library.CalendarWeekView;
+import com.artuok.appwork.library.Constants;
 import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.ads.RequestConfiguration;
-import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationBarView;
@@ -55,22 +52,25 @@ import java.util.Calendar;
 import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
-
-
-    //Navigation
     public BottomNavigationView navigation;
     public Fragment currentFragment;
     private NavigationView navigationView;
-    public static int CURRENT_VERSION = 21;
 
+
+    private FloatingActionButton mainFAB;
+    private FloatingActionButton subFAB1;
+    private FloatingActionButton subFAB2;
+    private View backgroundOverlay;
+    private boolean isFABsExpanded = false;
 
     //fragments
     homeFragment homefragment = new homeFragment();
-    AwaitingFragment awaitingFragment = new AwaitingFragment();
+    TasksFragment tasksFragment = new TasksFragment();
     CalendarFragment calendarFragment = new CalendarFragment();
-    SubjectsFragment subjectsFragment = new SubjectsFragment();
+
 
     public ChatFragment chatFragment = new ChatFragment();
+    public SocialFragment socialFragment = new SocialFragment();
     public AveragesFragment averagesFragment = new AveragesFragment();
     public AlarmsFragment alarmsFragment = new AlarmsFragment();
     public SettingsFragment settingsFragment = new SettingsFragment();
@@ -78,16 +78,9 @@ public class MainActivity extends AppCompatActivity {
 
 
     Fragment firstCurrentFragment = homefragment;
-    Fragment secondCurrentFragment = awaitingFragment;
+    Fragment secondCurrentFragment = tasksFragment;
     Fragment thirdCurrentFragment = calendarFragment;
-    Fragment fourCurrentFragment = subjectsFragment;
-
-    //floating button
-    FloatingActionButton actionButton;
-
-    CollapsingToolbarLayout collapsingToolbar;
-    //Toolbar
-    Toolbar toolbar;
+    Fragment fourCurrentFragment = socialFragment;
 
     //Dialog
     Calendar alarmset;
@@ -98,32 +91,13 @@ public class MainActivity extends AppCompatActivity {
 
     int position = 1;
 
-    ActivityResultLauncher<Intent> resultLauncherSelect = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if (result.getResultCode() == Activity.RESULT_OK) {
-                    Intent data = result.getData();
-                    if (data.getIntExtra("requestCode", 0) == 3) {
-                    } else if (data.getIntExtra("requestCode", 0) == 2) {
-                        loadChatFragment();
-                    }
-                }
-            }
-    );
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         navigation = findViewById(R.id.bottom_navigation);
-
         navigationView = findViewById(R.id.navigationView);
 
-        collapsingToolbar = findViewById(R.id.collapsingToolbar);
-        toolbar = findViewById(R.id.toolbar);
-        toolbar.setTitle("");
-
-        setSupportActionBar(toolbar);
 
         MobileAds.initialize(this);
         RequestConfiguration configuration = new RequestConfiguration.Builder().setTestDeviceIds(Arrays.asList("1C6196DE1539B306778414AEE133E09B")).build();
@@ -134,37 +108,45 @@ public class MainActivity extends AppCompatActivity {
         if (position == 1) {
             startFragment(homefragment);
         } else if (position == 2) {
-            startFragment(awaitingFragment);
+            startFragment(tasksFragment);
         } else if (position == 3) {
             startFragment(calendarFragment);
         } else if (position == 4) {
-            startFragment(subjectsFragment);
+            startFragment(socialFragment);
         } else {
             startFragment(homefragment);
         }
 
         instance = this;
 
-        actionButton = findViewById(R.id.floating_button);
-
+        mainFAB = findViewById(R.id.floating_button);
+        subFAB1 = findViewById(R.id.sub_floating_first);
+        subFAB2 = findViewById(R.id.sub_floating_second);
+        backgroundOverlay = findViewById(R.id.backgroundOverlay);
+        backgroundOverlay.setOnClickListener(view -> {});
         alarmset = Calendar.getInstance();
-        PushDownAnim.setPushDownAnimTo(actionButton)
-                .setScale(PushDownAnim.MODE_SCALE, 0.98f)
+
+        mainFAB.setOnClickListener(view -> {
+            if(calendarFragment.isAdded()){
+                if(calendarFragment.isVisible()){
+                    if(calendarFragment.isScheduleVisible()){
+                        Calendar calendar = Calendar.getInstance();
+                        int day = calendar.get(Calendar.DAY_OF_WEEK)-1;
+                        long hour = 43200;
+                        long duration = 3600;
+                        calendarFragment.startCreateActivity(new CalendarWeekView.EventsTask(day, hour, duration, 0, ""));
+                        return;
+                    }
+                }
+            }
+            toggleFABs();
+        });
+        PushDownAnim.setPushDownAnimTo(subFAB1)
+                .setScale(PushDownAnim.MODE_SCALE, 0.78f)
                 .setDurationPush(100)
                 .setOnClickListener(view -> {
-                    if(calendarFragment.isAdded()){
-                        if(calendarFragment.isVisible()){
-                            if(calendarFragment.isScheduleVisible()){
-                                Calendar calendar = Calendar.getInstance();
-                                int day = calendar.get(Calendar.DAY_OF_WEEK)-1;
-                                long hour = 43200;
-                                long duration = 3600;
-                                calendarFragment.startCreateActivity(new CalendarWeekView.EventsTask(day, hour, duration, 0, ""));
-                                return;
-                            }
-                        }
-                    }
-                    Intent i = new Intent(this, CreateAwaitingActivity.class);
+
+                    Intent i = new Intent(this, CreateTaskActivity.class);
                     i.getIntExtra("requestCode", 2);
 
                     resultLauncher.launch(i);
@@ -178,7 +160,7 @@ public class MainActivity extends AppCompatActivity {
         if (getIntent().getExtras() != null) {
             Bundle extras = getIntent().getExtras();
             if (extras.getString("task", "").equals("new task")) {
-                Intent i = new Intent(this, CreateAwaitingActivity.class);
+                Intent i = new Intent(this, CreateTaskActivity.class);
                 i.getIntExtra("requestCode", 2);
                 startActivity(i);
             }
@@ -193,7 +175,7 @@ public class MainActivity extends AppCompatActivity {
         if (!isActualVersion()) {
             showAnnouncement();
             //setWarning(false);
-            setVersion(CURRENT_VERSION);
+            setVersion(Constants.VERSION);
         }
 
         if (!SettingsFragment.isLogged(this)) {
@@ -209,10 +191,8 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
-        // Registra el callback
         getOnBackPressedDispatcher().addCallback(this, onBackPressedCallback);
     }
-
 
     @SuppressLint("RestrictedApi")
     public void showSnackbar(String text) {
@@ -257,7 +237,7 @@ public class MainActivity extends AppCompatActivity {
 
     public boolean isActualVersion() {
         SharedPreferences s = getSharedPreferences("settings", Context.MODE_PRIVATE);
-        return s.getInt("version", 0) == CURRENT_VERSION;
+        return s.getInt("version", 0) == Constants.VERSION;
     }
 
     public int getVersion() {
@@ -308,7 +288,7 @@ public class MainActivity extends AppCompatActivity {
                 case 4:
                     navigation.setSelectedItemId(R.id.homefragment);
                     position = 5;
-                    LoadTextFragment(chatFragment, getString(R.string.chat));
+                    LoadTextFragment(socialFragment, getString(R.string.chat));
                     break;
                 case 5:
                     navigation.setSelectedItemId(R.id.homefragment);
@@ -339,7 +319,7 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case 1:
                     position = 2;
-                    LoadFragment(awaitingFragment);
+                    LoadFragment(tasksFragment);
                     break;
                 case 2:
                     position = 3;
@@ -347,11 +327,11 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case 3:
                     position = 4;
-                    LoadFragment(subjectsFragment);
+                    LoadTextFragment(socialFragment, getString(R.string.search));
                     break;
                 case 4:
                     position = 5;
-                    LoadTextFragment(chatFragment, getString(R.string.chat));
+                    LoadTextFragment(socialFragment, getString(R.string.chat));
                     break;
                 case 5:
                     position = 6;
@@ -393,8 +373,8 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void loadChatFragment() {
-        if (chatFragment.isAdded()) {
-            chatFragment.loadChatsMessage();
+        if (socialFragment.isAdded()) {
+
         }
     }
 
@@ -435,7 +415,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void showAnnouncement() {
         AnnouncementDialog dialog = new AnnouncementDialog();
-        dialog.setTitle(getString(R.string.version) + " " + getString(R.string.version_code));
+        dialog.setTitle(getString(R.string.version) + " " + Constants.VERSION_CODE);
         dialog.setText(getString(R.string.version_changes));
 
         TypedArray a = obtainStyledAttributes(R.styleable.AppCustomAttrs);
@@ -449,7 +429,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         int[] banners = new int[9];
-        banners[0] = R.mipmap.banner;
+        banners[0] = R.mipmap.banner_10;
         banners[1] = R.mipmap.banner_2;
         banners[2] = R.mipmap.banner_3;
         banners[3] = R.mipmap.banner_4;
@@ -525,7 +505,7 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             case R.id.awaiting_fragment:
                 position = 2;
-                LoadFragment(awaitingFragment);
+                LoadFragment(tasksFragment);
                 return true;
             case R.id.calendar_fragment:
                 position = 3;
@@ -533,7 +513,7 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             case R.id.nav_subject:
                 position = 4;
-                LoadFragment(subjectsFragment);
+                LoadFragment(socialFragment);
                 return true;
         }
 
@@ -553,7 +533,7 @@ public class MainActivity extends AppCompatActivity {
                     return true;
                 case R.id.awaiting_fragment:
                     position = 2;
-                    LoadFragment(awaitingFragment);
+                    LoadFragment(tasksFragment);
                     return true;
                 case R.id.calendar_fragment:
                     position = 3;
@@ -561,7 +541,7 @@ public class MainActivity extends AppCompatActivity {
                     return true;
                 case R.id.nav_subject:
                     position = 4;
-                    LoadFragment(subjectsFragment);
+                    LoadTextFragment(socialFragment, getString(R.string.search));
                     return true;
             }
         } else {
@@ -574,8 +554,8 @@ public class MainActivity extends AppCompatActivity {
     };
 
     public void addMessage(){
-        if(chatFragment.isAdded()){
-            chatFragment.loadChatsMessage();
+        if(socialFragment.isAdded()){
+
         }
     }
 
@@ -612,59 +592,12 @@ public class MainActivity extends AppCompatActivity {
                     .add(R.id.frameLayoutMain, fragment);
         }
 
-        if (title == getString(R.string.chat)) {
-            actionButton.setImageResource(R.drawable.message_circle);
-            PushDownAnim.setPushDownAnimTo(actionButton)
-                    .setScale(PushDownAnim.MODE_SCALE, 0.98f)
-                    .setDurationPush(100)
-                    .setOnClickListener(view -> {
-                        SharedPreferences sharedPreferences = getSharedPreferences("chat", MODE_PRIVATE);
-                        boolean b = sharedPreferences.getBoolean("logged", false);
-                        if (b) {
-                            Intent i = new Intent(this, SelectActivity.class);
-                            if (ContextCompat.checkSelfPermission(this,
-                                    Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
-                                resultLauncherSelect.launch(i);
-                            } else if (shouldShowRequestPermissionRationale(Manifest.permission.READ_CONTACTS)) {
-                                showOnContextUI();
-                            } else {
-                                requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS);
-                            }
-                        } else {
-                            showSnackbar( getString(R.string.login_able_chat));
-                        }
-                    });
-        } else {
-            actionButton.setImageResource(R.drawable.ic_baseline_add_24);
-            PushDownAnim.setPushDownAnimTo(actionButton)
-                    .setScale(PushDownAnim.MODE_SCALE, 0.98f)
-                    .setDurationPush(100)
-                    .setOnClickListener(view -> {
 
-                        if(calendarFragment.isAdded()){
-                            if(calendarFragment.isVisible()){
-                                if(calendarFragment.isScheduleVisible()){
-                                    Calendar calendar = Calendar.getInstance();
-                                    int day = calendar.get(Calendar.DAY_OF_WEEK)-1;
-                                    long hour = 43200;
-                                    long duration = 3600;
-                                    calendarFragment.startCreateActivity(new CalendarWeekView.EventsTask(day, hour, duration, 0, ""));
-                                    return;
-                                }
-                            }
-                        }
-
-                        Intent i = new Intent(this, CreateAwaitingActivity.class);
-                        i.getIntExtra("requestCode", 2);
-                        resultLauncher.launch(i);
-                    });
-        }
 
 
         currentFragment = fragment;
         transaction.commit();
 
-        ((TextView) toolbar.findViewById(R.id.title)).setText(title);
     }
 
     public void loadExternalFragment(Fragment fragment, String name) {
@@ -685,59 +618,10 @@ public class MainActivity extends AppCompatActivity {
         }
         position = 1;
 
-        if (name == getString(R.string.chat)) {
-            actionButton.setImageResource(R.drawable.message_circle);
-            PushDownAnim.setPushDownAnimTo(actionButton)
-                    .setScale(PushDownAnim.MODE_SCALE, 0.98f)
-                    .setDurationPush(100)
-                    .setOnClickListener(view -> {
-                        SharedPreferences sharedPreferences = getSharedPreferences("chat", MODE_PRIVATE);
-                        boolean b = sharedPreferences.getBoolean("logged", false);
-                        if (b) {
-                            Intent i = new Intent(this, SelectActivity.class);
-                            if (ContextCompat.checkSelfPermission(this,
-                                    Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
-                                resultLauncherSelect.launch(i);
-                            } else if (shouldShowRequestPermissionRationale(Manifest.permission.READ_CONTACTS)) {
-                                showOnContextUI();
-                            } else {
-                                requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS);
-                            }
-                        } else {
-                            showSnackbar(getString(R.string.login_able_chat));
-                        }
-                    });
-        } else {
-            actionButton.setImageResource(R.drawable.ic_baseline_add_24);
-            PushDownAnim.setPushDownAnimTo(actionButton)
-                    .setScale(PushDownAnim.MODE_SCALE, 0.98f)
-                    .setDurationPush(100)
-                    .setOnClickListener(view -> {
 
-                        if (calendarFragment.isAdded()) {
-                            if (calendarFragment.isVisible()) {
-                                if (calendarFragment.isScheduleVisible()) {
-                                    Calendar calendar = Calendar.getInstance();
-                                    int day = calendar.get(Calendar.DAY_OF_WEEK) - 1;
-                                    long hour = 43200;
-                                    long duration = 3600;
-                                    calendarFragment.startCreateActivity(new CalendarWeekView.EventsTask(day, hour, duration, 0, ""));
-                                    return;
-                                }
-                            }
-                        }
-
-                        Intent i = new Intent(this, CreateAwaitingActivity.class);
-                        i.getIntExtra("requestCode", 2);
-                        resultLauncher.launch(i);
-                    });
-        }
 
         currentFragment = fragment;
         transaction.commit();
-
-
-        ((TextView) toolbar.findViewById(R.id.title)).setText(name);
     }
 
     public void LoadFragment(Fragment fragment) {
@@ -745,53 +629,15 @@ public class MainActivity extends AppCompatActivity {
                 getSupportFragmentManager()
                         .beginTransaction();
 
-//        if (fragment.isAdded()) {
-//            transaction
-//                    .hide(currentFragment)
-//                    .show(fragment);
-//        } else {
-//            transaction
-//                    .hide(currentFragment)
-//                    .add(R.id.frameLayoutMain, fragment);
-//        }
-
-
         if (fragment.isAdded()) {
             return;
         } else {
             transaction.remove(currentFragment)
-                    .add(R.id.frameLayoutMain, fragment);
+                    .add(R.id.frameLayoutMain, fragment, "tag");
         }
-
-
-        actionButton.setImageResource(R.drawable.ic_baseline_add_24);
-        PushDownAnim.setPushDownAnimTo(actionButton)
-                .setScale(PushDownAnim.MODE_SCALE, 0.98f)
-                .setDurationPush(100)
-                .setOnClickListener(view -> {
-                    if (calendarFragment.isAdded()) {
-                        if (calendarFragment.isVisible()) {
-                            if(calendarFragment.isScheduleVisible()){
-                                Calendar calendar = Calendar.getInstance();
-                                int day = calendar.get(Calendar.DAY_OF_WEEK)-1;
-                                long hour = 43200;
-                                long duration = 3600;
-                                calendarFragment.startCreateActivity(new CalendarWeekView.EventsTask(day, hour, duration, 0, ""));
-                                return;
-                            }
-                        }
-                    }
-                    Intent i = new Intent(this, CreateAwaitingActivity.class);
-                    i.getIntExtra("requestCode", 2);
-
-                    resultLauncher.launch(i);
-                });
 
         currentFragment = fragment;
         transaction.commit();
-
-
-        ((TextView) toolbar.findViewById(R.id.title)).setText(MainActivity.this.getString(R.string.app_name));
     }
 
     @Override
@@ -804,8 +650,8 @@ public class MainActivity extends AppCompatActivity {
         if (homefragment.isAdded()) {
             homefragment.NotifyDataAdd();
         }
-        if (awaitingFragment.isAdded()) {
-            awaitingFragment.NotifyChanged();
+        if (tasksFragment.isAdded()) {
+            tasksFragment.NotifyChanged();
         }
         if (calendarFragment.isAdded()) {
             calendarFragment.NotifyChanged();
@@ -814,14 +660,14 @@ public class MainActivity extends AppCompatActivity {
             averagesFragment.notifyDataChanged();
         }
 
-        if(subjectsFragment.isAdded()){
-            subjectsFragment.onNotifyDataChanged();
+        if(socialFragment.isAdded()){
+
         }
     }
 
     public void notifyToChatChanged(){
-        if(chatFragment.isAdded()){
-            chatFragment.loadChatsMessage();
+        if(socialFragment.isAdded()){
+
         }
     }
 
@@ -829,8 +675,8 @@ public class MainActivity extends AppCompatActivity {
         if (homefragment.isAdded() && position != 1) {
             homefragment.NotifyDataChanged(pos);
         }
-        if (awaitingFragment.isAdded() && position != 2) {
-            awaitingFragment.NotifyChanged();
+        if (tasksFragment.isAdded() && position != 2) {
+            tasksFragment.NotifyChanged();
         }
         if (calendarFragment.isAdded() && position != 3) {
             calendarFragment.NotifyChanged();
@@ -839,8 +685,8 @@ public class MainActivity extends AppCompatActivity {
             averagesFragment.notifyDataChanged();
         }
 
-        if(subjectsFragment.isAdded() && position != 4){
-            subjectsFragment.onNotifyDataChanged();
+        if(socialFragment.isAdded() && position != 4){
+
         }
     }
 
@@ -868,15 +714,10 @@ public class MainActivity extends AppCompatActivity {
         dialog.setDrawable(R.drawable.ic_users);
         dialog.show(getSupportFragmentManager(), "permissions");
     }
-
-
-
-
     private ActivityResultLauncher<String> requestPermissionLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(),
             isGranted -> {
                 if (isGranted) {
-                    Intent i = new Intent(this, SelectActivity.class);
-                    resultLauncherSelect.launch(i);
+
                 }
             });
 
@@ -884,9 +725,35 @@ public class MainActivity extends AppCompatActivity {
         return instance;
     }
 
-    public void notifyCalendar() {
-        calendarFragment.NotifyChanged();
+    private void toggleFABs() {
+        if (isFABsExpanded) {
+            hideFABs();
+        } else {
+            showFABs();
+        }
     }
 
+    private void showFABs() {
+        isFABsExpanded = true;
+        backgroundOverlay.setVisibility(View.VISIBLE);
+        backgroundOverlay.setAlpha(0f);
+
+        int translate = mainFAB.getHeight();
+        float margin = translate*0.1f;
+        mainFAB.animate().rotation(45f);
+        subFAB1.animate().translationY((-translate)-margin);
+        //subFAB2.animate().translationY((-translate*2)-margin);
+
+        backgroundOverlay.animate().alpha(1f);
+    }
+
+    private void hideFABs() {
+        isFABsExpanded = false;
+        mainFAB.animate().rotation(0f);
+        subFAB1.animate().translationY(0f);
+        subFAB2.animate().translationY(0f);
+
+        backgroundOverlay.animate().alpha(0f).withEndAction(() -> backgroundOverlay.setVisibility(View.GONE));
+    }
 
 }

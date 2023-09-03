@@ -507,7 +507,6 @@ class AlarmsFragment : Fragment() {
 
                 if(l > hour){
                     id = row.getInt(0)
-                    Log.d("CattoNextAlarm", row.getString(1))
                     return id
                 }
             }while (row.moveToNext())

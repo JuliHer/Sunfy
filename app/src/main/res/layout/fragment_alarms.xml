@@ -9,8 +9,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="15dp">
-
+        android:paddingHorizontal="15dp">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/notifications"
+            android:textSize="25sp"
+            android:textFontWeight="700"
+            android:layout_marginTop="25dp"/>
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

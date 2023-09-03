@@ -28,39 +28,42 @@
         <androidx.coordinatorlayout.widget.CoordinatorLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent">
-
-            <com.google.android.material.appbar.AppBarLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:elevation="0dp"
-                app:elevation="0dp"
-                android:background="@drawable/transparent_background">
-
-                <com.google.android.material.appbar.CollapsingToolbarLayout
-                    android:id="@+id/collapsingToolbar"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    app:layout_scrollFlags="scroll|snap|enterAlwaysCollapsed|exitUntilCollapsed">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
-
-                        <include
-                            android:id="@+id/toolbar"
-                            layout="@layout/toolbar"
-                            style="@style/drawabe" />
-                    </LinearLayout>
-                </com.google.android.material.appbar.CollapsingToolbarLayout>
-
-            </com.google.android.material.appbar.AppBarLayout>
-
             <FrameLayout
                 android:id="@+id/frameLayoutMain"
                 android:layout_width="match_parent"
+                android:layout_height="match_parent"></FrameLayout>
+            <FrameLayout
+                android:id="@+id/backgroundOverlay"
+                android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                app:layout_behavior="@string/appbar_scrolling_view_behavior"></FrameLayout>
-
+                android:background="#80000000"
+                android:visibility="gone"/>
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/sub_floating_second"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="?backgroundDialog"
+                android:backgroundTint="?backgroundDialog"
+                android:src="@drawable/ic_globe"
+                app:layout_anchor="@+id/floating_button"
+                app:layout_anchorGravity="center"
+                android:scaleY="0.8"
+                android:scaleX="0.8"
+                app:tint="?iMainColor"
+                app:borderWidth="0dp"/>
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/sub_floating_first"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/background_corner_rounded"
+                android:backgroundTint="?backgroundDialog"
+                android:src="@drawable/ic_book"
+                app:layout_anchor="@+id/floating_button"
+                app:layout_anchorGravity="center"
+                android:scaleY="0.8"
+                android:scaleX="0.8"
+                app:tint="?iMainColor"
+                app:borderWidth="0dp"/>
             <com.google.android.material.floatingactionbutton.FloatingActionButton
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

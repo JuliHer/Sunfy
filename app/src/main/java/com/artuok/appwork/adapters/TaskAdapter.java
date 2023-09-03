@@ -81,7 +81,6 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
                 ta.recycle();
             } else {
                 if (c.getTimeInMillis() < timeIM) {
-
                     status.setColorFilter(mInflater.getContext().getColor(R.color.green_500));
                 } else {
                     TypedArray ta = mInflater.getContext().obtainStyledAttributes(R.styleable.AppCustomAttrs);
