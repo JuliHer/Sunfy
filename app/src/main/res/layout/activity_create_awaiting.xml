@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".CreateAwaitingActivity">
+    tools:context=".CreateTaskActivity">
 
     <ScrollView
         android:layout_width="match_parent"
@@ -65,17 +65,7 @@
                         android:layout_height="35dp"
                         android:visibility="gone" />
 
-                    <android.widget.Button
 
-                        android:id="@+id/accept_awaiting"
-                        android:layout_width="match_parent"
-                        android:layout_height="35dp"
-                        android:text="@string/Accept_M"
-                        android:paddingVertical="8dp"
-                        android:autoSizeTextType="uniform"
-                        android:background="@drawable/button"
-                        android:textColor="@color/white"
-                        android:backgroundTint="?iMainColor" />
                 </LinearLayout>
 
             </LinearLayout>
@@ -247,4 +237,13 @@
 
         </LinearLayout>
     </ScrollView>
-</LinearLayout>
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/accept_awaiting"
+        style="@style/floatinButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_check"
+        app:tint="@color/white"
+        android:layout_gravity="end|bottom"
+        android:layout_margin="30dp"/>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -3,15 +3,15 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
+    android:orientation="vertical"
     android:layout_marginHorizontal="16dp"
     android:padding="8dp"
-    android:gravity="center_vertical">
+    android:gravity="center">
     <ImageView
         android:id="@+id/drawable_dialog"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
-        android:layout_margin="5dp"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_margin="15dp"
         android:src="@drawable/ic_check_circle"
         style="@style/drawabe"
         app:tint="?subTextColor" />
@@ -20,13 +20,14 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:layout_marginVertical="5dp"
-        android:layout_marginStart="8dp">
+        android:layout_marginHorizontal="15dp">
         <TextView
             android:id="@+id/title_dialog"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/required_permissions"
             android:textSize="16sp"
+            android:textAlignment="center"
             android:textFontWeight="600"
             android:textAllCaps="true"
             android:maxLines="2"
@@ -36,6 +37,7 @@
             android:id="@+id/txt_dialog"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:textAlignment="center"
             android:text="@string/permissions_description" />
 
     </LinearLayout>

@@ -152,14 +152,14 @@
             android:orientation="vertical"
             android:layout_margin="5dp"
             android:padding="5dp"
-            android:background="@drawable/textinput_background">
+            android:background="@drawable/background_corner_rounded">
             <androidx.cardview.widget.CardView
                 android:id="@+id/reply_layout"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 app:cardBackgroundColor="@color/black_transparent"
                 app:cardElevation="0dp"
-                app:cardCornerRadius="2dp">
+                app:cardCornerRadius="10dp">
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -175,7 +175,7 @@
                             android:id="@+id/reply_name"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="They"
+                            android:text="@string/you"
                             android:textColor="?colorThird"
                             android:textSize="13sp"
                             android:textStyle="bold"
@@ -200,11 +200,11 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
             <EditText
-                android:id="@+id/textInput"
+                android:id="@+id/text_input"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@drawable/transparent_background"
-                android:hint="Mensaje"
+                android:hint="@string/write_hint"
                 android:text=""
                 android:maxLines="3"
                 android:paddingHorizontal="5dp"
@@ -215,9 +215,9 @@
 
 
         <ImageView
-            android:id="@+id/sendMessage"
-            android:layout_width="50dip"
-            android:layout_height="50dip"
+            android:id="@+id/send_btn"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
             android:layout_marginEnd="10dp"
             android:layout_marginStart="5dp"
             android:background="@drawable/send_button"

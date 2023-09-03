@@ -3,6 +3,7 @@ package com.artuok.appwork.fragmets;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Intent;
+import android.content.res.TypedArray;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
@@ -55,6 +56,7 @@ public class CalendarFragment extends Fragment {
     private boolean scheduleVisible = false;
 
     int defaultColor = 0;
+    int selectColor = 0;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -69,6 +71,9 @@ public class CalendarFragment extends Fragment {
         calendar = root.findViewById(R.id.calendar);
         recyclerView = root.findViewById(R.id.recyclerdate);
         defaultColor = schedule.getTextColors().getDefaultColor();
+        TypedArray pa = requireActivity().obtainStyledAttributes(R.styleable.AppCustomAttrs);
+        selectColor = pa.getColor(R.styleable.AppCustomAttrs_backgroundDialog, Color.WHITE);
+        pa.recycle();
         registLaunchers();
         LinearLayoutManager manager = new LinearLayoutManager(requireActivity(), RecyclerView.VERTICAL, false);
         recyclerView.setLayoutManager(manager);
@@ -134,10 +139,10 @@ public class CalendarFragment extends Fragment {
 
         if(i == 0){
             calendar.setBackground(requireActivity().getDrawable(R.drawable.popup_buttons_active));
-            calendar.setTextColor(Color.WHITE);
+            calendar.setTextColor(selectColor);
         }else{
             schedule.setBackground(requireActivity().getDrawable(R.drawable.popup_buttons_active));
-            schedule.setTextColor(Color.WHITE);
+            schedule.setTextColor(selectColor);
         }
     }
 
@@ -264,7 +269,6 @@ public class CalendarFragment extends Fragment {
                 if (b.moveToFirst()) {
                     color = b.getInt(0);
                 }
-                Log.d("CattoAdd", ""+ti);
                 element.add(new Item(new TaskEvent(ti, "", tim, color), 0));
                 b.close();
             } while (c.moveToNext());

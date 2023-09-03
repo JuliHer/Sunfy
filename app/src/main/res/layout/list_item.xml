@@ -15,15 +15,22 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="8dp">
+            <ImageView
+                android:id="@+id/status_item_task"
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:src="@drawable/ic_baseline_circle_24"
+                android:layout_marginEnd="10dp" />
             <TextView
                 android:id="@+id/title_subject"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="@string/create_subject"
-                android:paddingHorizontal="8dp"
+
                 android:textAllCaps="true" />
         </LinearLayout>
 

@@ -81,13 +81,14 @@
                     android:text="Now we implement announcement to tell you about new changes, we redesign some views and we improve the chat and now is cooler than before"
                     android:textAlignment="center"
                     android:textColor="@color/white"
-                    android:textSize="18sp" />
+                    android:textSize="18sp"
+                    android:layout_marginBottom="25dp"/>
 
                 <TextView
                     android:id="@+id/positive"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginVertical="25dp"
+                    android:layout_marginBottom="25dp"
                     android:background="@drawable/background_button"
                     android:paddingHorizontal="20dp"
                     android:paddingVertical="10dp"

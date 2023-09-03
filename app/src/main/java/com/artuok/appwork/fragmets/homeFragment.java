@@ -7,7 +7,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.text.format.DateFormat;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,7 +19,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.artuok.appwork.CreateAwaitingActivity;
+import com.artuok.appwork.CreateTaskActivity;
 import com.artuok.appwork.MainActivity;
 import com.artuok.appwork.R;
 import com.artuok.appwork.adapters.TasksAdapter;
@@ -82,7 +81,7 @@ public class homeFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        View root = inflater.inflate(R.layout.home_fragment, container, false);
+        View root = inflater.inflate(R.layout.fragment_home, container, false);
 
         setListener();
         restartResultLauncher();
@@ -103,7 +102,7 @@ public class homeFragment extends Fragment {
 
             long b = date.getTime();
 
-            Intent a = new Intent(requireActivity(), CreateAwaitingActivity.class);
+            Intent a = new Intent(requireActivity(), CreateTaskActivity.class);
             a.putExtra("deadline", b);
             a.getIntExtra("requestCode", 2);
 
@@ -224,6 +223,8 @@ public class homeFragment extends Fragment {
                 List<TaskElement> task = getTaskDay(today);
                 int dow = ((dayWeek + i) % 7) + 1;
 
+                if(!isAdded())
+                    return;
                 String title = dow - 1 == dayWeek ? requireActivity().getString(R.string.today) : getDayOfWeek(requireActivity(), dow);
                 title = dow - 1 == (dayWeek + 1) % 7 ? requireActivity().getString(R.string.tomorrow) : title;
 
@@ -260,7 +261,7 @@ public class homeFragment extends Fragment {
     private void setAnnounce(int pos) {
         int finalPos = pos + advirments;
         advirments++;
-        AdLoader adLoader = new AdLoader.Builder(requireActivity(), "ca-app-pub-3940256099942544/2247696110")
+        AdLoader adLoader = new AdLoader.Builder(requireActivity(), "ca-app-pub-5838551368289900/1451662327")
                 .forNativeAd(nativeAd -> {
                     String title = nativeAd.getHeadline();
                     String body = nativeAd.getBody();
@@ -312,7 +313,7 @@ public class homeFragment extends Fragment {
         Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.T_TASK + " WHERE end_date BETWEEN '" + td + "' AND '" + tm + "' ORDER BY end_date ASC", null);
         if (cursor.moveToFirst()) {
             do {
-                boolean check = Integer.parseInt(cursor.getString(5)) > 0;
+                boolean check = Integer.parseInt(cursor.getString(5)) > 1;
                 String title = cursor.getString(4);
                 long t = cursor.getLong(2);
                 Calendar m = Calendar.getInstance();
@@ -443,11 +444,10 @@ public class homeFragment extends Fragment {
 
 
             Cursor cursor = db.rawQuery(
-                    "SELECT * FROM " + DbHelper.T_TASK + " WHERE status = '1' AND completed_date > '" + date1 + "' AND completed_date <= '" + date2 + "'",
+                    "SELECT * FROM " + DbHelper.T_TASK + " WHERE status = '2' AND completed_date > '" + date1 + "' AND completed_date <= '" + date2 + "'",
                     null
             );
 
-            Log.d("cattoAwaiting", date1 + " < completed_date < " + date2);
             if (cursor.moveToFirst()) {
                 data.add(new LineChart.LineChartDataSet(getMinDayOfWeek(i), cursor.getCount()));
             } else {
@@ -479,7 +479,7 @@ public class homeFragment extends Fragment {
 
 
             Cursor cursor = db.rawQuery(
-                    "SELECT * FROM " + DbHelper.T_TASK + " WHERE status = '0' AND end_date > '" + date1 + "' AND end_date <= '" + date2 + "'",
+                    "SELECT * FROM " + DbHelper.T_TASK + " WHERE status < '2' AND end_date > '" + date1 + "' AND end_date <= '" + date2 + "'",
                     null
             );
 

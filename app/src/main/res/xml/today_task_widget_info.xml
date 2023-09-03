@@ -11,4 +11,6 @@
     android:targetCellWidth="3"
     android:targetCellHeight="3"
     android:updatePeriodMillis="2400000"
-    android:widgetCategory="home_screen" />
+    android:widgetCategory="home_screen">
+    <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+</appwidget-provider>

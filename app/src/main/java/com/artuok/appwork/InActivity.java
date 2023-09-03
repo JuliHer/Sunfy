@@ -9,47 +9,39 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.provider.ContactsContract;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
 
-import com.artuok.appwork.db.DbChat;
 import com.artuok.appwork.db.DbHelper;
 import com.artuok.appwork.fragmets.SettingsFragment;
-import com.artuok.appwork.objects.ChatElement;
+import com.artuok.appwork.library.MessageControler;
 import com.artuok.appwork.services.AlarmWorkManager;
+import com.artuok.appwork.services.MessageWorkManager;
 import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.ads.RequestConfiguration;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.Query;
-import com.google.firebase.database.ValueEventListener;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
-import java.util.Objects;
-
-import io.michaelrocks.libphonenumber.android.NumberParseException;
-import io.michaelrocks.libphonenumber.android.PhoneNumberUtil;
-import io.michaelrocks.libphonenumber.android.Phonenumber;
-import kotlin.text.Regex;
+import java.util.concurrent.TimeUnit;
 
 public class InActivity extends AppCompatActivity {
 
@@ -76,190 +68,27 @@ public class InActivity extends AppCompatActivity {
         Preferences();
 
         MobileAds.initialize(this);
-        RequestConfiguration configuration = new RequestConfiguration.Builder().setTestDeviceIds(Arrays.asList("1C6196DE1539B306778414AEE133E09B")).build();
-
-        MobileAds.setRequestConfiguration(configuration);
-
         createNotificationChannel();
         setAlarm();
         activateAlarms();
         setAlarmSchedule();
+        setTokenInDatabase();
+        if(SettingsFragment.isLogged(this)){
+            MessageControler.restateUserChat(this, null);
+            WorkManager workManager = WorkManager.getInstance(this);
+            PeriodicWorkRequest periodicWorkRequest = new PeriodicWorkRequest.Builder(MessageWorkManager.class, PeriodicWorkRequest.MIN_PERIODIC_INTERVAL_MILLIS, TimeUnit.MILLISECONDS).build();
+            workManager.enqueueUniquePeriodicWork("messageWorker", ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE, periodicWorkRequest);
+        }
         new Handler().postDelayed(() -> loadMain(), 500);
     }
 
-
-    private void getContacts() {
-        ContentResolver cr = getContentResolver();
-        Uri table = ContactsContract.CommonDataKinds.Phone.CONTENT_URI;
-        String selection = ContactsContract.Contacts.HAS_PHONE_NUMBER + " > ?";
-        String[] arguments = {"0"};
-
-        Cursor cur = cr.query(
-                table,
-                null,
-                selection,
-                arguments,
-                ContactsContract.Contacts.DISPLAY_NAME + " COLLATE NOCASE ASC"
-        );
-
-        DbChat dbChat = new DbChat(this);
-        SQLiteDatabase dbr = dbChat.getReadableDatabase();
-        SQLiteDatabase dbw = dbChat.getWritableDatabase();
-        Cursor cursor;
-
-        String myNumber = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
-        long now = Calendar.getInstance().getTimeInMillis();
-        if (cur != null) {
-            if (cur.moveToFirst()) {
-                int idIndex =
-                        cur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.CONTACT_ID);
-                int nameIndex = cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME);
-                int numberIndex =
-                        cur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
-                String id;
-                String name;
-                String number;
-                final SharedPreferences shared =
-                        getSharedPreferences("chat", Context.MODE_PRIVATE);
-                String code = shared.getString("regionCode", "ZZ");
-                String codeNa;
-                final PhoneNumberUtil phoneUtil = PhoneNumberUtil.createInstance(this);
-                do {
-                    id = cur.getString(idIndex);
-                    name = cur.getString(nameIndex);
-                    number = cur.getString(numberIndex);
-                    codeNa = code;
-                    try {
-                        final Phonenumber.PhoneNumber phone = phoneUtil.parse(number, codeNa);
-                        final String numberp = phoneUtil.format(phone, PhoneNumberUtil.PhoneNumberFormat.INTERNATIONAL);
-                        final Regex re = new Regex("[^0-9+]");
-                        number = re.replace(numberp, "");
-
-                        if (phoneUtil.isValidNumber(phone)) {
-                            if (!numberPhones.contains(number) && myNumber != number) {
-                                ChatElement chat = new ChatElement(
-                                        id,
-                                        name,
-                                        numberp,
-                                        "",
-                                        number,
-                                        codeNa,
-                                        false,
-                                        0
-                                );
-                                contactsCount++;
-
-                                cursor = dbr.query(DbChat.T_CHATS_LOGGED, null, "number = ?", new String[]{number}, "", "", "");
-                                if (cursor.moveToFirst()) {
-                                    String lastname = cursor.getString(1);
-                                    if (!Objects.equals(lastname, name)) {
-                                        ContentValues values = new ContentValues();
-                                        values.put("name", name);
-                                        dbw.update(DbChat.T_CHATS_LOGGED, values, "number = ?", new String[]{number});
-                                    }
-                                } else {
-                                    ContentValues values = new ContentValues();
-                                    values.put("name", name);
-                                    values.put("number", number);
-                                    values.put("ISO", codeNa);
-                                    values.put("image", "");
-                                    values.put("log", false);
-                                    values.put("publicKey", "noKey");
-                                    values.put("userId", "noUser");
-                                    values.put("updated", now);
-                                    values.put("added", true);
-                                    dbw.insert(DbChat.T_CHATS_LOGGED, null, values);
-                                }
-                                if (!SettingsFragment.isMobileData(this) || !SettingsFragment.isSaverModeActive(this))
-                                    getUserDetails(chat, dbw);
-                                numberPhones.add(number);
-                                cursor.close();
-                            }
-                        }
-
-                    } catch (NumberParseException e) {
-                        e.printStackTrace();
-                    }
-
-
-                } while (cur.moveToNext());
-
-            }
-            cur.close();
-        }
-    }
-
-    private void getUserDetails(ChatElement chatElement, SQLiteDatabase dbw) {
-        DatabaseReference userDB = FirebaseDatabase.getInstance().getReference();
-        Query query = userDB.child("user").orderByChild("phone").equalTo(chatElement.getNumber());
-        query.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                contactsDetailed++;
-                if (snapshot.exists()) {
-                    String phone = "";
-                    String publicKey = "";
-                    long updated = 0L;
-                    for (DataSnapshot child : snapshot.getChildren()) {
-                        phone = child.child("phone").getValue().toString();
-
-                        publicKey = child.child("publicKey").getValue().toString();
-                        updated = Long.parseLong(child.child("updated").getValue().toString());
-
-                        String imageKey = child.getKey();
-
-                        updateContactPublicKey(publicKey, phone, dbw);
-                        updateContactUser(phone, imageKey, dbw);
-                        updateContactLog(phone, true, dbw);
-                        updateContactInfo(updated, phone, dbw);
-                        return;
-                    }
-                } else {
-                    updateContactPublicKey("", chatElement.getNumber(), dbw);
-                    updateContactUser(chatElement.getNumber(), "noUser", dbw);
-                    updateContactLog(chatElement.getNumber(), false, dbw);
-                }
-
-                if (contactsCount == contactsDetailed) {
-
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
+    void setTokenInDatabase(){
+        FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
+            if(task.isSuccessful()){
+                String token = task.getResult();
             }
         });
     }
-
-    private void updateContactUser(String p, String user, SQLiteDatabase dbw) {
-        ContentValues cv = new ContentValues();
-        cv.put("userId", user);
-        dbw.update(DbChat.T_CHATS_LOGGED, cv, "number = '" + p + "'", null);
-    }
-
-
-    private void updateContactInfo(long time, String phone, SQLiteDatabase dbw) {
-        ContentValues values = new ContentValues();
-        values.put("updated", time);
-
-        dbw.update(DbChat.T_CHATS_LOGGED, values, "number = '" + phone + "'", null);
-    }
-
-
-    private void updateContactLog(String p, boolean b, SQLiteDatabase dbw) {
-        ContentValues cv = new ContentValues();
-        cv.put("log", b ? 1 : 0);
-        dbw.update(DbChat.T_CHATS_LOGGED, cv, "number = '" + p + "'", null);
-    }
-
-
-    private void updateContactPublicKey(String publicKey, String p, SQLiteDatabase dbw) {
-        ContentValues cv = new ContentValues();
-        cv.put("publicKey", publicKey);
-        dbw.update(DbChat.T_CHATS_LOGGED, cv, "number = '" + p + "'", null);
-    }
-
 
     @Override
     protected void onDestroy() {
@@ -272,7 +101,7 @@ public class InActivity extends AppCompatActivity {
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
             if (extras.getInt("task", 0) == 1) {
-                intent = new Intent(this, CreateAwaitingActivity.class);
+                intent = new Intent(this, CreateTaskActivity.class);
             }
         }
         startActivity(intent);

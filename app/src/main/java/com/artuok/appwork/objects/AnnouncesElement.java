@@ -14,6 +14,7 @@ public class AnnouncesElement {
     private List<Image> images;
     private Image icon;
     private NativeAd nativeAd;
+    private int position;
 
     public AnnouncesElement(NativeAd nativeAd, String title, String body, String announser, List<Image> images, Image icon) {
         this.nativeAd = nativeAd;
@@ -22,6 +23,14 @@ public class AnnouncesElement {
         this.announser = announser;
         this.images = images;
         this.icon = icon;
+    }
+
+    public int getPosition() {
+        return position;
+    }
+
+    public void setPosition(int position) {
+        this.position = position;
     }
 
     public String getAction() {

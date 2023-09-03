@@ -12,6 +12,7 @@ import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
@@ -212,7 +213,6 @@ public class CreateActivity extends AppCompatActivity {
             elements.add(e);
             elements.get(0).setColor(0);
             adapter.notifyDataSetChanged();
-            Log.d("eSize", elements.size() + "");
         }
     }
 
@@ -313,7 +313,6 @@ public class CreateActivity extends AppCompatActivity {
 
             end.setText(desc);
         }
-
 
         Button accept = edit.findViewById(R.id.accept);
         PushDownAnim

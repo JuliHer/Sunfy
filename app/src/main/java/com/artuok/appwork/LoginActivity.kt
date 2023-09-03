@@ -1,792 +1,317 @@
 package com.artuok.appwork
 
+import android.animation.ArgbEvaluator
+import android.animation.ValueAnimator
 import android.content.Context
-import android.content.Intent
 import android.content.SharedPreferences
+import android.graphics.Color
 import android.os.Bundle
-import android.view.KeyEvent
 import android.view.View
-import android.widget.*
+import android.widget.EditText
+import android.widget.LinearLayout
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.google.firebase.FirebaseException
+import com.artuok.appwork.dialogs.PermissionDialog
+import com.artuok.appwork.fragmets.SettingsFragment
+import com.artuok.appwork.library.TextViewLetterAnimator
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.PhoneAuthCredential
-import com.google.firebase.auth.PhoneAuthOptions
-import com.google.firebase.auth.PhoneAuthProvider
-import com.google.firebase.auth.ktx.auth
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
+import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
-import com.google.firebase.ktx.Firebase
 import com.thekhaeng.pushdownanim.PushDownAnim
-import io.michaelrocks.libphonenumber.android.NumberParseException
-import io.michaelrocks.libphonenumber.android.PhoneNumberUtil
-import java.util.*
-import java.util.concurrent.TimeUnit
+import java.security.KeyPair
+import java.security.KeyPairGenerator
+import java.security.KeyStore
+import java.security.NoSuchAlgorithmException
+import java.security.NoSuchProviderException
+import java.security.PrivateKey
+import java.security.PublicKey
+import java.security.SecureRandom
+import java.text.Normalizer
+import java.util.Base64
+
 
 class LoginActivity : AppCompatActivity() {
-    private lateinit var spinner: Spinner
-    private lateinit var cc: EditText
-    private lateinit var phoneEdit: EditText
-    private lateinit var codeInput: EditText
-    private lateinit var enterBtn: LinearLayout
-    private lateinit var verifyBtn: LinearLayout
-    private lateinit var userPhoneNumber: String
-    private lateinit var userCodePhoneNumber: String
-    private lateinit var auth: FirebaseAuth
-    private lateinit var callbacks: PhoneAuthProvider.OnVerificationStateChangedCallbacks
-    private var lastLength = 0
-    private var storedVerificationId: String = ""
-    private lateinit var login: LinearLayout
-    private lateinit var verify: LinearLayout
-    private lateinit var wait: LinearLayout
-    private lateinit var enterCode: TextView
+
+    private lateinit var weareText : TextView
+    private lateinit var background : LinearLayout
+    private lateinit var emailInput : EditText
+    private lateinit var passwordInput : EditText
+    private lateinit var signinBtn : TextView
+    private lateinit var signupBtn : TextView
+
+    private lateinit var signupEmail : EditText
+    private lateinit var signupPassword : EditText
+    private lateinit var signupVerifyPassword : EditText
+    private lateinit var signupSignupBtn : TextView
+    private lateinit var signupSigninBtn : TextView
+
+    private lateinit var usernameInput : EditText
+    private lateinit var createAccount : TextView
+    private lateinit var back : TextView
+
+    private lateinit var signinLayout : LinearLayout
+    private lateinit var signupLayout : LinearLayout
+    private lateinit var usernameLayout : LinearLayout
+
+    private val auth = FirebaseAuth.getInstance()
+
+
+    private var i = 0
+    val colors = arrayOf("#52FF77", "#D152FF", "#2FD5FF", "#FFFC52")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
-        spinner = findViewById(R.id.country)
-        cc = findViewById(R.id.countryCodes)
-        phoneEdit = findViewById(R.id.editTextPhone)
-        enterBtn = findViewById(R.id.enterBtn)
-        verifyBtn = findViewById(R.id.verifyBtn)
-
-        login = findViewById(R.id.login)
-        verify = findViewById(R.id.verify)
-        wait = findViewById(R.id.wait)
-        codeInput = findViewById(R.id.codeHiden)
-        enterCode = findViewById(R.id.enterCode)
-
-        auth = Firebase.auth
-
-        callbacks = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
-            override fun onVerificationCompleted(credential: PhoneAuthCredential) {
-                signInWithPhoneAuthCredential(credential)
-            }
-
-            override fun onVerificationFailed(e: FirebaseException) {
-                Toast.makeText(this@LoginActivity, e.message, Toast.LENGTH_SHORT).show()
-            }
-
-            override fun onCodeSent(
-                verificationId: String,
-                p1: PhoneAuthProvider.ForceResendingToken
-            ) {
-
-
-                val timeout = Calendar.getInstance().timeInMillis + 120000L
-                val sharedPreferences: SharedPreferences = getSharedPreferences("chat", Context.MODE_PRIVATE)
-                val editor = sharedPreferences.edit()
-
-                wait.visibility = View.GONE
-                login.visibility = View.GONE
-                verify.visibility = View.VISIBLE
-                editor.putLong("verifyTimeOut", timeout)
-                editor.putString("VerificationId", verificationId)
-                editor.apply()
-
-                storedVerificationId = verificationId
-            }
+        if(SettingsFragment.isLogged(this)){
+            finish()
         }
-
-        val array = arrayOf("", "93", "355", "213", "1684", "376", "244", "1264", "672", "1268", "54", "374", "297", "61", "43", "994", "1242", "973", "880", "1246", "375", "32", "501", "229", "1441", "975", "591", "387", "267", "55", "246", "1284", "673", "359", "226", "257", "855", "237", "1", "238", "1345", "236", "235", "56", "86", "61", "61", "57", "269", "682", "506", "385", "53", "599", "357", "420", "243", "45", "253", "1767", "1809", "670", "593", "20", "503", "240", "291", "372", "251", "500", "298", "679", "358", "33", "689", "241", "220", "995", "49", "233", "350", "30", "299", "1473", "1671", "502", "441481", "224", "245", "592", "509", "504", "852", "36", "354", "91", "62", "98", "964", "353", "441624", "972", "39", "225", "1876", "81", "441534", "962", "7", "254", "686", "383", "965", "996", "856", "371", "961", "266", "231", "218", "423", "370", "352", "853", "389", "261", "265", "60", "960", "223", "356", "692", "222", "230", "262", "52", "691", "373", "377", "976", "382", "1664", "212", "258", "95", "264", "674", "977", "31", "599", "687", "64", "505", "227", "234", "683", "850", "1670", "47", "968", "92", "680", "970", "507", "675", "595", "51", "63", "64", "48", "351", "1787", "974", "242", "262", "40", "7", "250", "590", "290", "1869", "1758", "590", "508", "1784", "685", "378", "239", "966", "221", "381", "248", "232", "65", "1721", "421", "386", "677", "252", "27", "82", "211", "34", "94", "249", "597", "47", "268", "46", "41", "963", "886", "992", "255", "66", "228", "690", "676", "1868", "216", "90", "993", "1649", "688", "1340", "256", "380", "971", "44", "1", "598", "998", "678", "379", "58", "84", "681", "212", "967", "260", "263")
-        val countryCodes = arrayOf("", "AF", "AL", "DZ", "AS", "AD", "AO",
-            "AI",
-            "AQ",
-            "AG",
-            "AR",
-            "AM",
-            "AW",
-            "AU",
-            "AT",
-            "AZ",
-            "BS",
-            "BH",
-            "BD",
-            "BB",
-            "BY",
-            "BE",
-            "BZ",
-            "BJ",
-            "BM",
-            "BT",
-            "BO",
-            "BA",
-            "BW",
-            "BR",
-            "IO",
-            "VG",
-            "BN",
-            "BG",
-            "BF",
-            "BI",
-            "KH",
-            "CM",
-            "CA",
-            "CV",
-            "KY",
-            "CF",
-            "TD",
-            "CL",
-            "CN",
-            "CX",
-            "CC",
-            "CO",
-            "KM",
-            "CK",
-            "CR",
-            "HR",
-            "CU",
-            "CW",
-            "CY",
-            "CZ",
-            "CD",
-            "DK",
-            "DJ",
-            "DM",
-            "DO",
-            "TL",
-            "EC",
-            "EG",
-            "SV",
-            "GQ",
-            "ER",
-            "EE",
-            "ET",
-            "FK",
-            "FO",
-            "FJ",
-            "FI",
-            "FR",
-            "PF",
-            "GA",
-            "GM",
-            "GE",
-            "DE",
-            "GH",
-            "GI",
-            "GR",
-            "GL",
-            "GD",
-            "GU",
-            "GT",
-            "GG",
-            "GN",
-            "GW",
-            "GY",
-            "HT",
-            "HN",
-            "HK",
-            "HU",
-            "IS",
-            "IN",
-            "ID",
-            "IR",
-            "IQ",
-            "IE",
-            "IM",
-            "IL",
-            "IT",
-            "CI",
-            "JM",
-            "JP",
-            "JE",
-            "JO",
-            "KZ",
-            "KE",
-            "KI",
-            "XK",
-            "KW",
-            "KG",
-            "LA",
-            "LV",
-            "LB",
-            "LS",
-            "LR",
-            "LY",
-            "LI",
-            "LT",
-            "LU",
-            "MO",
-            "MK",
-            "MG",
-            "MW",
-            "MY",
-            "MV",
-            "ML",
-            "MT",
-            "MH",
-            "MR",
-            "MU",
-            "YT",
-            "MX",
-            "FM",
-            "MD",
-            "MC",
-            "MN",
-            "ME",
-            "MS",
-            "MA",
-            "MZ",
-            "MM",
-            "NA",
-            "NR",
-            "NP",
-            "NL",
-            "AN",
-            "NC",
-            "NZ",
-            "NI",
-            "NE",
-            "NG",
-            "NU",
-            "KP",
-            "MP",
-            "NO",
-            "OM",
-            "PK",
-            "PW",
-            "PS",
-            "PA",
-            "PG",
-            "PY",
-            "PE",
-            "PH",
-            "PN",
-            "PL",
-            "PT",
-            "PR",
-            "QA",
-            "CG",
-            "RE",
-            "RO",
-            "RU",
-            "RW",
-            "BL",
-            "SH",
-            "KN",
-            "LC",
-            "MF",
-            "PM",
-            "VC",
-            "WS",
-            "SM",
-            "ST",
-            "SA",
-            "SN",
-            "RS",
-            "SC",
-            "SL",
-            "SG",
-            "SX",
-            "SK",
-            "SI",
-            "SB",
-            "SO",
-            "ZA",
-            "KR",
-            "SS",
-            "ES",
-            "LK",
-            "SD",
-            "SR",
-            "SJ",
-            "SZ",
-            "SE",
-            "CH",
-            "SY",
-            "TW",
-            "TJ",
-            "TZ",
-            "TH",
-            "TG",
-            "TK",
-            "TO",
-            "TT",
-            "TN",
-            "TR",
-            "TM",
-            "TC",
-            "TV",
-            "VI",
-            "UG",
-            "UA",
-            "AE",
-            "GB",
-            "US",
-            "UY",
-            "UZ",
-            "VU",
-            "VA",
-            "VE",
-            "VN",
-            "WF",
-            "EH",
-            "YE",
-            "ZM",
-            "ZW"
-        )
-        val country = arrayOf(
-            "Pais",
-            "Afghanistan",
-            "Albania",
-            "Algeria",
-            "American Samoa",
-            "Andorra",
-            "Angola",
-            "Anguilla",
-            "Antarctica",
-            "Antigua and Barbuda",
-            "Argentina",
-            "Armenia",
-            "Aruba",
-            "Australia",
-            "Austria",
-            "Azerbaijan",
-            "Bahamas",
-            "Bahrain",
-            "Bangladesh",
-            "Barbados",
-            "Belarus",
-            "Belgium",
-            "Belize",
-            "Benin",
-            "Bermuda",
-            "Bhutan",
-            "Bolivia",
-            "Bosnia and Herzegovina",
-            "Botswana",
-            "Brazil",
-            "British Indian Ocean Territory",
-            "British Virgin Islands",
-            "Brunei",
-            "Bulgaria",
-            "Burkina Faso",
-            "Burundi",
-            "Cambodia",
-            "Cameroon",
-            "Canada",
-            "Cape Verde",
-            "Cayman Islands",
-            "Central African Republic",
-            "Chad",
-            "Chile",
-            "China",
-            "Christmas Island",
-            "Cocos Islands",
-            "Colombia",
-            "Comoros",
-            "Cook Islands",
-            "Costa Rica",
-            "Croatia",
-            "Cuba",
-            "Curacao",
-            "Cyprus",
-            "Czech Republic",
-            "Democratic Republic of the Congo",
-            "Denmark",
-            "Djibouti",
-            "Dominica",
-            "Dominican Republic",
-            "East Timor",
-            "Ecuador",
-            "Egypt",
-            "El Salvador",
-            "Equatorial Guinea",
-            "Eritrea",
-            "Estonia",
-            "Ethiopia",
-            "Falkland Islands",
-            "Faroe Islands",
-            "Fiji",
-            "Finland",
-            "France",
-            "French Polynesia",
-            "Gabon",
-            "Gambia",
-            "Georgia",
-            "Germany",
-            "Ghana",
-            "Gibraltar",
-            "Greece",
-            "Greenland",
-            "Grenada",
-            "Guam",
-            "Guatemala",
-            "Guernsey",
-            "Guinea",
-            "Guinea Bissau",
-            "Guyana",
-            "Haiti",
-            "Honduras",
-            "Hong Kong",
-            "Hungary",
-            "Iceland",
-            "India",
-            "Indonesia",
-            "Iran",
-            "Iraq",
-            "Ireland",
-            "Isle of Man",
-            "Israel",
-            "Italy",
-            "Ivory Coast",
-            "Jamaica",
-            "Japan",
-            "Jersey",
-            "Jordan",
-            "Kazakhstan",
-            "Kenya",
-            "Kiribati",
-            "Kosovo",
-            "Kuwait",
-            "Kyrgyzstan",
-            "Laos",
-            "Latvia",
-            "Lebanon",
-            "Lesotho",
-            "Liberia",
-            "Libya",
-            "Liechtenstein",
-            "Lithuania",
-            "Luxembourg",
-            "Macao",
-            "Macedonia",
-            "Madagascar",
-            "Malawi",
-            "Malaysia",
-            "Maldives",
-            "Mali",
-            "Malta",
-            "Marshall Islands",
-            "Mauritania",
-            "Mauritius",
-            "Mayotte",
-            "Mexico",
-            "Micronesia",
-            "Moldova",
-            "Monaco",
-            "Mongolia",
-            "Montenegro",
-            "Montserrat",
-            "Morocco",
-            "Mozambique",
-            "Myanmar",
-            "Namibia",
-            "Nauru",
-            "Nepal",
-            "Netherlands",
-            "Netherlands Antilles",
-            "New Caledonia",
-            "New Zealand",
-            "Nicaragua",
-            "Niger",
-            "Nigeria",
-            "Niue",
-            "North Korea",
-            "Northern Mariana Islands",
-            "Norway",
-            "Oman",
-            "Pakistan",
-            "Palau",
-            "Palestine",
-            "Panama",
-            "Papua New Guinea",
-            "Paraguay",
-            "Peru",
-            "Philippines",
-            "Pitcairn",
-            "Poland",
-            "Portugal",
-            "Puerto Rico",
-            "Qatar",
-            "Republic of the Congo",
-            "Reunion",
-            "Romania",
-            "Russia",
-            "Rwanda",
-            "Saint Barthelemy",
-            "Saint Helena",
-            "Saint Kitts and Nevis",
-            "Saint Lucia",
-            "Saint Martin",
-            "Saint Pierre and Miquelon",
-            "Saint Vincent and the Grenadines",
-            "Samoa",
-            "San Marino",
-            "Sao Tome and Principe",
-            "Saudi Arabia",
-            "Senegal",
-            "Serbia",
-            "Seychelles",
-            "Sierra Leone",
-            "Singapore",
-            "Sint Maarten",
-            "Slovakia",
-            "Slovenia",
-            "Solomon Islands",
-            "Somalia",
-            "South Africa",
-            "South Korea",
-            "South Sudan",
-            "Spain",
-            "Sri Lanka",
-            "Sudan",
-            "Suriname",
-            "Svalbard and Jan Mayen",
-            "Swaziland",
-            "Sweden",
-            "Switzerland",
-            "Syria",
-            "Taiwan",
-            "Tajikistan",
-            "Tanzania",
-            "Thailand",
-            "Togo",
-            "Tokelau",
-            "Tonga",
-            "Trinidad and Tobago",
-            "Tunisia",
-            "Turkey",
-            "Turkmenistan",
-            "Turks and Caicos Islands",
-            "Tuvalu",
-            "U.S. Virgin Islands",
-            "Uganda",
-            "Ukraine",
-            "United Arab Emirates",
-            "United Kingdom",
-            "United States",
-            "Uruguay",
-            "Uzbekistan",
-            "Vanuatu",
-            "Vatican",
-            "Venezuela",
-            "Vietnam",
-            "Wallis and Futuna",
-            "Western Sahara",
-            "Yemen",
-            "Zambia",
-            "Zimbabwe"
-        )
-
-        val arrayList = ArrayList(listOf(*country))
-        val adapter = ArrayAdapter(this, R.layout.style_spinner, arrayList)
-        spinner.adapter = adapter
-
-        spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(adapterView: AdapterView<*>?, view: View, i: Int, l: Long) {
-                if (i != 0) {
-                    cc.setText(array[i])
-                    phoneEdit.requestFocus()
-                }
+        initializateVars()
+        setupAnimations()
+        show(0)
+        PushDownAnim.setPushDownAnimTo(signinBtn)
+            .setScale(0.95f)
+            .setOnClickListener {
+                val email = emailInput.text.toString()
+                val password = passwordInput.text.toString()
+                if(email.isNotEmpty() && password.isNotEmpty())
+                    login(email, password)
+            }
+        PushDownAnim.setPushDownAnimTo(signupBtn)
+            .setScale(0.95f)
+            .setOnClickListener {
+                show(1)
             }
 
-            override fun onNothingSelected(adapterView: AdapterView<*>?) {}
-        }
+        PushDownAnim.setPushDownAnimTo(signupSignupBtn)
+            .setScale(0.95f)
+            .setOnClickListener {
+                val email = signupEmail.text.toString().trim()
+                val password = signupPassword.text.toString().trim()
+                val verifyPassword = signupVerifyPassword.text.toString().trim()
 
-        phoneEdit.setOnKeyListener { view: View?, i: Int, keyEvent: KeyEvent? ->
-            if (lastLength == 0) {
-                if (i == KeyEvent.KEYCODE_DEL) {
-                    cc.requestFocus()
-                    cc.setSelection(cc.text.length)
-                }
+                if(email.isNotEmpty() && password.isNotEmpty() && verifyPassword.isNotEmpty())
+                    if(password == verifyPassword)
+                        show(2)
+                    else
+                        Toast.makeText(this@LoginActivity, "No coincide", Toast.LENGTH_SHORT).show()
+                else
+                    Toast.makeText(this@LoginActivity, "Uno de los campos esta vacio", Toast.LENGTH_SHORT).show()
+
             }
-            lastLength = phoneEdit.text.toString().length
-            false
-        }
-
-        cc.setOnKeyListener { view: View?, i: Int, keyEvent: KeyEvent? ->
-            if (listOf(*array).contains(cc.text.toString())) {
-                val g =
-                    listOf(*array).indexOf(cc.text.toString())
-                spinner.setSelection(g)
-                cc.requestFocus()
+        PushDownAnim.setPushDownAnimTo(signupSigninBtn)
+            .setScale(0.95f)
+            .setOnClickListener {
+                show(0)
             }
-            false
-        }
+        PushDownAnim.setPushDownAnimTo(createAccount)
+            .setScale(0.95f)
+            .setOnClickListener {
+                val email = signupEmail.text.toString().trim()
+                val password = signupPassword.text.toString().trim()
+                val username = usernameInput.text.toString().trim()
 
-
-        enterCode.setOnClickListener{
-            this.login.visibility = View.GONE
-            this.verify.visibility = View.VISIBLE
-            this.wait.visibility = View.GONE
-        }
-
-        PushDownAnim.setPushDownAnimTo(enterBtn)
-            .setDurationPush(100)
-            .setScale(PushDownAnim.MODE_SCALE, 0.98f)
-            .setOnClickListener{
-                val num = "+" + cc.text.toString() + phoneEdit.text.toString()
-                if (listOf(*array).contains(cc.text.toString())) {
-                    val g = listOf(*array).indexOf(cc.text.toString())
-                    onClickEnterPhone(num, countryCodes[g])
-                }
+                if(email.isNotEmpty() && password.isNotEmpty() && username.isNotEmpty())
+                    signup(username, email, password)
+                else
+                    Toast.makeText(this@LoginActivity, "Uno de los campos esta vacio", Toast.LENGTH_SHORT).show()
+            }
+        PushDownAnim.setPushDownAnimTo(back)
+            .setScale(0.95f)
+            .setOnClickListener {
+                show(1)
             }
 
-        PushDownAnim.setPushDownAnimTo(verifyBtn)
-            .setDurationPush(100)
-            .setScale(PushDownAnim.MODE_SCALE, 0.98f)
-            .setOnClickListener{
-                val code = codeInput.text.toString()
-                verifyCode(code)
-            }
-        loginWithNumberPhone()
     }
 
-    private fun loginWithNumberPhone(): Boolean {
-        val sharedPreferences: SharedPreferences =
-            getSharedPreferences("chat", Context.MODE_PRIVATE)
-        val login = sharedPreferences.getBoolean("logged", false)
+    private fun initializateVars(){
+        weareText = findViewById(R.id.weare)
+        background = findViewById(R.id.background)
+        emailInput = findViewById(R.id.email)
+        passwordInput = findViewById(R.id.password)
+        signinBtn = findViewById(R.id.login_btn)
+        signupBtn = findViewById(R.id.signup_btn)
+        signinLayout = findViewById(R.id.signin_layout)
+        signupLayout = findViewById(R.id.signup_layout)
+        usernameLayout = findViewById(R.id.username_layout)
+        usernameInput = findViewById(R.id.username_input)
+        createAccount = findViewById(R.id.create)
+        back = findViewById(R.id.back_button)
 
-        if (login) {
-            return true
-        } else {
-            val timeRestant = sharedPreferences.getLong("verifyTimeOut", 0)
-            if (Calendar.getInstance().timeInMillis >= timeRestant) {
-                this.login.visibility = View.VISIBLE
-                this.verify.visibility = View.GONE
-                this.wait.visibility = View.GONE
+        signupEmail = findViewById(R.id.email_su)
+        signupPassword = findViewById(R.id.password_su)
+        signupVerifyPassword = findViewById(R.id.password_verify_su)
+        signupSignupBtn = findViewById(R.id.signup_su_btn)
+        signupSigninBtn = findViewById(R.id.login_su_btn)
+    }
+
+    private fun show(u : Int){
+        signinLayout.visibility = View.GONE
+        signupLayout.visibility = View.GONE
+        usernameLayout.visibility = View.GONE
+
+        when(u){
+            0 -> {signinLayout.visibility = View.VISIBLE}
+            1 -> {signupLayout.visibility = View.VISIBLE}
+            2 -> {usernameLayout.visibility = View.VISIBLE}
+            3 -> {}
+        }
+    }
+
+    private fun signup(username : String, email: String, password: String){
+        val newName = username
+        val normalized = Normalizer.normalize(newName.lowercase(), Normalizer.Form.NFD)
+        val searchTerm = normalized.replace("\\p{InCombiningDiacriticalMarks}+".toRegex(), "")
+
+        auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener {
+            if(it.isSuccessful){
+                val usersReference = FirebaseDatabase.getInstance().reference.child("user")
+                val uid = auth.currentUser!!.uid
+                usersReference.orderByChild("lowername").equalTo(searchTerm)
+                    .addListenerForSingleValueEvent(object : ValueEventListener {
+                        override fun onDataChange(snapshot: DataSnapshot) {
+                            val code = snapshot.childrenCount + 1
+                            usersReference.child(uid).child("name").setValue(newName)
+                            usersReference.child(uid).child("lowername").setValue(searchTerm)
+                            usersReference.child(uid).child("search").setValue("$searchTerm-$code")
+                            usersReference.child(uid).child("code").setValue(code)
+                            auth.currentUser!!.sendEmailVerification()
+                            auth.signOut()
+                            almostThere()
+                            show(0)
+                        }
+
+                        override fun onCancelled(error: DatabaseError) {
+
+                        }
+                    })
             }else{
-                this.login.visibility = View.GONE
-                this.verify.visibility = View.VISIBLE
-                this.wait.visibility = View.GONE
+                try {
+                    throw it.exception!!
+                } catch (e: FirebaseAuthWeakPasswordException) {
+                    signupPassword.error = "La contraseña es debil"
+                } catch (e: FirebaseAuthInvalidCredentialsException) {
+                    signupEmail.error = "El email esta mal escrito"
+                } catch (e: FirebaseAuthUserCollisionException) {
+                    signupEmail.error = "El usuario ya existe"
+                } catch (e: Exception) {
+                    Toast.makeText(this@LoginActivity, "${e.message}", Toast.LENGTH_SHORT).show()
+                }
             }
         }
-        return false
+
+
     }
 
-    private fun verifyCode(code: String) {
-
-        if (storedVerificationId.isEmpty() || storedVerificationId == "") {
-            val shared = getSharedPreferences("chat", Context.MODE_PRIVATE)
-            storedVerificationId = shared.getString("VerificationId", "")!!
-        }
-
-
-        if (code.isNotEmpty())
-            if (storedVerificationId.isNotEmpty() && storedVerificationId != "") {
-                val credential = PhoneAuthProvider.getCredential(storedVerificationId, code)
-                signInWithPhoneAuthCredential(credential)
-            }
-    }
-
-    private fun onClickEnterPhone(phoneN : String, iso : String){
-        val phoneUtil = PhoneNumberUtil.createInstance(this)
-        try {
-            val phoneNumber = phoneUtil.parse(phoneN, iso)
-            if (phoneUtil.isValidNumber(phoneNumber)) {
-                var phone = phoneUtil.format(
-                    phoneNumber,
-                    PhoneNumberUtil.PhoneNumberFormat.INTERNATIONAL
-                )
-                val re = Regex("[^0-9+]")
-                phone = re.replace(phone, "")
-
-                val phoneNational = phoneUtil.format(
-                    phoneNumber,
-                    PhoneNumberUtil.PhoneNumberFormat.NATIONAL
-                )
-                userPhoneNumber = re.replace(phoneNational, "")
-                userCodePhoneNumber = iso
-
-                wait.visibility = View.VISIBLE
-                login.visibility = View.GONE
-
-                startPhoneNumberVerification(phone)
-            } else {
-                Toast.makeText(this, "Number is not valid", Toast.LENGTH_SHORT).show()
-            }
-        } catch (e: NumberParseException) {
-            e.printStackTrace()
-        }
-    }
-
-    private fun startPhoneNumberVerification(phoneNumber: String) {
-        val options = PhoneAuthOptions.newBuilder(auth)
-            .setPhoneNumber(phoneNumber)
-            .setTimeout(120L, TimeUnit.SECONDS)
-            .setActivity(this)
-            .setCallbacks(callbacks)
-            .build()
-        auth.setLanguageCode(Locale.getDefault().language)
-        PhoneAuthProvider.verifyPhoneNumber(options)
-    }
-
-    private fun signInWithPhoneAuthCredential(credential: PhoneAuthCredential) {
-        auth.signInWithCredential(credential)
+    private fun login(email: String, password: String) {
+        auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener {
-                if (it.isSuccessful) {
-                    val user = it.result?.user
-                    val phone = user?.phoneNumber
-                    if (phone != null) {
-                        loginUser(user!!.uid, phone)
-
+                if(it.isSuccessful){
+                    if(auth.currentUser!!.isEmailVerified){
+                        val preferences: SharedPreferences = getSharedPreferences("chat", MODE_PRIVATE)
+                        val edit = preferences.edit()
+                        edit.putBoolean("logged", true)
+                        edit.apply()
+                        finish()
+                    }else{
+                        almostThere()
+                        auth.signOut()
+                    }
+                }else{
+                    try {
+                        throw it.exception!!
+                    } catch (e: FirebaseAuthInvalidUserException) {
+                        emailInput.error = "The user doesn't exists"
+                    } catch (e: FirebaseAuthInvalidCredentialsException) {
+                        passwordInput.error = "the password is incorrect"
+                        // Puedes mostrar un mensaje de error en pantalla
+                    } catch (e: Exception) {
+                        Toast.makeText(this@LoginActivity, "${e.message}", Toast.LENGTH_SHORT).show()
                     }
                 }
-            }.addOnFailureListener {
-                it.printStackTrace()
             }
     }
 
-    private fun loginUser(userId: String, number : String) {
-        val userBase = FirebaseDatabase.getInstance().reference.child("user").child(userId)
-        val user = FirebaseDatabase.getInstance().reference.child("user");
 
-        user.orderByChild("phone").equalTo(number)
-            .addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    if (snapshot.exists()) {
-                        val userHash = mapOf(
-                            "name" to "",
-                            "phone" to auth.currentUser?.phoneNumber,
-                            "region" to userCodePhoneNumber,
-                            "updated" to Calendar.getInstance().timeInMillis
-                        )
 
-                        user.child(snapshot.key!!).updateChildren(userHash)
+    private fun almostThere(){
+        val dialog = PermissionDialog()
+        dialog.setDrawable(R.drawable.ic_mail)
+        dialog.setTitleDialog(getString(R.string.almost_there))
+        dialog.setTextDialog(getString(R.string.verify_email))
+        dialog.setPositiveText(getString(R.string.Accept_M))
+        dialog.setPositive { _, _ ->
+            dialog.dismiss()
+        }
+        dialog.show(supportFragmentManager, "Verify Email")
+    }
 
-                        val sharedPreferences: SharedPreferences =
-                            getSharedPreferences("chat", Context.MODE_PRIVATE)
-                        val editor = sharedPreferences.edit()
-                        editor.putBoolean("logged", true)
-                        editor.putLong("verifyTimeOut", 0)
-                        editor.putString("regionCode", userCodePhoneNumber)
-                        editor.apply()
-                        val i = Intent(this@LoginActivity, MainActivity::class.java)
 
-                        startActivity(i)
-                        finish()
-                    } else {
-                        val userHash = mapOf(
-                            "name" to "",
-                            "phone" to auth.currentUser?.phoneNumber,
-                            "region" to userCodePhoneNumber,
-                            "updated" to Calendar.getInstance().timeInMillis
-                        )
+    private fun setupAnimations(){
+        val wearray = arrayOf(
+            getString(R.string.we_are_organization),
+            getString(R.string.we_are_efficiency),
+            getString(R.string.we_are_productivity),
+            getString(R.string.we_are_simplification),
+            getString(R.string.we_are_focus),
+            getString(R.string.we_are_management),
+            getString(R.string.we_are_prioritization),
+            getString(R.string.we_are_effectiveness),
+            getString(R.string.we_are_planning),
+            getString(R.string.we_are_coordination),
+            getString(R.string.we_are_monitoring),
+            getString(R.string.we_are_progress),
+            getString(R.string.we_are_reminders),
+            getString(R.string.we_are_tasks),
+            getString(R.string.we_are_accomplishment)
+        )
 
-                        userBase.updateChildren(userHash)
+
+        weareText.text = ""
+
+        val generateText = TextViewLetterAnimator(weareText, 2000)
+
+        generateText.setOnFinishListener(object : TextViewLetterAnimator.OnFinishListener{
+            override fun onFinish() {
+                if(weareText.text.isNotEmpty()){
+                    generateText.startDeleteAnimation(1500)
+                }else{
+                    if(i + 1 < wearray.size){
+                        i++
+                    }else{
+                        i = 0
                     }
+                    generateText.startGenerateAnimation(wearray[i])
                 }
-
-                override fun onCancelled(error: DatabaseError) {
-
-                }
-
-            })
-
-        FirebaseDatabase.getInstance().reference.orderByChild("phone").equalTo(number)
-            .addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
+            }
+        })
 
 
-                }
+        // Duración de la animación en milisegundos
+        val animationDuration = 10000L
 
-                override fun onCancelled(error: DatabaseError) {
+        // Crea el objeto ValueAnimator para controlar la animación
+        val colorAnimator = ValueAnimator.ofObject(ArgbEvaluator(), Color.parseColor(colors[0]), Color.parseColor(colors[1]), Color.parseColor(colors[2]), Color.parseColor(colors[3]))
 
-                }
+        // Configura la duración de la animación
+        colorAnimator.duration = animationDuration
 
-            })
+        // Agrega un listener para actualizar el color de fondo de la vista en cada fotograma
+        colorAnimator.addUpdateListener { animator ->
+            val animatedValue = animator.animatedValue as Int
+            background.setBackgroundColor(animatedValue)
+
+        }
+        colorAnimator.repeatCount = ValueAnimator.INFINITE
+        colorAnimator.repeatMode = ValueAnimator.REVERSE
+        // Inicia la animación
+        colorAnimator.start()
+        generateText.startGenerateAnimation(wearray[i])
     }
 }

@@ -12,6 +12,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.artuok.appwork.R;
@@ -30,6 +31,7 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     List<Item> mData;
     LayoutInflater mInflater;
     OnClickListener listener;
+    OnMoveListener moveListener;
 
     public AwaitingAdapter(Context context, List<Item> mData) {
         this.mData = mData;
@@ -41,17 +43,17 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         if (viewType == 0) {
-            View view = mInflater.inflate(R.layout.item_awaiting_layout, parent, false);
-            return new AwaitingViewHolder(view);
-        } else if (viewType == 1) {
-            View view = mInflater.inflate(R.layout.recurrence_layout, parent, false);
-            return new StatisticViewHolder(view);
+            View view = mInflater.inflate(R.layout.item_awaiting_grid_layout, parent, false);
+            return new AwaitingGridViewHolder(view);
         } else if (viewType == 2) {
-            View view = mInflater.inflate(R.layout.item_text_layout, parent, false);
+            View view = mInflater.inflate(R.layout.item_title_layout, parent, false);
             return new TextViewHolder(view);
         }else if(viewType == 3){
             View view = mInflater.inflate(R.layout.item_awaiting_grid_layout, parent, false);
             return new AwaitingGridViewHolder(view);
+        } else if(viewType == 4){
+            View view = mInflater.inflate(R.layout.item_task_layout, parent, false);
+            return new TaskViewHolder(view);
         } else if(viewType == 12){
             View view = mInflater.inflate(R.layout.item_ad_awaiting_layout, parent, false);
             return new AwaitingAdViewHolder(view);
@@ -64,16 +66,16 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         int type = getItemViewType(position);
         if (type == 0) {
             AwaitElement element = (AwaitElement) mData.get(position).getObject();
-            ((AwaitingViewHolder) holder).onBindData(element);
-        } else if (type == 1) {
-            StatisticsElement element = (StatisticsElement) mData.get(position).getObject();
-            ((StatisticViewHolder) holder).onBindData(element);
+            ((AwaitingGridViewHolder) holder).onBindData(element);
         } else if (type == 2) {
             TextElement element = (TextElement) mData.get(position).getObject();
             ((TextViewHolder) holder).onBindData(element);
         } else if (type == 3) {
             AwaitElement element = (AwaitElement) mData.get(position).getObject();
             ((AwaitingGridViewHolder) holder).onBindData(element);
+        } else if(type == 4){
+            AwaitElement element = (AwaitElement) mData.get(position).getObject();
+            ((TaskViewHolder) holder).onBindData(element);
         } else if(type == 12){
             AnnouncesElement element = (AnnouncesElement) mData.get(position).getObject();
             ((AwaitingAdViewHolder) holder).onBindData(element);
@@ -85,8 +87,11 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         return mData.size();
     }
 
-    public void setOnClickListener(OnClickListener listener) {
+    public void setOnClickListener(@Nullable OnClickListener listener) {
         this.listener = listener;
+    }
+    public void setOnMoveListener(@Nullable OnMoveListener listener) {
+        this.moveListener = listener;
     }
 
     @Override
@@ -110,9 +115,9 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         }
     }
 
-    class AwaitingGridViewHolder extends RecyclerView.ViewHolder{
+    class AwaitingGridViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
         TextView title, status, date, time, subject;
-        ImageView subjectIcon;
+        ImageView subjectIcon, arrowLeft, arrowRight;
 
         public AwaitingGridViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -122,7 +127,24 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             status = itemView.findViewById(R.id.status_card);
             date = itemView.findViewById(R.id.date_card);
             time = itemView.findViewById(R.id.time);
-
+            arrowLeft = itemView.findViewById(R.id.arrow_left);
+            arrowRight = itemView.findViewById(R.id.arrow_right);
+            if(listener != null){
+                PushDownAnim.setPushDownAnimTo(itemView)
+                        .setDurationPush(100)
+                        .setScale(PushDownAnim.MODE_SCALE, 0.98f)
+                        .setOnClickListener(this);
+            }
+            if(moveListener != null){
+                PushDownAnim.setPushDownAnimTo(arrowLeft)
+                        .setDurationPush(100)
+                        .setScale(PushDownAnim.MODE_SCALE, 0.95f)
+                        .setOnClickListener(view -> moveListener.onMoveLeft(view, getLayoutPosition()));
+                PushDownAnim.setPushDownAnimTo(arrowRight)
+                        .setDurationPush(100)
+                        .setScale(PushDownAnim.MODE_SCALE, 0.95f)
+                        .setOnClickListener(view -> moveListener.onMoveRight(view, getLayoutPosition()));
+            }
         }
 
         void onBindData(AwaitElement element){
@@ -142,60 +164,15 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                 title.setPaintFlags(title.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
                 title.setTextColor(colorSub);
             }
+            if(element.isMine()){
+                arrowRight.setVisibility(View.VISIBLE);
+                arrowLeft.setVisibility(View.VISIBLE);
+            }else{
+                arrowRight.setVisibility(View.GONE);
+                arrowLeft.setVisibility(View.GONE);
+            }
 
             subject.setText(element.getSubject());
-
-            date.setText(element.getDate());
-            time.setText(element.getTime());
-            ta.recycle();
-        }
-    }
-
-    class AwaitingViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-
-        TextView title, status, date, time;
-
-        LinearLayout subject;
-        ImageView liked;
-
-        public AwaitingViewHolder(@NonNull View itemView) {
-            super(itemView);
-            title = itemView.findViewById(R.id.title_card);
-            subject = itemView.findViewById(R.id.subject_color);
-            status = itemView.findViewById(R.id.status_card);
-            date = itemView.findViewById(R.id.date_card);
-            time = itemView.findViewById(R.id.time);
-            liked = itemView.findViewById(R.id.task_liked);
-            PushDownAnim.setPushDownAnimTo(itemView)
-                    .setDurationPush(100)
-                    .setScale(PushDownAnim.MODE_SCALE, 0.98f)
-                    .setOnClickListener(this);
-        }
-
-        void onBindData(AwaitElement element){
-            TypedArray ta = mInflater.getContext().obtainStyledAttributes(R.styleable.AppCustomAttrs);
-            int color = ta.getColor(R.styleable.AppCustomAttrs_backgroundBorder, Color.WHITE);
-            int colorSub = ta.getColor(R.styleable.AppCustomAttrs_subTextColor, Color.WHITE);
-            title.setText(element.getTitle());
-            title.setPaintFlags(title.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
-            title.setTextColor(color);
-
-            subject.setBackgroundColor(element.getTaskColor());
-
-            status.setText(element.getStatus());
-            status.setBackgroundColor(element.getStatusColor());
-
-            if(element.isDone()){
-                title.setPaintFlags(title.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
-                title.setTextColor(colorSub);
-            }
-
-            if(element.isLiked()){
-                liked.setVisibility(View.VISIBLE);
-            }else{
-                liked.setVisibility(View.GONE);
-            }
-
             date.setText(element.getDate());
             time.setText(element.getTime());
             ta.recycle();
@@ -204,28 +181,6 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         @Override
         public void onClick(View view) {
             listener.onClick(view, getLayoutPosition());
-        }
-    }
-
-    class StatisticViewHolder extends RecyclerView.ViewHolder {
-
-        TextView done, onHold, losed;
-
-        public StatisticViewHolder(@NonNull View itemView) {
-            super(itemView);
-            done = itemView.findViewById(R.id.done_txt);
-            onHold = itemView.findViewById(R.id.onHold_txt);
-            losed = itemView.findViewById(R.id.losed_txt);
-        }
-
-        void onBindData(StatisticsElement element) {
-            String hold = mInflater.getContext().getString(R.string.on_hold_string);
-            String d = "" + element.getDone();
-            done.setText(d);
-            String o = hold + ": " + element.getOnHold();
-            onHold.setText(o);
-            String l = "" + element.getLosed();
-            losed.setText(l);
         }
     }
 
@@ -273,7 +228,78 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         }
     }
 
+    class TaskViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
+
+        TextView title, status, date, time, subject, inProcess;
+        ImageView subjectIcon, check;
+
+        public TaskViewHolder(@NonNull View itemView) {
+            super(itemView);
+            title = itemView.findViewById(R.id.title_card);
+            subjectIcon = itemView.findViewById(R.id.subject_color);
+            subject = itemView.findViewById(R.id.subject);
+            status = itemView.findViewById(R.id.status_card);
+            date = itemView.findViewById(R.id.date_card);
+            time = itemView.findViewById(R.id.time);
+            check = itemView.findViewById(R.id.check);
+            inProcess = itemView.findViewById(R.id.in_process);
+
+            PushDownAnim.setPushDownAnimTo(itemView)
+                    .setDurationPush(100)
+                    .setScale(PushDownAnim.MODE_SCALE, 0.95f)
+                    .setOnClickListener(this);
+        }
+
+        void onBindData(AwaitElement element){
+            TypedArray ta = mInflater.getContext().obtainStyledAttributes(R.styleable.AppCustomAttrs);
+            int color = ta.getColor(R.styleable.AppCustomAttrs_backgroundBorder, Color.WHITE);
+            int colorSub = ta.getColor(R.styleable.AppCustomAttrs_subTextColor, Color.WHITE);
+
+            title.setText(element.getTitle());
+            title.setPaintFlags(title.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
+            title.setTextColor(color);
+            check.setVisibility(View.GONE);
+            inProcess.setVisibility(View.GONE);
+
+            subjectIcon.setColorFilter(element.getTaskColor());
+
+            status.setText(element.getStatus());
+            status.setBackgroundColor(element.getStatusColor());
+
+            if(element.isDone()){
+                title.setPaintFlags(title.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+                title.setTextColor(colorSub);
+                check.setVisibility(View.VISIBLE);
+                status.setText(mInflater.getContext().getString(R.string.done_string));
+            }
+
+            if(element.isMine()){
+                inProcess.setVisibility(View.VISIBLE);
+            }
+
+            subject.setText(element.getSubject());
+            date.setText(element.getDate());
+            time.setText(element.getTime());
+            ta.recycle();
+        }
+
+        @Override
+        public void onClick(View view) {
+            listener.onClick(view, getLayoutPosition());
+        }
+    }
+
+
+    public interface OnLongClickListener{
+        boolean onLongClick(View view, int position);
+    }
+
     public interface OnClickListener {
         void onClick(View view, int position);
+    }
+
+    public interface OnMoveListener{
+        void onMoveLeft(View view, int position);
+        void onMoveRight(View view, int position);
     }
 }

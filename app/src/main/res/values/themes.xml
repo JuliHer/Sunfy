@@ -35,7 +35,7 @@
         <item name="highInputColor">@color/white</item>
         <item name="hintInputColor">@color/gray_900</item>
         <item name="hintViewGrayColor">@color/gray_800</item>
-
+        <item name="backgroundSub">@color/gray_800</item>
         <!--calendar-->
         <item name="gridColor">@color/gray_900</item>
         <item name="textDayColor">@color/gray_400</item>

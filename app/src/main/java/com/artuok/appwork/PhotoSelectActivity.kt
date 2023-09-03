@@ -4,14 +4,21 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Paint
 import android.net.ConnectivityManager
 import android.os.Bundle
+import android.renderscript.Allocation
+import android.renderscript.Element
+import android.renderscript.RenderScript
+import android.renderscript.ScriptIntrinsicBlur
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.artuok.appwork.fragmets.SettingsFragment
+import com.artuok.appwork.library.PhotoEditor
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.storage.FirebaseStorage
@@ -27,6 +34,7 @@ class PhotoSelectActivity : AppCompatActivity() {
     private lateinit var rotate : ImageView
     private lateinit var img : Bitmap
     private lateinit var ok : Button
+    private lateinit var imageBlur : ImageView
 
     private var uploadToIcon = false
     private var carpet = "Sunfy Profile"
@@ -53,10 +61,11 @@ class PhotoSelectActivity : AppCompatActivity() {
         back = findViewById(R.id.cancel_action)
         rotate = findViewById(R.id.rotate)
         ok = findViewById(R.id.accept)
-
+        imageBlur = findViewById(R.id.image_blurred)
 
         ok.setOnClickListener {
-            val path = saveImageInDevice(cropper.croppedImage)
+            val bitmap = PhotoEditor.resizeImage(cropper.croppedImage, 512)
+            val path = saveImageInDevice(bitmap)
             flushTempImages()
 
             val returnIntent = Intent()
@@ -75,6 +84,7 @@ class PhotoSelectActivity : AppCompatActivity() {
             finish()
         }
 
+        imageBlur.setImageBitmap(PhotoEditor.applyBlur(img, 7))
         cropper.setImageBitmap(img)
         cropper.guidelines = CropImageView.Guidelines.ON
         cropper.scaleType = CropImageView.ScaleType.FIT_CENTER
@@ -181,4 +191,7 @@ class PhotoSelectActivity : AppCompatActivity() {
         }
         return mobileDataEnable
     }
+
+    //Efects functions
+
 }

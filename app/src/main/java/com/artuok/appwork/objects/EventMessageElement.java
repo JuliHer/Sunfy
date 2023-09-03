@@ -1,57 +1,27 @@
 package com.artuok.appwork.objects;
 
 public class EventMessageElement {
-    String id;
-    String title;
-    String userId;
-    long endDate;
-    long date;
-    long message;
+    private long deadline;
+    private String description;
+    private String user;
 
-    boolean added = false;
+    public EventMessageElement(long deadline, String description, String user) {
 
-
-
-    public EventMessageElement(String id, String title, String userId, long date, long endDate) {
-        this.id = id;
-        this.title = title;
-        this.userId = userId;
-        this.endDate = endDate;
+        this.deadline = deadline;
+        this.description = description;
+        this.user = user;
     }
 
-    public long getMessage() {
-        return message;
+
+    public long getDeadline() {
+        return deadline;
     }
 
-    public void setMessage(long message) {
-        this.message = message;
+    public String getDescription() {
+        return description;
     }
 
-    public long getDate() {
-        return date;
-    }
-
-    public boolean isAdded() {
-        return added;
-    }
-
-    public void setAdded(boolean added) {
-        this.added = added;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public String getUserId() {
-        return userId;
-    }
-
-    public long getEndDate() {
-        return endDate;
+    public String getUser() {
+        return user;
     }
 }

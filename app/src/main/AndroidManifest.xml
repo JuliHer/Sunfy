@@ -9,13 +9,11 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
-    <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
 
     <uses-feature
         android:name="android.hardware.camera"
@@ -30,6 +28,15 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AppWork"
         android:usesCleartextTraffic="true">
+        <activity
+            android:name=".ProfileEditActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ProfileActivity"
+            android:exported="false"
+            android:label="@string/title_activity_profile"
+            android:theme="@style/Theme.AppWork" />
         <activity
             android:name=".LoginActivity"
             android:exported="false">
@@ -51,19 +58,6 @@
         <meta-data
 
             android:value="ca-app-pub-3940256099942544/2247696110"/>
-
-            {
-            "code" : 401,
-            "errors" : [ {
-            "domain" : "global",
-            "location" : "Authorization",
-            "locationType" : "header",
-            "message" : "Invalid Credentials",
-            "reason" : "authError"
-            } ],
-            "message" : "Request had invalid authentication credentials. Expected OAuth 2 access token, login cookie or other valid authentication credential. See https://developers.google.com/identity/sign-in/web/devconsole-project.",
-            status" : "UNAUTHENTICATED"
-            }
         -->
         <activity
             android:name=".CreateGroupActivity"
@@ -79,7 +73,6 @@
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
-
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/today_task_widget_info" />
@@ -93,13 +86,6 @@
                 android:value="" />
         </activity>
         <activity
-            android:name=".SelectActivity"
-            android:exported="false">
-            <meta-data
-                android:name="android.app.lib_name"
-                android:value="" />
-        </activity>
-        <activity
             android:name=".ChatActivity"
             android:exported="false">
             <meta-data
@@ -107,7 +93,7 @@
                 android:value="" />
         </activity>
         <activity
-            android:name=".CreateAwaitingActivity"
+            android:name=".CreateTaskActivity"
             android:exported="false"
             android:launchMode="singleTask"
             android:parentActivityName=".MainActivity">
@@ -116,7 +102,7 @@
                 android:value="" />
         </activity>
         <activity
-            android:name=".ViewActivity"
+            android:name=".ExpandActivity"
             android:exported="false">
             <meta-data
                 android:name="android.app.lib_name"
@@ -177,22 +163,14 @@
                 <action android:name="com.artuok.appwork.services.MESSAGES" />
             </intent-filter>
         </receiver>
-        <receiver
-            android:name=".services.MessageBroadcastReceiver"
-            android:enabled="true"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT" />
-            </intent-filter>
-        </receiver>
 
         <service
             android:name=".services.ServiceManager"
             android:enabled="true"
             android:foregroundServiceType="dataSync"
             android:icon="@drawable/ic_stat_name"
-            android:stopWithTask="false"
-            android:permission="android.permission.START_FOREGROUND_SERVICES_FROM_BACKGROUND" />
+            android:permission="android.permission.START_FOREGROUND_SERVICES_FROM_BACKGROUND"
+            android:stopWithTask="false" />
         <service
             android:name=".services.NotificationService"
             android:enabled="true"
@@ -212,6 +190,12 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+        <service android:name=".services.FirebaseMessageService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>

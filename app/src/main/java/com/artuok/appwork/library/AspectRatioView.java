@@ -45,7 +45,7 @@ public class AspectRatioView extends CardView {
                 int h = Integer.parseInt(s[1]);
                 ratioHeight = ratioWidth / w * h;
 
-                Log.d("CattoMeasure", ratioHeight+ "="+ratioWidth+"/"+w+"*"+h);
+
             }else if(ORIENTATION == HORIZONTAL){
                 String[] s = RATIO.split(":");
                 int h = Integer.parseInt(s[0]);

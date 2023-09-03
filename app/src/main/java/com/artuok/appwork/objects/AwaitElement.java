@@ -11,8 +11,10 @@ public class AwaitElement {
     private int statusColor;
     private boolean done = false;
     private boolean liked = false;
+    private boolean mine = true;
 
-    public AwaitElement(int id, String title, String status, String date, String time, int taskColor, int statusColor) {
+
+    public AwaitElement(int id, String title, String status, String date, String time, int taskColor, int statusColor, boolean mine) {
         this.id = id;
         this.title = title;
         this.status = status;
@@ -20,6 +22,15 @@ public class AwaitElement {
         this.time = time;
         this.taskColor = taskColor;
         this.statusColor = statusColor;
+        this.mine = mine;
+    }
+
+    public boolean isMine() {
+        return mine;
+    }
+
+    public void setMine(boolean mine) {
+        this.mine = mine;
     }
 
     public String getSubject() {
@@ -72,5 +83,9 @@ public class AwaitElement {
 
     public int getStatusColor() {
         return statusColor;
+    }
+
+    public void setStatusColor(int statusColor) {
+        this.statusColor = statusColor;
     }
 }

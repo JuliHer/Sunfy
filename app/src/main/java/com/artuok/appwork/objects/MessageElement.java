@@ -2,26 +2,32 @@ package com.artuok.appwork.objects;
 
 public class MessageElement {
 
-    String message;
-    int mine;
-    int type;
-    String id;
-    long timestamp;
-    int status;
-    int reaction;
-    String theirName;
-    String messageReplyed;
-    EventMessageElement event;
-    boolean select = false;
+    private String id;
+    private String message;
+    private long timestamp;
+    private int user;
+    private String name;
+    private int status;
+    private boolean select;
+    private MessageElement reply;
 
-    public MessageElement(String id, String message, int mine, long timestamp, int status, int reaction, String theirName) {
-        this.message = message;
-        this.mine = mine;
+    private EventMessageElement task = null;
+
+    public MessageElement(String id, String message, long timestamp, int user, String name, int status) {
         this.id = id;
+        this.message = message;
         this.timestamp = timestamp;
+        this.user = user;
+        this.name = name;
         this.status = status;
-        this.reaction = reaction;
-        this.theirName = theirName;
+    }
+
+    public MessageElement getReply() {
+        return reply;
+    }
+
+    public void setReply(MessageElement reply) {
+        this.reply = reply;
     }
 
     public boolean isSelect() {
@@ -32,59 +38,59 @@ public class MessageElement {
         this.select = select;
     }
 
-    public void addEvent(EventMessageElement element){
-        this.event = element;
-    }
-
-    public EventMessageElement getEvent(){
-        return this.event;
-    }
-
-    public void setTheirName(String theirName) {
-        this.theirName = theirName;
+    public String getId() {
+        return id;
     }
 
     public void setId(String id) {
         this.id = id;
     }
 
-    public void setStatus(int status) {
-        this.status = status;
-    }
-
-    public String getTheirName() {
-        return theirName;
-    }
-
-    public String getMessageReplyed() {
-        return messageReplyed;
-    }
-
-    public void setMessageReplyed(String messageReplyed) {
-        this.messageReplyed = messageReplyed;
-    }
-
-    public String getId() {
-        return id;
-    }
-
     public String getMessage() {
         return message;
     }
 
-    public int getMine() {
-        return mine;
+    public void setMessage(String message) {
+        this.message = message;
     }
 
     public long getTimestamp() {
         return timestamp;
     }
 
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public int getUser() {
+        return user;
+    }
+
+    public void setUser(int user) {
+        this.user = user;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public int getStatus() {
         return status;
     }
 
-    public int getReaction() {
-        return reaction;
+    public void setStatus(int status) {
+        this.status = status;
+    }
+
+    public EventMessageElement getTask() {
+        return task;
+    }
+
+    public void setTask(EventMessageElement task) {
+        this.task = task;
     }
 }

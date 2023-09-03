@@ -3,12 +3,14 @@ package com.artuok.appwork.adapters;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Color;
+import android.media.Image;
 import android.text.format.DateFormat;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -20,6 +22,7 @@ import com.artuok.appwork.fragmets.homeFragment;
 import com.artuok.appwork.objects.EventMessageElement;
 import com.artuok.appwork.objects.Item;
 import com.artuok.appwork.objects.MessageElement;
+import com.artuok.appwork.objects.TextElement;
 import com.thekhaeng.pushdownanim.PushDownAnim;
 
 import java.util.Calendar;
@@ -50,31 +53,38 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         this.onClickListener = onClickListener;
     }
 
+    public void addMessage(Item element){
+        mData.add(0, element);
+    }
+
+    public void changeMessage(List<Item> list){
+        mData = list;
+    }
+
+    public void modifyStatus(int pos, int status){
+        ((MessageElement)mData.get(pos).getObject()).setStatus(status);
+    }
+
+    public List<Item> getData(){
+        return mData;
+    }
+
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
 
         if (viewType == 0) {
-            View view = inflater.inflate(R.layout.item_my_message_layout, parent, false);
-            return new MyMessageViewHolder(view);
-        } else if (viewType == 1) {
-            View view = inflater.inflate(R.layout.item_their_message_layout, parent, false);
-            return new TheirMessageViewHolder(view);
-        } else if (viewType == 2){
-            View view = inflater.inflate(R.layout.item_my_replymessage_layout, parent, false);
-            return new MyReplyMessageViewHolder(view);
+            View view = inflater.inflate(R.layout.item_message_layout, parent, false);
+            return new MessageViewHolder(view);
+        }else if(viewType == 1){
+            View view = inflater.inflate(R.layout.item_message_reply_layout, parent, false);
+            return new MessageReplyViewHolder(view);
+        }else if(viewType == 2){
+            View view = inflater.inflate(R.layout.item_message_task_layout, parent, false);
+            return new MessageTaskViewHolder(view);
         }else if(viewType == 3){
-            View view = inflater.inflate(R.layout.item_their_replymessage_layout, parent, false);
-            return new TheirReplyMessageViewHolder(view);
-        }else if (viewType == 4){
-            View view = inflater.inflate(R.layout.item_myevent_message_layout, parent, false);
-            return new MyEventMessageViewHolder(view);
-        }else if (viewType == 5) {
-            View view = inflater.inflate(R.layout.item_theirevent_message_layout, parent, false);
-            return new TheirEventMessageViewHolder(view);
-        } else if (viewType == 6) {
             View view = inflater.inflate(R.layout.item_message_event_layout, parent, false);
-            return new EventMessageViewHolder(view);
+            return new EventViewHolder(view);
         }
         return null;
     }
@@ -84,29 +94,21 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         int type = getItemViewType(position);
         if (type == 0) {
             MessageElement element = (MessageElement) mData.get(position).getObject();
-            ((MyMessageViewHolder) holder).onBindData(element);
-        } else if (type == 1) {
+            ((MessageViewHolder) holder).onBindData(element);
+        }else if(type == 1){
             MessageElement element = (MessageElement) mData.get(position).getObject();
-            ((TheirMessageViewHolder) holder).onBindData(element);
-        }
-        else if (type == 2) {
+            ((MessageReplyViewHolder) holder).onBindData(element);
+        }else if(type == 2){
             MessageElement element = (MessageElement) mData.get(position).getObject();
-            ((MyReplyMessageViewHolder) holder).onBindData(element);
-        }else if (type == 3) {
-            MessageElement element = (MessageElement) mData.get(position).getObject();
-            ((TheirReplyMessageViewHolder) holder).onBindData(element);
-        }else if (type == 4){
-            MessageElement element = (MessageElement) mData.get(position).getObject();
-            ((MyEventMessageViewHolder) holder).onBindData(element);
-        }else if (type == 5) {
-            MessageElement element = (MessageElement) mData.get(position).getObject();
-            ((TheirEventMessageViewHolder) holder).onBindData(element);
-        } else if (type == 6) {
-            MessageElement element = (MessageElement) mData.get(position).getObject();
-            ((EventMessageViewHolder) holder).onBindData(element);
+            ((MessageTaskViewHolder) holder).onBindData(element);
+        }else if(type == 3){
+            TextElement element = (TextElement) mData.get(position).getObject();
+            ((EventViewHolder) holder).onBindData(element);
         }
 
     }
+
+    public Item getItem(int pos){ return mData.get(pos); }
 
     @Override
     public int getItemCount() {
@@ -118,36 +120,27 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         return mData.get(position).getType();
     }
 
-    class MyMessageViewHolder extends RecyclerView.ViewHolder {
-        TextView message, time;
+
+    class MessageViewHolder extends RecyclerView.ViewHolder{
+
+        TextView text, texty, time, timey;
         ImageView stat;
+
+        LinearLayout my, your;
         View total;
-
-        public MyMessageViewHolder(@NonNull View itemView) {
+        public MessageViewHolder(@NonNull View itemView) {
             super(itemView);
-
-            message = itemView.findViewById(R.id.mainMessage);
+            text = itemView.findViewById(R.id.main);
+            texty = itemView.findViewById(R.id.mainy);
             time = itemView.findViewById(R.id.timestamp);
+            timey = itemView.findViewById(R.id.timestampy);
             stat = itemView.findViewById(R.id.status);
+            my = itemView.findViewById(R.id.my);
+            your = itemView.findViewById(R.id.your);
             total = itemView;
-            itemView.setOnClickListener(view -> {
-                if (onClickListener != null) {
-                    onClickListener.onClick(view, getLayoutPosition());
-                }
-            });
-            itemView.setOnLongClickListener(view -> {
-                if (onLongClickListener != null) {
-                    onLongClickListener.onLong(view, getLayoutPosition());
-                    return true;
-                }
-                return false;
-            });
         }
 
-        public void onBindData(MessageElement element) {
-            message.setText(element.getMessage());
-
-            message.setLinksClickable(true);
+        void onBindData(MessageElement element){
             Calendar c = Calendar.getInstance();
             c.setTimeInMillis(element.getTimestamp());
             int h = c.get(Calendar.HOUR_OF_DAY);
@@ -165,172 +158,75 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             } else {
                 timestamp = h + ":" + minute;
             }
+            if(element.getUser() == 0){
+                your.setVisibility(View.GONE);
+                my.setVisibility(View.VISIBLE);
+                text.setText(element.getMessage());
+                time.setText(timestamp);
 
-            stat.setColorFilter(null);
-            if (element.getStatus() == 0) {
-                stat.setImageDrawable(inflater.getContext().getDrawable(R.drawable.ic_clock));
-            } else if (element.getStatus() == 1) {
-                stat.setImageDrawable(inflater.getContext().getDrawable(R.drawable.check_sended));
-            } else if (element.getStatus() == 2) {
-                stat.setImageDrawable(inflater.getContext().getDrawable(R.drawable.ic_check_circle));
-            } else if (element.getStatus() == 3) {
-                stat.setImageDrawable(inflater.getContext().getDrawable(R.drawable.ic_check_circle));
-                stat.setColorFilter(inflater.getContext().getColor(R.color.red_500));
-            }
-
-
-            if(mData.size() > getLayoutPosition() + 1){
-                if (((MessageElement) mData.get(getLayoutPosition() + 1).getObject()).getMine() != ((MessageElement) mData.get(getLayoutPosition()).getObject()).getMine()) {
-                    RecyclerView.LayoutParams p = (RecyclerView.LayoutParams) total.getLayoutParams();
-                    p.setMargins(0, convertToDpToPx(10), 0, 0);
-                    total.setLayoutParams(p);
-                    total.requestLayout();
-                } else {
-                    RecyclerView.LayoutParams p = (RecyclerView.LayoutParams) total.getLayoutParams();
-                    p.setMargins(0, 0, 0, 0);
-                    total.setLayoutParams(p);
-                    total.requestLayout();
+                stat.setColorFilter(null);
+                if (element.getStatus() == 0) {
+                    stat.setImageDrawable(inflater.getContext().getDrawable(R.drawable.ic_clock));
+                } else if (element.getStatus() == 1) {
+                    stat.setImageDrawable(inflater.getContext().getDrawable(R.drawable.ic_check));
+                } else if (element.getStatus() == 2) {
+                    stat.setImageDrawable(inflater.getContext().getDrawable(R.drawable.ic_check_circle));
+                } else if (element.getStatus() == 3) {
+                    stat.setImageDrawable(inflater.getContext().getDrawable(R.drawable.ic_check_circle));
+                    stat.setColorFilter(inflater.getContext().getColor(R.color.blue_500));
                 }
-            }
-
-            if(element.isSelect()){
-                TypedArray a = inflater.getContext().obtainStyledAttributes(R.styleable.AppCustomAttrs);
-                int color = a.getColor(R.styleable.AppCustomAttrs_backgroundLighting, inflater.getContext().getColor(R.color.black_transparent_500));
-                a.recycle();
-                total.setBackgroundColor(color);
-            } else {
-                total.setBackgroundColor(Color.parseColor("#00000000"));
-            }
-
-            time.setText(timestamp);
-        }
-    }
-
-    class EventMessageViewHolder extends RecyclerView.ViewHolder {
-
-        TextView text;
-
-        public EventMessageViewHolder(@NonNull View context) {
-            super(context);
-            text = context.findViewById(R.id.text);
-        }
-
-        void onBindData(MessageElement element) {
-            text.setText(element.getMessage());
-
-            if (element.getMine() == 4) {
-                text.setTextColor(inflater.getContext().getColor(R.color.yellow_700));
-            } else {
-                TypedArray a = inflater.getContext().obtainStyledAttributes(R.styleable.AppCustomAttrs);
-                int color = a.getColor(R.styleable.AppCustomAttrs_backgroundBorder, Color.WHITE);
-                a.recycle();
-                text.setTextColor(color);
-            }
-        }
-    }
-
-    class TheirMessageViewHolder extends RecyclerView.ViewHolder {
-        TextView message, time;
-        View total;
-
-        public TheirMessageViewHolder(@NonNull View itemView) {
-            super(itemView);
-            message = itemView.findViewById(R.id.mainMessage);
-            time = itemView.findViewById(R.id.timestamp);
-            total = itemView;
-            itemView.setOnClickListener(view -> {
-                if (onClickListener != null) {
-                    onClickListener.onClick(view, getLayoutPosition());
-                }
-            });
-            itemView.setOnLongClickListener(view -> {
-                if (onLongClickListener != null) {
-                    onLongClickListener.onLong(view, getLayoutPosition());
-                    return true;
-                }
-                return false;
-            });
-        }
-
-        public void onBindData(MessageElement element) {
-            message.setText(element.getMessage());
-            message.setLinksClickable(true);
-            Calendar c = Calendar.getInstance();
-            c.setTimeInMillis(element.getTimestamp());
-            int h = c.get(Calendar.HOUR_OF_DAY);
-            int m = c.get(Calendar.MINUTE);
-            String minute = m < 10 ? "0" + m : "" + m;
-            String tm = c.get(Calendar.AM_PM) == Calendar.AM ? "a. m." : "p. m.";
-
-            String hour = (h % 12) + "";
-            hour = (h == 12) ? "12" : hour;
-
-            boolean hourFormat = DateFormat.is24HourFormat(inflater.getContext());
-            String timestamp = "";
-            if (!hourFormat) {
-                timestamp = hour + ":" + minute + " " + tm;
-            } else {
-                timestamp = h + ":" + minute;
-            }
-
-            if (mData.size() > getLayoutPosition() + 1) {
-                if (((MessageElement) mData.get(getLayoutPosition() + 1).getObject()).getMine() != ((MessageElement) mData.get(getLayoutPosition()).getObject()).getMine()) {
-                    RecyclerView.LayoutParams p = (RecyclerView.LayoutParams) total.getLayoutParams();
-                    p.setMargins(0, convertToDpToPx(10), 0, 0);
-                    total.setLayoutParams(p);
-                    total.requestLayout();
-                } else {
-                    RecyclerView.LayoutParams p = (RecyclerView.LayoutParams) total.getLayoutParams();
-                    p.setMargins(0, 0, 0, 0);
-                    total.setLayoutParams(p);
-                    total.requestLayout();
-                }
-            }
-
-            if(element.isSelect()){
-                TypedArray a = inflater.getContext().obtainStyledAttributes(R.styleable.AppCustomAttrs);
-                int color = a.getColor(R.styleable.AppCustomAttrs_backgroundLighting, inflater.getContext().getColor(R.color.black_transparent_500));
-                a.recycle();
-                total.setBackgroundColor(color);
             }else{
-                total.setBackgroundColor(Color.parseColor("#00000000"));
+                your.setVisibility(View.VISIBLE);
+                my.setVisibility(View.GONE);
+                texty.setText(element.getMessage());
+                timey.setText(timestamp);
             }
 
-            time.setText(timestamp);
+            if(getLayoutPosition() + 1 < mData.size()){
+                RecyclerView.LayoutParams p = (RecyclerView.LayoutParams) total.getLayoutParams();
+                if(mData.get(getLayoutPosition() + 1).getType() != 3){
+                    if (((MessageElement) mData.get(getLayoutPosition() + 1).getObject()).getUser() != ((MessageElement) mData.get(getLayoutPosition()).getObject()).getUser()) {
+                        p.setMargins(0, convertToDpToPx(10), 0, 0);
+                    } else {
+                        p.setMargins(0, 0, 0, 0);
+                    }
+                }
+
+                total.setLayoutParams(p);
+                total.requestLayout();
+            }else if(getLayoutPosition() + 1 == mData.size()){
+                RecyclerView.LayoutParams p = (RecyclerView.LayoutParams) total.getLayoutParams();
+                p.setMargins(0, convertToDpToPx(10), 0, 0);
+                total.setLayoutParams(p);
+                total.requestLayout();
+            }
         }
     }
 
-    class MyReplyMessageViewHolder extends RecyclerView.ViewHolder{
-        TextView message, time, reply, name;
+    class MessageReplyViewHolder extends RecyclerView.ViewHolder{
+
+        TextView text, texty, time, timey, name, namey, reply, replyy;
         ImageView stat;
+
+        LinearLayout my, your;
         View total;
-
-        public MyReplyMessageViewHolder(@NonNull View itemView) {
+        public MessageReplyViewHolder(@NonNull View itemView) {
             super(itemView);
-
-            message = itemView.findViewById(R.id.mainMessage);
+            text = itemView.findViewById(R.id.main);
+            texty = itemView.findViewById(R.id.mainy);
             time = itemView.findViewById(R.id.timestamp);
-            reply = itemView.findViewById(R.id.reply_message);
-            name = itemView.findViewById(R.id.name_of_they);
+            timey = itemView.findViewById(R.id.timestampy);
             stat = itemView.findViewById(R.id.status);
+            my = itemView.findViewById(R.id.my);
+            your = itemView.findViewById(R.id.your);
+            reply = itemView.findViewById(R.id.reply);
+            replyy = itemView.findViewById(R.id.replyy);
+            name = itemView.findViewById(R.id.name);
+            namey = itemView.findViewById(R.id.namey);
             total = itemView;
-
-            itemView.setOnClickListener(view -> {
-                if (onClickListener != null) {
-                    onClickListener.onClick(view, getLayoutPosition());
-                }
-            });
-            itemView.setOnLongClickListener(view -> {
-                if (onLongClickListener != null) {
-                    onLongClickListener.onLong(view, getLayoutPosition());
-                    return true;
-                }
-                return false;
-            });
         }
 
-        public void onBindData(MessageElement element){
-            message.setText(element.getMessage());
+        void onBindData(MessageElement element){
             Calendar c = Calendar.getInstance();
             c.setTimeInMillis(element.getTimestamp());
             int h = c.get(Calendar.HOUR_OF_DAY);
@@ -341,9 +237,6 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             String hour = (h % 12) + "";
             hour = (h == 12) ? "12" : hour;
 
-            reply.setText(element.getMessageReplyed());
-            name.setText(element.getTheirName());
-
             boolean hourFormat = DateFormat.is24HourFormat(inflater.getContext());
             String timestamp = "";
             if (!hourFormat) {
@@ -352,162 +245,92 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 timestamp = h + ":" + minute;
             }
 
-            stat.setColorFilter(null);
-            if (element.getStatus() == 0) {
-                stat.setImageDrawable(inflater.getContext().getDrawable(R.drawable.ic_clock));
-            } else if (element.getStatus() == 1) {
-                stat.setImageDrawable(inflater.getContext().getDrawable(R.drawable.check_sended));
-            } else if (element.getStatus() == 2) {
-                stat.setImageDrawable(inflater.getContext().getDrawable(R.drawable.ic_check_circle));
-            } else if (element.getStatus() == 3) {
-                stat.setImageDrawable(inflater.getContext().getDrawable(R.drawable.ic_check_circle));
-                stat.setColorFilter(inflater.getContext().getColor(R.color.red_500));
-            }
 
-            if(mData.size() > getLayoutPosition() + 1){
-                if (((MessageElement) mData.get(getLayoutPosition() + 1).getObject()).getMine() != ((MessageElement) mData.get(getLayoutPosition()).getObject()).getMine()) {
-                    RecyclerView.LayoutParams p = (RecyclerView.LayoutParams) total.getLayoutParams();
-                    p.setMargins(0, convertToDpToPx(10), 0, 0);
-                    total.setLayoutParams(p);
-                    total.requestLayout();
-                } else {
-                    RecyclerView.LayoutParams p = (RecyclerView.LayoutParams) total.getLayoutParams();
-                    p.setMargins(0, 0, 0, 0);
-                    total.setLayoutParams(p);
-                    total.requestLayout();
+            MessageElement msg = element.getReply();
+            if(element.getUser() == 0){
+
+                your.setVisibility(View.GONE);
+                my.setVisibility(View.VISIBLE);
+                text.setText(element.getMessage());
+                time.setText(timestamp);
+                reply.setText(msg.getMessage());
+                name.setText(msg.getUser() == 0 ? inflater.getContext().getString(R.string.you) : msg.getName());
+
+                stat.setColorFilter(null);
+                if (element.getStatus() == 0) {
+                    stat.setImageDrawable(inflater.getContext().getDrawable(R.drawable.ic_clock));
+                } else if (element.getStatus() == 1) {
+                    stat.setImageDrawable(inflater.getContext().getDrawable(R.drawable.ic_check));
+                } else if (element.getStatus() == 2) {
+                    stat.setImageDrawable(inflater.getContext().getDrawable(R.drawable.ic_check_circle));
+                } else if (element.getStatus() == 3) {
+                    stat.setImageDrawable(inflater.getContext().getDrawable(R.drawable.ic_check_circle));
+                    stat.setColorFilter(inflater.getContext().getColor(R.color.blue_500));
                 }
-            }
-
-            if(element.isSelect()){
-                TypedArray a = inflater.getContext().obtainStyledAttributes(R.styleable.AppCustomAttrs);
-                int color = a.getColor(R.styleable.AppCustomAttrs_backgroundLighting, inflater.getContext().getColor(R.color.black_transparent_500));
-                a.recycle();
-                total.setBackgroundColor(color);
             }else{
-                total.setBackgroundColor(Color.parseColor("#00000000"));
+
+                your.setVisibility(View.VISIBLE);
+                my.setVisibility(View.GONE);
+                texty.setText(element.getMessage());
+                timey.setText(timestamp);
+                replyy.setText(msg.getMessage());
+                namey.setText(msg.getUser() == 0 ? inflater.getContext().getString(R.string.you) : msg.getName());
             }
 
-            time.setText(timestamp);
+            if(getLayoutPosition() + 1 < mData.size()){
+                RecyclerView.LayoutParams p = (RecyclerView.LayoutParams) total.getLayoutParams();
+                if(mData.get(getLayoutPosition() + 1).getType() != 3){
+                    if (((MessageElement) mData.get(getLayoutPosition() + 1).getObject()).getUser() != ((MessageElement) mData.get(getLayoutPosition()).getObject()).getUser()) {
+                        p.setMargins(0, convertToDpToPx(10), 0, 0);
+                    } else {
+                        p.setMargins(0, 0, 0, 0);
+                    }
+                }
+                total.setLayoutParams(p);
+                total.requestLayout();
+            }
         }
     }
 
-    class TheirReplyMessageViewHolder extends RecyclerView.ViewHolder{
-        TextView message, time, reply, name;
-        View total;
-        public TheirReplyMessageViewHolder(@NonNull View itemView) {
-            super(itemView);
+    class MessageTaskViewHolder extends RecyclerView.ViewHolder{
 
-            message = itemView.findViewById(R.id.mainMessage);
+        TextView text, texty, time, timey, date, datey, task, tasky;
+        ImageView stat;
+
+        LinearLayout my, your, add, addy;
+        View total;
+        public MessageTaskViewHolder(@NonNull View itemView) {
+            super(itemView);
+            text = itemView.findViewById(R.id.main);
+            texty = itemView.findViewById(R.id.mainy);
             time = itemView.findViewById(R.id.timestamp);
-            reply = itemView.findViewById(R.id.reply_message);
-            name = itemView.findViewById(R.id.name_of_they);
-            total = itemView;
-
-            itemView.setOnClickListener(view -> {
-                if (onClickListener != null) {
-                    onClickListener.onClick(view, getLayoutPosition());
-                }
-            });
-            itemView.setOnLongClickListener(view -> {
-                if (onLongClickListener != null) {
-                    onLongClickListener.onLong(view, getLayoutPosition());
-                    return true;
-                }
-                return false;
-            });
-        }
-
-        public void onBindData(MessageElement element){
-            message.setText(element.getMessage());
-            Calendar c = Calendar.getInstance();
-            c.setTimeInMillis(element.getTimestamp());
-            int h = c.get(Calendar.HOUR_OF_DAY);
-            int m = c.get(Calendar.MINUTE);
-            String minute = m < 10 ? "0" + m : "" + m;
-            String tm = c.get(Calendar.AM_PM) == Calendar.AM ? "a. m." : "p. m.";
-
-            String hour = (h % 12) + "";
-            hour = (h == 12) ? "12" : hour;
-
-            boolean hourFormat = DateFormat.is24HourFormat(inflater.getContext());
-            String timestamp = "";
-            if (!hourFormat) {
-                timestamp = hour + ":" + minute + " " + tm;
-            } else {
-                timestamp = h + ":" + minute;
-            }
-            reply.setText(element.getMessageReplyed());
-            name.setText(element.getTheirName());
-
-            if (mData.size() > getLayoutPosition() + 1) {
-                if (((MessageElement) mData.get(getLayoutPosition() + 1).getObject()).getMine() != ((MessageElement) mData.get(getLayoutPosition()).getObject()).getMine()) {
-                    RecyclerView.LayoutParams p = (RecyclerView.LayoutParams) total.getLayoutParams();
-                    p.setMargins(0, convertToDpToPx(10), 0, 0);
-                    total.setLayoutParams(p);
-                    total.requestLayout();
-                } else {
-                    RecyclerView.LayoutParams p = (RecyclerView.LayoutParams) total.getLayoutParams();
-                    p.setMargins(0, 0, 0, 0);
-                    total.setLayoutParams(p);
-                    total.requestLayout();
-                }
-            }
-
-            if(element.isSelect()){
-                TypedArray a = inflater.getContext().obtainStyledAttributes(R.styleable.AppCustomAttrs);
-                int color = a.getColor(R.styleable.AppCustomAttrs_backgroundLighting, inflater.getContext().getColor(R.color.black_transparent_500));
-                a.recycle();
-                total.setBackgroundColor(color);
-            }else{
-                total.setBackgroundColor(Color.parseColor("#00000000"));
-            }
-
-            time.setText(timestamp);
-        }
-    }
-
-    class MyEventMessageViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        TextView message, time;
-        TextView eTitle, eUser, eDate, eTime;
-        ImageView stat, usericon;
-        View total;
-        CardView task;
-
-        public MyEventMessageViewHolder(@NonNull View itemView) {
-            super(itemView);
+            timey = itemView.findViewById(R.id.timestampy);
+            stat = itemView.findViewById(R.id.status);
+            my = itemView.findViewById(R.id.my);
+            your = itemView.findViewById(R.id.your);
 
             task = itemView.findViewById(R.id.task);
-            message = itemView.findViewById(R.id.mainMessage);
-            time = itemView.findViewById(R.id.timestamp);
-            stat = itemView.findViewById(R.id.status);
-            eTitle = itemView.findViewById(R.id.eventtitle);
-            eUser = itemView.findViewById(R.id.username);
-            eDate = itemView.findViewById(R.id.endDate);
-            eTime = itemView.findViewById(R.id.endTime);
-            PushDownAnim.setPushDownAnimTo(task)
-                    .setDurationPush(100)
-                    .setScale(PushDownAnim.MODE_SCALE, 0.98f)
-                    .setOnClickListener(this);
+            tasky = itemView.findViewById(R.id.tasky);
+            date = itemView.findViewById(R.id.date);
+            datey = itemView.findViewById(R.id.datey);
+            add = itemView.findViewById(R.id.add_btn);
+            addy = itemView.findViewById(R.id.add_btn_y);
             total = itemView;
-
-            itemView.setOnClickListener(view -> {
-                if (onClickListener != null) {
-                    onClickListener.onClick(view, getLayoutPosition());
-                }
-            });
-            itemView.setOnLongClickListener(view -> {
-                if (onLongClickListener != null) {
-                    onLongClickListener.onLong(view, getLayoutPosition());
-                    return true;
-                }
-                return false;
-            });
+            PushDownAnim.setPushDownAnimTo(add)
+                    .setOnClickListener(view -> {
+                        if(addEventListener != null){
+                            addEventListener.onAddEvent(view, getLayoutPosition());
+                        }
+                    });
+            PushDownAnim.setPushDownAnimTo(addy)
+                    .setOnClickListener(view -> {
+                        if(addEventListener != null){
+                            addEventListener.onAddEvent(view, getLayoutPosition());
+                        }
+                    });
         }
 
-        public void onBindData(MessageElement element) {
-            message.setText(element.getMessage());
-            if(element.getMessage().equals(" 1"))
-                message.setText(inflater.getContext().getString(R.string.task));
+        void onBindData(MessageElement element){
             Calendar c = Calendar.getInstance();
             c.setTimeInMillis(element.getTimestamp());
             int h = c.get(Calendar.HOUR_OF_DAY);
@@ -526,195 +349,69 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 timestamp = h + ":" + minute;
             }
 
-            stat.setColorFilter(null);
-            if (element.getStatus() == 0) {
-                stat.setImageDrawable(inflater.getContext().getDrawable(R.drawable.ic_clock));
-            } else if (element.getStatus() == 1) {
-                stat.setImageDrawable(inflater.getContext().getDrawable(R.drawable.check_sended));
-            } else if (element.getStatus() == 2) {
-                stat.setImageDrawable(inflater.getContext().getDrawable(R.drawable.ic_check_circle));
-            } else if (element.getStatus() == 3) {
-                stat.setImageDrawable(inflater.getContext().getDrawable(R.drawable.ic_check_circle));
-                stat.setColorFilter(inflater.getContext().getColor(R.color.red_500));
-            }
 
-            if(element.isSelect()){
-                TypedArray a = inflater.getContext().obtainStyledAttributes(R.styleable.AppCustomAttrs);
-                int color = a.getColor(R.styleable.AppCustomAttrs_backgroundLighting, inflater.getContext().getColor(R.color.black_transparent_500));
-                a.recycle();
-                total.setBackgroundColor(color);
+            if(element.getUser() == 0){
+
+                your.setVisibility(View.GONE);
+                my.setVisibility(View.VISIBLE);
+                text.setText(element.getMessage());
+                time.setText(timestamp);
+                task.setText(element.getTask().getDescription());
+                date.setText(dow(element.getTask().getDeadline()));
+
+                stat.setColorFilter(null);
+                if (element.getStatus() == 0) {
+                    stat.setImageDrawable(inflater.getContext().getDrawable(R.drawable.ic_clock));
+                } else if (element.getStatus() == 1) {
+                    stat.setImageDrawable(inflater.getContext().getDrawable(R.drawable.ic_check));
+                } else if (element.getStatus() == 2) {
+                    stat.setImageDrawable(inflater.getContext().getDrawable(R.drawable.ic_check_circle));
+                } else if (element.getStatus() == 3) {
+                    stat.setImageDrawable(inflater.getContext().getDrawable(R.drawable.ic_check_circle));
+                    stat.setColorFilter(inflater.getContext().getColor(R.color.blue_500));
+                }
             }else{
-                total.setBackgroundColor(Color.parseColor("#00000000"));
+
+                your.setVisibility(View.VISIBLE);
+                my.setVisibility(View.GONE);
+                texty.setText(element.getMessage());
+                timey.setText(timestamp);
+                tasky.setText(element.getTask().getDescription());
+                datey.setText(dow(element.getTask().getDeadline()));
             }
 
-            EventMessageElement e = element.getEvent();
-            eTitle.setText(e.getTitle());
+            if(getLayoutPosition() + 1 < mData.size()){
+                RecyclerView.LayoutParams p = (RecyclerView.LayoutParams) total.getLayoutParams();
+                if(mData.get(getLayoutPosition() + 1).getType() != 3){
+                    if (((MessageElement) mData.get(getLayoutPosition() + 1).getObject()).getUser() != ((MessageElement) mData.get(getLayoutPosition()).getObject()).getUser()) {
+                        p.setMargins(0, convertToDpToPx(10), 0, 0);
+                    } else {
+                        p.setMargins(0, 0, 0, 0);
+                    }
+                }
 
-            c.setTimeInMillis(e.getEndDate());
+                total.setLayoutParams(p);
+                total.requestLayout();
+            }
+        }
+
+        private String dow(long tim) {
+            String d;
+            Calendar c = Calendar.getInstance();
+            c.setTimeInMillis(tim);
             int day = c.get(Calendar.DAY_OF_MONTH);
             int month = c.get(Calendar.MONTH);
             int year = c.get(Calendar.YEAR);
-            int hours = c.get(Calendar.HOUR) == 0 ? 12 : c.get(Calendar.HOUR);
-            int minutes = c.get(Calendar.MINUTE);
+            int hour = c.get(Calendar.HOUR) == 0 ? 12 : c.get(Calendar.HOUR);
+            int minute = c.get(Calendar.MINUTE);
 
-            String dd = day < 10 ? "0" + day : "" + day;
-            String dates = dd + " " + homeFragment.getMonthMinor(inflater.getContext(), (month)) + " " + year + " ";
-            String mn = minutes < 10 ? "0" + minutes : "" + minutes;
-
-            String times = "";
-            if (!hourFormat) {
-                times = hours + ":" + mn;
-                times += c.get(Calendar.AM_PM) == Calendar.AM ? " a. m." : " p. m.";
-            } else {
-                times = c.get(Calendar.HOUR_OF_DAY) + ":" + mn;
-            }
-
-            eDate.setText(dates);
-            eTime.setText(times);
-
-            if (mData.size() > getLayoutPosition() + 1) {
-                if (((MessageElement) mData.get(getLayoutPosition() + 1).getObject()).getMine() != ((MessageElement) mData.get(getLayoutPosition()).getObject()).getMine()) {
-                    RecyclerView.LayoutParams p = (RecyclerView.LayoutParams) total.getLayoutParams();
-                    p.setMargins(0, convertToDpToPx(10), 0, 0);
-                    total.setLayoutParams(p);
-                    total.requestLayout();
-                } else {
-                    RecyclerView.LayoutParams p = (RecyclerView.LayoutParams) total.getLayoutParams();
-                    p.setMargins(0, 0, 0, 0);
-                    total.setLayoutParams(p);
-                    total.requestLayout();
-                }
-            }
-
-            time.setText(timestamp);
-        }
-
-        @Override
-        public void onClick(View view) {
-            if(addEventListener != null){
-                addEventListener.onAddEvent(view, getLayoutPosition());
-            }
-        }
-    }
-
-    class TheirEventMessageViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        TextView message, time;
-        TextView eTitle, eUser, eDate, eTime;
-        ImageView usericon;
-        View total;
-        CardView task;
-
-        public TheirEventMessageViewHolder(@NonNull View itemView) {
-            super(itemView);
-
-            task = itemView.findViewById(R.id.task);
-            message = itemView.findViewById(R.id.mainMessage);
-            time = itemView.findViewById(R.id.timestamp);
-            eTitle = itemView.findViewById(R.id.eventtitle);
-            eUser = itemView.findViewById(R.id.username);
-            eDate = itemView.findViewById(R.id.endDate);
-            eTime = itemView.findViewById(R.id.endTime);
-            PushDownAnim.setPushDownAnimTo(task)
-                    .setDurationPush(100)
-                    .setScale(PushDownAnim.MODE_SCALE, 0.98f)
-                    .setOnClickListener(this);
-
-            itemView.setOnClickListener(view -> {
-                if (onClickListener != null) {
-                    onClickListener.onClick(view, getLayoutPosition());
-                }
-            });
-            itemView.setOnLongClickListener(view -> {
-                if (onLongClickListener != null) {
-                    onLongClickListener.onLong(view, getLayoutPosition());
-                    return true;
-                }
-                return false;
-            });
-            total = itemView;
-        }
-
-        public void onBindData(MessageElement element) {
-            message.setText(element.getMessage());
-            if(element.getMessage().equals(" 1")) {
-                String s = inflater.getContext().getString(R.string.task);
-                message.setText(s);
-            }
-
-            Calendar c = Calendar.getInstance();
-            c.setTimeInMillis(element.getTimestamp());
-            int h = c.get(Calendar.HOUR_OF_DAY);
-            int m = c.get(Calendar.MINUTE);
-            String minute = m < 10 ? "0" + m : "" + m;
-            String tm = c.get(Calendar.AM_PM) == Calendar.AM ? "a. m." : "p. m.";
-
-            String hour = (h % 12) + "";
-            hour = (h == 12) ? "12" : hour;
-
-            boolean hourFormat = DateFormat.is24HourFormat(inflater.getContext());
-            String timestamp = "";
-            if (!hourFormat) {
-                timestamp = hour + ":" + minute + " " + tm;
-            } else {
-                timestamp = h + ":" + minute;
-            }
-
-            EventMessageElement e = element.getEvent();
-
-            eTitle.setText(e.getTitle());
-
-            c.setTimeInMillis(e.getEndDate());
-            int day = c.get(Calendar.DAY_OF_MONTH);
-            int month = c.get(Calendar.MONTH);
-            int year = c.get(Calendar.YEAR);
-            int hours = c.get(Calendar.HOUR) == 0 ? 12 : c.get(Calendar.HOUR);
-            int minutes = c.get(Calendar.MINUTE);
-
-            String dd = day < 10 ? "0" + day : "" + day;
-            String dates = dd + " " + homeFragment.getMonthMinor(inflater.getContext(), (month)) + " " + year + " ";
-            String mn = minutes < 10 ? "0" + minutes : "" + minutes;
-            String times = "";
-            if (!hourFormat) {
-                times = hours + ":" + mn;
-                times += c.get(Calendar.AM_PM) == Calendar.AM ? " a. m." : " p. m.";
-            } else {
-                times = c.get(Calendar.HOUR_OF_DAY) + ":" + mn;
-            }
-
-            eDate.setText(dates);
-            eTime.setText(times);
-
-            if (mData.size() > getLayoutPosition() + 1) {
-                if (((MessageElement) mData.get(getLayoutPosition() + 1).getObject()).getMine() != ((MessageElement) mData.get(getLayoutPosition()).getObject()).getMine()) {
-                    RecyclerView.LayoutParams p = (RecyclerView.LayoutParams) total.getLayoutParams();
-                    p.setMargins(0, convertToDpToPx(10), 0, 0);
-                    total.setLayoutParams(p);
-                    total.requestLayout();
-                } else {
-                    RecyclerView.LayoutParams p = (RecyclerView.LayoutParams) total.getLayoutParams();
-                    p.setMargins(0, 0, 0, 0);
-                    total.setLayoutParams(p);
-                    total.requestLayout();
-                }
-            }
-
-            if(element.isSelect()){
-                TypedArray a = inflater.getContext().obtainStyledAttributes(R.styleable.AppCustomAttrs);
-                int color = a.getColor(R.styleable.AppCustomAttrs_backgroundLighting, inflater.getContext().getColor(R.color.black_transparent_500));
-                a.recycle();
-                total.setBackgroundColor(color);
-            }else{
-                total.setBackgroundColor(Color.parseColor("#00000000"));
-            }
-
-            time.setText(timestamp);
-        }
-
-        @Override
-        public void onClick(View view) {
-            if(addEventListener != null){
-                addEventListener.onAddEvent(view, getLayoutPosition());
-            }
+            String dd = day < 10 ? "0" + day : String.valueOf(day);
+            String datetime = dd + " " + homeFragment.getMonthMinor(inflater.getContext(), month) + " " + year + " ";
+            String mn = minute < 10 ? "0" + minute : String.valueOf(minute);
+            datetime += hour + ":" + mn;
+            datetime += c.get(Calendar.AM_PM) == Calendar.AM ? " a. m." : " p. m.";
+            d = datetime;
+            return d;
         }
     }
 
@@ -733,5 +430,19 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     public interface OnLongClickListener{
         void onLong(View view, int pos);
+    }
+
+    class EventViewHolder extends RecyclerView.ViewHolder{
+        TextView text;
+        public EventViewHolder(@NonNull View itemView) {
+            super(itemView);
+
+            text = itemView.findViewById(R.id.text);
+        }
+
+        void onBindData(TextElement element){
+
+            text.setText(element.getText());
+        }
     }
 }

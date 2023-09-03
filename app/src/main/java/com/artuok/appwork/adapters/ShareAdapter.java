@@ -83,8 +83,8 @@ public class ShareAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
 
         void onBindData(ChatElement element){
             username.setText(element.getName());
-            if(element.getImage() != null){
-                usericon.setImageBitmap(element.getImage());
+            if(element.getPicture() != null){
+                usericon.setImageBitmap(element.getPicture());
             }
         }
 

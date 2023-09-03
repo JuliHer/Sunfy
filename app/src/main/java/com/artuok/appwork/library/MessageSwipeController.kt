@@ -7,6 +7,7 @@ import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.graphics.drawable.Drawable
 import android.util.DisplayMetrics
+import android.util.Log
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
@@ -17,6 +18,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.artuok.appwork.R
 import com.artuok.appwork.objects.Item
 import com.artuok.appwork.objects.MessageElement
+import kotlin.math.pow
 
 
 class MessageSwipeController(private val context: Context, private val element : ArrayList<Item>, private val blockAll : Boolean, private val swipeControllerActions: SwipeControllerActions) :
@@ -28,6 +30,7 @@ class MessageSwipeController(private val context: Context, private val element :
     private var currentItemViewHolder: RecyclerView.ViewHolder? = null
     private lateinit var mView: View
     private var dX = 0f
+    private var attenuedDx = 0f
 
     private var replyButtonProgress: Float = 0.toFloat()
     private var lastReplyButtonAnimationTime: Long = 0
@@ -70,22 +73,27 @@ class MessageSwipeController(private val context: Context, private val element :
         isCurrentlyActive: Boolean
     ) {
 
+        if(element[viewHolder.layoutPosition].type != 3){
+            if(!(element[viewHolder.layoutPosition].`object` as MessageElement).isSelect){
+                if((element[viewHolder.layoutPosition].`object` as MessageElement).status != 0){
+                    if (actionState == ACTION_STATE_SWIPE) {
+                        setTouchListener(recyclerView, viewHolder)
+                    }
 
-        if(!(element[viewHolder.layoutPosition].`object` as MessageElement).isSelect){
-            if((element[viewHolder.layoutPosition].`object` as MessageElement).status != 0){
-                if (actionState == ACTION_STATE_SWIPE) {
-                    setTouchListener(recyclerView, viewHolder)
-                }
+                    if (mView.translationX < convertTodp(400) || dX < this.dX) {
 
-                if (mView.translationX < convertTodp(200) || dX < this.dX) {
-                    super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
-                    this.dX = dX
-                    startTracking = true
+                        super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
+                        this.dX = dX
+                        this.attenuedDx = 0f
+                        startTracking = true
+                    }
+
+                    currentItemViewHolder = viewHolder
+                    drawReplyButton(c)
                 }
-                currentItemViewHolder = viewHolder
-                drawReplyButton(c)
             }
         }
+
 
 
 
@@ -99,6 +107,7 @@ class MessageSwipeController(private val context: Context, private val element :
                 if (Math.abs(mView.translationX) >= this@MessageSwipeController.convertTodp(100)) {
                     swipeControllerActions.showReplyUI(viewHolder.adapterPosition)
                 }
+                attenuedDx = 0f
             }
             false
         }
@@ -142,7 +151,7 @@ class MessageSwipeController(private val context: Context, private val element :
             scale = if (replyButtonProgress <= 0.8f) {
                 3.0f * (replyButtonProgress / 0.8f)
             } else {
-                3.0f - 0.2f * ((replyButtonProgress - 0.8f) / 0.2f)
+                3.0f - 0.5f * ((replyButtonProgress - 0.8f) / 0.5f)
             }
             alpha = Math.min(255f, 255 * (replyButtonProgress / 0.8f)).toInt()
         } else {
@@ -193,7 +202,10 @@ class MessageSwipeController(private val context: Context, private val element :
     private fun convertTodp(pixel: Int): Int {
         return (pixel / (context.resources.displayMetrics.densityDpi.toFloat() / DisplayMetrics.DENSITY_DEFAULT)).toInt()
     }
-
+    fun dpToPx(dp: Int): Int {
+        val density = context.resources.displayMetrics.density
+        return (dp * density).toInt()
+    }
 
 
 }
