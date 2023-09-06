@@ -1,6 +1,5 @@
 package com.artuok.appwork;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
@@ -25,7 +24,6 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.artuok.appwork.dialogs.AnnouncementDialog;
-import com.artuok.appwork.dialogs.PermissionDialog;
 import com.artuok.appwork.fragmets.AlarmsFragment;
 import com.artuok.appwork.fragmets.AveragesFragment;
 import com.artuok.appwork.fragmets.TasksFragment;
@@ -34,11 +32,9 @@ import com.artuok.appwork.fragmets.CalendarFragment;
 import com.artuok.appwork.fragmets.ChatFragment;
 import com.artuok.appwork.fragmets.SettingsFragment;
 import com.artuok.appwork.fragmets.SocialFragment;
-import com.artuok.appwork.fragmets.homeFragment;
+import com.artuok.appwork.fragmets.HomeFragment;
 import com.artuok.appwork.library.CalendarWeekView;
 import com.artuok.appwork.library.Constants;
-import com.google.android.gms.ads.MobileAds;
-import com.google.android.gms.ads.RequestConfiguration;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationBarView;
@@ -47,16 +43,12 @@ import com.google.android.material.snackbar.BaseTransientBottomBar;
 import com.google.android.material.snackbar.Snackbar;
 import com.thekhaeng.pushdownanim.PushDownAnim;
 
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
     public BottomNavigationView navigation;
     public Fragment currentFragment;
-    private NavigationView navigationView;
-
-
     private FloatingActionButton mainFAB;
     private FloatingActionButton subFAB1;
     private FloatingActionButton subFAB2;
@@ -64,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean isFABsExpanded = false;
 
     //fragments
-    homeFragment homefragment = new homeFragment();
+    HomeFragment homefragment = new HomeFragment();
     TasksFragment tasksFragment = new TasksFragment();
     CalendarFragment calendarFragment = new CalendarFragment();
 
@@ -85,8 +77,6 @@ public class MainActivity extends AppCompatActivity {
     //Dialog
     Calendar alarmset;
 
-    private OnBackPressedCallback onBackPressedCallback;
-
     private static MainActivity instance;
 
     int position = 1;
@@ -96,12 +86,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         navigation = findViewById(R.id.bottom_navigation);
-        navigationView = findViewById(R.id.navigationView);
+        NavigationView navigationView = findViewById(R.id.navigationView);
 
-
-        MobileAds.initialize(this);
-        RequestConfiguration configuration = new RequestConfiguration.Builder().setTestDeviceIds(Arrays.asList("1C6196DE1539B306778414AEE133E09B")).build();
-        MobileAds.setRequestConfiguration(configuration);
         if (savedInstanceState != null)
             position = savedInstanceState.getInt("position", 1);
 
@@ -166,15 +152,8 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-
-        if (isWarning() || !isActualVersion()) {
-            //showErrorAnnouncement();
-        }
-
-
-        if (!isActualVersion()) {
+        if (checkVersion()) {
             showAnnouncement();
-            //setWarning(false);
             setVersion(Constants.VERSION);
         }
 
@@ -182,7 +161,7 @@ public class MainActivity extends AppCompatActivity {
             showAnnouncementChat();
         }
 
-        onBackPressedCallback = new OnBackPressedCallback(true) {
+        OnBackPressedCallback onBackPressedCallback = new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
                 if (position != 0) {
@@ -198,9 +177,7 @@ public class MainActivity extends AppCompatActivity {
     public void showSnackbar(String text) {
         CoordinatorLayout layout = (CoordinatorLayout) findViewById(R.id.coordinadorers);
         Snackbar snackbar = Snackbar.make(layout, "", BaseTransientBottomBar.LENGTH_LONG);
-
-        View customSnack = getLayoutInflater().inflate(R.layout.snack_notification_layout, null);
-
+        @SuppressLint("InflateParams") View customSnack = getLayoutInflater().inflate(R.layout.snack_notification_layout, null);
         snackbar.getView().setBackgroundColor(Color.TRANSPARENT);
 
         Snackbar.SnackbarLayout snackbarLayout = (Snackbar.SnackbarLayout) snackbar.getView();
@@ -223,21 +200,9 @@ public class MainActivity extends AppCompatActivity {
         se.apply();
     }
 
-    public void setWarning(boolean warning){
+    public boolean checkVersion() {
         SharedPreferences s = getSharedPreferences("settings", Context.MODE_PRIVATE);
-        SharedPreferences.Editor se = s.edit();
-        se.putBoolean("acceptWarning", warning);
-        se.apply();
-    }
-
-    public boolean isWarning() {
-        SharedPreferences s = getSharedPreferences("settings", Context.MODE_PRIVATE);
-        return !s.getBoolean("acceptWarning", false);
-    }
-
-    public boolean isActualVersion() {
-        SharedPreferences s = getSharedPreferences("settings", Context.MODE_PRIVATE);
-        return s.getInt("version", 0) == Constants.VERSION;
+        return s.getInt("version", 0) != Constants.VERSION;
     }
 
     public int getVersion() {
@@ -346,7 +311,6 @@ public class MainActivity extends AppCompatActivity {
                     LoadTextFragment(settingsFragment, getString(R.string.settings_menu));
                     break;
                 case 8:
-                    navigation.setSelectedItemId(R.id.homefragment);
                     position = 9;
                     LoadTextFragment(backupsFragment, getString(R.string.backup));
                     break;
@@ -358,25 +322,14 @@ public class MainActivity extends AppCompatActivity {
             result -> {
                 if (result.getResultCode() == Activity.RESULT_OK) {
                     Intent data = result.getData();
-                    if (data.getIntExtra("requestCode", 0) == 3) {
-                    } else if (data.getIntExtra("requestCode", 0) == 2) {
+                    assert data != null;
+                    if (data.getIntExtra("requestCode", 0) == 2) {
                         updateWidget();
                         notifyAllChanged();
-                    }
-
-                    if(data.getIntExtra("requestCode2", 0) == 8){
-
                     }
                 }
             }
     );
-
-
-    public void loadChatFragment() {
-        if (socialFragment.isAdded()) {
-
-        }
-    }
 
     public void updateWidget() {
 
@@ -459,25 +412,6 @@ public class MainActivity extends AppCompatActivity {
         dialog.show(getSupportFragmentManager(), "Error Announcement");
     }
 
-    public void showErrorAnnouncement() {
-        AnnouncementDialog dialog = new AnnouncementDialog();
-        dialog.setTitle(getString(R.string.v_unstable));
-        dialog.setText(getString(R.string.contact_with_progr_unstable_v));
-        dialog.setBackgroundCOlor(getColor(R.color.yellow_700));
-        dialog.setDrawable(R.drawable.alert_octagon);
-        dialog.setAgree(true);
-        dialog.setOnNegativeClickListener(getString(R.string.dismiss), view -> {
-            setWarning(false);
-            finish();
-        });
-        dialog.setOnPositiveClickListener(getString(R.string.Accept_M), view -> {
-            setWarning(true);
-            dialog.dismiss();
-        });
-
-        dialog.show(getSupportFragmentManager(), "Error Announcement");
-    }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu, menu);
@@ -486,18 +420,14 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-
-        int id = item.getItemId();
-
         return true;
     }
 
     boolean changesFromDrawer = false;
 
 
+    @SuppressLint("NonConstantResourceId")
     NavigationView.OnNavigationItemSelectedListener mOnItemSelectedListener = item -> {
-
-
         switch (item.getItemId()) {
             case R.id.homefragment:
                 position = 1;
@@ -520,15 +450,12 @@ public class MainActivity extends AppCompatActivity {
         return false;
     };
 
+    @SuppressLint("NonConstantResourceId")
     NavigationBarView.OnItemSelectedListener mOnNavigationItemSelectedListener = item -> {
-
-
         if (!changesFromDrawer) {
-            changesFromDrawer = false;
             switch (item.getItemId()) {
                 case R.id.homefragment:
                     position = 1;
-
                     LoadFragment(homefragment);
                     return true;
                 case R.id.awaiting_fragment:
@@ -553,28 +480,23 @@ public class MainActivity extends AppCompatActivity {
         return false;
     };
 
-    public void addMessage(){
-        if(socialFragment.isAdded()){
-
-        }
-    }
-
     private void startFragment(Fragment fragment) {
         FragmentTransaction transaction =
                 getSupportFragmentManager()
                         .beginTransaction();
         transaction.replace(R.id.frameLayoutMain, fragment);
-        if (position == 1) {
-            firstCurrentFragment = fragment;
-        } else if (position == 2) {
-            secondCurrentFragment = fragment;
-        } else if (position == 3) {
-            thirdCurrentFragment = fragment;
-        } else if (position == 4) {
-            fourCurrentFragment = fragment;
-        } else {
-            firstCurrentFragment = fragment;
+
+        switch (position){
+            case 2: secondCurrentFragment = fragment;
+                break;
+            case 3: thirdCurrentFragment = fragment;
+                break;
+            case 4: fourCurrentFragment = fragment;
+                break;
+            default: firstCurrentFragment = fragment;
+                break;
         }
+
         currentFragment = fragment;
         transaction.commit();
     }
@@ -618,8 +540,6 @@ public class MainActivity extends AppCompatActivity {
         }
         position = 1;
 
-
-
         currentFragment = fragment;
         transaction.commit();
     }
@@ -659,16 +579,10 @@ public class MainActivity extends AppCompatActivity {
         if (averagesFragment.isAdded()) {
             averagesFragment.notifyDataChanged();
         }
-
-        if(socialFragment.isAdded()){
-
-        }
     }
 
     public void notifyToChatChanged(){
-        if(socialFragment.isAdded()){
 
-        }
     }
 
     public void notifyChanged(int pos) {
@@ -684,42 +598,17 @@ public class MainActivity extends AppCompatActivity {
         if (averagesFragment.isAdded()) {
             averagesFragment.notifyDataChanged();
         }
-
-        if(socialFragment.isAdded() && position != 4){
-
-        }
     }
 
     void Preferences() {
         SharedPreferences sharedPreferences = getSharedPreferences("settings", MODE_PRIVATE);
         boolean b = sharedPreferences.getBoolean("DarkMode", false);
-
         if (b) {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
         } else {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
         }
     }
-
-    private void showOnContextUI() {
-        PermissionDialog dialog = new PermissionDialog();
-        dialog.setTitleDialog(getString(R.string.required_permissions));
-        dialog.setTextDialog(getString(R.string.permissions_read_contacts_description));
-        dialog.setPositive((view, which) -> requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS));
-
-        dialog.setNegative((view, which) -> {
-            dialog.dismiss();
-        });
-
-        dialog.setDrawable(R.drawable.ic_users);
-        dialog.show(getSupportFragmentManager(), "permissions");
-    }
-    private ActivityResultLauncher<String> requestPermissionLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(),
-            isGranted -> {
-                if (isGranted) {
-
-                }
-            });
 
     public static MainActivity getInstance() {
         return instance;

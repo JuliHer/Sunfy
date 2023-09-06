@@ -58,8 +58,8 @@
                 android:layout_weight="1"
                 android:clipToPadding="false"
                 android:addStatesFromChildren="false"
-                android:paddingStart="24dp"
-                android:paddingEnd="24dp"/>
+                android:paddingStart="30dp"
+                android:paddingEnd="30dp"/>
         </LinearLayout>
 
         <com.airbnb.lottie.LottieAnimationView

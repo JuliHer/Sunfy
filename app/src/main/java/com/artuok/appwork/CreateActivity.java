@@ -12,9 +12,7 @@ import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -32,8 +30,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.artuok.appwork.adapters.ScheduleAdapter;
 import com.artuok.appwork.adapters.SubjectAdapter;
 import com.artuok.appwork.db.DbHelper;
-import com.artuok.appwork.fragmets.homeFragment;
 import com.artuok.appwork.library.CalendarWeekView;
+import com.artuok.appwork.library.Constants;
 import com.artuok.appwork.objects.ItemSubjectElement;
 import com.artuok.appwork.objects.SubjectElement;
 import com.artuok.appwork.services.AlarmWorkManager;
@@ -287,7 +285,7 @@ public class CreateActivity extends AppCompatActivity {
         });
 
         if (f) {
-            String dayDate = homeFragment.getDayOfWeek(this, sDay + 1);
+            String dayDate = Constants.getDayOfWeek(this, sDay + 1);
             textDay.setText(dayDate);
 
             String desc = convertMillisInTime(sHour);
@@ -300,7 +298,7 @@ public class CreateActivity extends AppCompatActivity {
 
             end.setText(desc);
         } else {
-            String dayDate = homeFragment.getDayOfWeek(this, e.getDay() + 1);
+            String dayDate = Constants.getDayOfWeek(this, e.getDay() + 1);
             textDay.setText(dayDate);
 
             String desc = convertMillisInTime(e.getHour());
@@ -366,7 +364,7 @@ public class CreateActivity extends AppCompatActivity {
 
         desc += hour + ":" + min + " " + tm;
 
-        String mon = homeFragment.getDayOfWeek(this, sDay + 1);
+        String mon = Constants.getDayOfWeek(this, sDay + 1);
         day.setText(mon);
         hours.setText(desc);
     }
@@ -401,7 +399,7 @@ public class CreateActivity extends AppCompatActivity {
         sunday.setOnClickListener(view -> {
             dayModify = 0;
             if (textDay != null) {
-                textDay.setText(homeFragment.getDayOfWeek(this, dayModify + 1));
+                textDay.setText(Constants.getDayOfWeek(this, dayModify + 1));
             }
             daySelector.dismiss();
         });
@@ -409,7 +407,7 @@ public class CreateActivity extends AppCompatActivity {
         monday.setOnClickListener(view -> {
             dayModify = 1;
             if (textDay != null) {
-                textDay.setText(homeFragment.getDayOfWeek(this, dayModify + 1));
+                textDay.setText(Constants.getDayOfWeek(this, dayModify + 1));
             }
             daySelector.dismiss();
         });
@@ -417,7 +415,7 @@ public class CreateActivity extends AppCompatActivity {
         tuesday.setOnClickListener(view -> {
             dayModify = 2;
             if (textDay != null) {
-                textDay.setText(homeFragment.getDayOfWeek(this, dayModify + 1));
+                textDay.setText(Constants.getDayOfWeek(this, dayModify + 1));
             }
             daySelector.dismiss();
         });
@@ -425,7 +423,7 @@ public class CreateActivity extends AppCompatActivity {
         wednesday.setOnClickListener(view -> {
             dayModify = 3;
             if (textDay != null) {
-                textDay.setText(homeFragment.getDayOfWeek(this, dayModify + 1));
+                textDay.setText(Constants.getDayOfWeek(this, dayModify + 1));
             }
             daySelector.dismiss();
         });
@@ -433,7 +431,7 @@ public class CreateActivity extends AppCompatActivity {
         thursday.setOnClickListener(view -> {
             dayModify = 4;
             if (textDay != null) {
-                textDay.setText(homeFragment.getDayOfWeek(this, dayModify + 1));
+                textDay.setText(Constants.getDayOfWeek(this, dayModify + 1));
             }
             daySelector.dismiss();
         });
@@ -441,7 +439,7 @@ public class CreateActivity extends AppCompatActivity {
         friday.setOnClickListener(view -> {
             dayModify = 5;
             if (textDay != null) {
-                textDay.setText(homeFragment.getDayOfWeek(this, dayModify + 1));
+                textDay.setText(Constants.getDayOfWeek(this, dayModify + 1));
             }
             daySelector.dismiss();
         });
@@ -449,7 +447,7 @@ public class CreateActivity extends AppCompatActivity {
         saturday.setOnClickListener(view -> {
             dayModify = 6;
             if (textDay != null) {
-                textDay.setText(homeFragment.getDayOfWeek(this, dayModify + 1));
+                textDay.setText(Constants.getDayOfWeek(this, dayModify + 1));
             }
             daySelector.dismiss();
 

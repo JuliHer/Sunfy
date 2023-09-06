@@ -2,33 +2,33 @@
     <!-- Base application theme. -->
     <style name="Theme.AppWork" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/green_b_500</item>
-        <item name="colorPrimaryVariant">@color/green_b_700</item>
+        <item name="colorPrimary">@color/blue_b_500</item>
+        <item name="colorPrimaryVariant">@color/blue_b_700</item>
         <item name="colorOnPrimary">@color/black</item>
         <!-- Secondary brand color. -->
-        <item name="colorSecondary">@color/green_b_700</item>
-        <item name="colorSecondaryVariant">@color/green_b_700</item>
+        <item name="colorSecondary">@color/blue_b_700</item>
+        <item name="colorSecondaryVariant">@color/blue_b_700</item>
         <item name="colorOnSecondary">@color/black</item>
         <item name="android:textColor">@color/white</item>
         <!-- Status bar color. -->
-        <item name="android:statusBarColor" tools:targetApi="l">@color/green_900</item>
+        <item name="android:statusBarColor" tools:targetApi="l">@color/blue_b_900</item>
         <!-- Customize your theme here. -->
         <item name="shimmerSkeleton">@color/gray_300</item>
         <item name="maskSkeleton">@color/gray_200</item>
-        <item name="shimmerHintSkeleton">@color/green_750</item>
-        <item name="maskHintSkeleton">@color/green_800</item>
+        <item name="shimmerHintSkeleton">@color/blue_b_750</item>
+        <item name="maskHintSkeleton">@color/blue_b_800</item>
 
         <item name="backgroundDialog">@color/gray_000</item>
         <item name="backgroundAlert">@color/gray_200</item>
         <item name="backgroundBorder">@color/white</item>
         <item name="subTextColor">@color/gray_600</item>
-        <item name="iconHint">@color/green_000</item>
-        <item name="backgroundHint">@color/green_900</item>
-        <item name="iMainColor">@color/green_500</item>
+        <item name="iconHint">@color/blue_b_000</item>
+        <item name="backgroundHint">@color/blue_b_900</item>
+        <item name="iMainColor">@color/blue_b_500</item>
         <item name="colorThird">@color/purple_200</item>
         <item name="MainColor">@color/blue_400</item>
-        <item name="borderLighting">@color/green_000</item>
-        <item name="backgroundLighting">@color/green_900</item>
+        <item name="borderLighting">@color/blue_b_000</item>
+        <item name="backgroundLighting">@color/blue_b_900</item>
 
 
         <item name="highInputColor">@color/black_500</item>
@@ -39,7 +39,7 @@
         <item name="gridColor">@color/gray_200</item>
         <item name="textDayColor">@color/gray_700</item>
         <item name="textDayWeekendColor">@color/gray_500</item>
-        <item name="highLightColor">@color/green_b_200</item>
+        <item name="highLightColor">@color/blue_b_200</item>
         <item name="textHighLightColor">@color/white</item>
         <item name="textHourColor">@color/gray_500</item>
 
@@ -68,7 +68,7 @@
     </style>
 
     <style name="floatinButton">
-        <item name="backgroundTint">@color/green_b_500</item>
+        <item name="backgroundTint">@color/blue_b_500</item>
     </style>
 
     <style name="task_home_item" parent="CardView">
@@ -82,8 +82,8 @@
     </style>
 
     <style name="iconMain">
-        <item name="android:tint">@color/green_b_200</item>
-        <item name="android:textColor">@color/green_b_200</item>
+        <item name="android:tint">@color/blue_b_200</item>
+        <item name="android:textColor">@color/blue_b_200</item>
     </style>
 
     <style name="iconHnT">
@@ -94,7 +94,7 @@
     <style name="buttonAction">
         <item name="android:tint">@color/white</item>
         <item name="android:textColor">@color/white</item>
-        <item name="cardBackgroundColor">@color/green_b_500</item>
+        <item name="cardBackgroundColor">@color/blue_b_500</item>
     </style>
 
     <style name="drawabe">
@@ -108,7 +108,7 @@
 
     <style name="splash">
         <item name="background">@color/white</item>
-        <item name="tint">@color/green_b_500</item>
+        <item name="tint">@color/blue_b_500</item>
     </style>
 
     <style name="splashscreen" parent="Theme.AppWork">
@@ -120,15 +120,15 @@
     </style>
 
     <style name="alarmColorBg">
-        <item name="android:background">@color/green_750</item>
+        <item name="android:background">@color/blue_b_750</item>
     </style>
 
     <style name="alarmColorCardViewBg">
-        <item name="cardBackgroundColor">@color/green_b_200</item>
+        <item name="cardBackgroundColor">@color/blue_b_200</item>
     </style>
 
     <style name="IconColor">
-        <item name="android:tint">@color/green_b_200</item>
+        <item name="android:tint">@color/blue_b_200</item>
         <item name="android:textColor">@color/white</item>
     </style>
 
@@ -141,9 +141,9 @@
         <item name="ColorDaysInGrid">@color/white</item>
         <item name="ColorWeekendDays">@color/gray_500</item>
         <item name="ColorWeekendDaysInGrid">@color/gray_700</item>
-        <item name="ColorToday">@color/green_b_200</item>
+        <item name="ColorToday">@color/blue_b_200</item>
         <item name="ColorTextHighlight">@color/white</item>
-        <item name="ColorHighlight">@color/green_b_200</item>
+        <item name="ColorHighlight">@color/blue_b_200</item>
         <item name="ColorMonth">@color/white</item>
         <item name="ColorOutMonth">@color/gray_500</item>
     </style>

@@ -88,7 +88,7 @@ public class SocialSearchAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
     public class UserSearchViewHolder extends RecyclerView.ViewHolder{
 
         ImageView image;
-        TextView name, desc, code, followers, following;
+        TextView name, desc, code;
 
         public UserSearchViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -96,8 +96,6 @@ public class SocialSearchAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
             name = itemView.findViewById(R.id.username);
             desc = itemView.findViewById(R.id.aditional_info);
             code = itemView.findViewById(R.id.usercode);
-            followers = itemView.findViewById(R.id.followers);
-            following = itemView.findViewById(R.id.following);
 
             if(listener != null)
                 PushDownAnim.setPushDownAnimTo(itemView)
@@ -121,10 +119,6 @@ public class SocialSearchAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
             desc.setText("");
             if(element.getDesc().isEmpty())
                 desc.setVisibility(View.GONE);
-
-            followers.setText(element.getFollowers());
-            following.setText(element.getFollowing());
-
             desc.setText(element.getDesc());
             code.setText("#"+element.getCode());
         }

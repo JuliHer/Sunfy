@@ -14,10 +14,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.artuok.appwork.R
 import com.artuok.appwork.adapters.AwaitingAdapter
-import com.artuok.appwork.db.DbChat
 import com.artuok.appwork.db.DbHelper
 import com.artuok.appwork.fragmets.AverageAsync
-import com.artuok.appwork.fragmets.homeFragment
+import com.artuok.appwork.fragmets.HomeFragment
+import com.artuok.appwork.library.Constants
 import com.artuok.appwork.library.FalseSkeleton
 import com.artuok.appwork.objects.AwaitElement
 import com.artuok.appwork.objects.Item
@@ -78,8 +78,8 @@ class TaskFragment : Fragment() {
                 val c = Calendar.getInstance()
                 val today = c.timeInMillis
                 val date = q.getLong(2)
-                val dates = getDateString(date)
-                val times = getTimeString(date)
+                val dates = Constants.getDateString(requireContext(), date)
+                val times = Constants.getTimeString(requireContext(), date)
                 if (!isAdded) return
                 val inApp = Random().nextInt() % 5
                 if (inApp == 4) {
@@ -122,34 +122,7 @@ class TaskFragment : Fragment() {
         }
     }
 
-    private fun getDateString(time: Long) : String{
-        val c = Calendar.getInstance()
-        c.timeInMillis = time
-        val day = c[Calendar.DAY_OF_MONTH]
-        val month = c[Calendar.MONTH]
-        val year = c[Calendar.YEAR]
-        val dd = if (day < 10) "0$day" else "" + day
-        val dates = dd + " " + homeFragment.getMonthMinor(
-            requireActivity(),
-            month
-        ) + " " + year + " "
-        return dates
-    }
-    private fun getTimeString(time: Long) : String{
-        val c = Calendar.getInstance()
-        c.timeInMillis = time
-        val hourFormat = DateFormat.is24HourFormat(requireActivity())
-        var hour = c[Calendar.HOUR_OF_DAY]
-        if (!hourFormat) hour = if (c[Calendar.HOUR] == 0) 12 else c[Calendar.HOUR]
-        val minute = c[Calendar.MINUTE]
-        val mn = if (minute < 10) "0$minute" else "" + minute
-        var times = "$hour:$mn"
-        if (!hourFormat) {
-            times += if (c[Calendar.AM_PM] == Calendar.AM) " a. m." else " p. m."
-        }
 
-        return times
-    }
 
     private fun getElementById(id : Long) : AwaitElement?{
         val dbHelper = DbHelper(requireActivity())
@@ -162,8 +135,8 @@ class TaskFragment : Fragment() {
             val c = Calendar.getInstance()
             val today = c.timeInMillis
             val date = q.getLong(2)
-            val dates = getDateString(date)
-            val times = getTimeString(date)
+            val dates = Constants.getDateString(requireActivity(), date)
+            val times = Constants.getTimeString(requireActivity(), date)
             val subjectName = q.getInt(3)
             val s = db.rawQuery(
                 "SELECT * FROM " + DbHelper.t_subjects + " WHERE id = " + subjectName,

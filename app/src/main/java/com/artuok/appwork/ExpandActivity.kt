@@ -29,7 +29,8 @@ import com.artuok.appwork.adapters.PublicationImageAdapter
 import com.artuok.appwork.db.DbChat
 import com.artuok.appwork.db.DbHelper
 import com.artuok.appwork.dialogs.PermissionDialog
-import com.artuok.appwork.fragmets.homeFragment
+import com.artuok.appwork.fragmets.HomeFragment
+import com.artuok.appwork.library.Constants
 import com.artuok.appwork.library.MessageControler
 import com.artuok.appwork.library.TextViewLetterAnimator
 import com.artuok.appwork.objects.*
@@ -183,27 +184,8 @@ class ExpandActivity : AppCompatActivity() {
             do {
                 val cc = Calendar.getInstance()
                 val date: Long = c.getLong(2)
-                cc.timeInMillis = date
-                val day = cc[Calendar.DAY_OF_MONTH]
-                val month = cc[Calendar.MONTH]
-                val year = cc[Calendar.YEAR]
-                val hourFormat = DateFormat.is24HourFormat(this)
-                var hour = cc[Calendar.HOUR_OF_DAY]
-                if (!hourFormat) hour = if (cc[Calendar.HOUR] == 0) 12 else cc[Calendar.HOUR]
-
-                val minute = cc[Calendar.MINUTE]
-
-                val dd = if (day < 10) "0$day" else "" + day
-                val dates = dd + " " + homeFragment.getMonthMinor(
-                    this,
-                    month
-                ) + " " + year + " "
-                val mn = if (minute < 10) "0$minute" else "" + minute
-                var times = "$hour:$mn"
-
-                if (!hourFormat) {
-                    times += if (cc[Calendar.AM_PM] == Calendar.AM) " a. m." else " p. m."
-                }
+                val dates = Constants.getDateString(this, date)
+                val times = Constants.getTimeString(this, date)
 
                 val done = c.getInt(5) == 1
                 val liked = c.getInt(7) == 1
@@ -422,7 +404,7 @@ class ExpandActivity : AppCompatActivity() {
 
         val d = c[Calendar.DAY_OF_WEEK]
 
-        val day = homeFragment.getDayOfWeek(this, d)
+        val day = Constants.getDayOfWeek(this, d)
 
         return day
     }
@@ -462,23 +444,6 @@ class ExpandActivity : AppCompatActivity() {
             resources.displayMetrics
         ).toInt()
     }
-    fun dow(tim : Long){
-            val d : String
-            val c = Calendar.getInstance()
-            c.timeInMillis = tim
-            val day = c.get(Calendar.DAY_OF_MONTH)
-            val month = c.get(Calendar.MONTH)
-            val year = c.get(Calendar.YEAR)
-            val hour = if(c.get(Calendar.HOUR) == 0) 12 else c.get(Calendar.HOUR)
-            val minute = c.get(Calendar.MINUTE)
-
-            val dd = if (day < 10) "0$day" else "$day"
-            var datetime = "$dd " + homeFragment.getMonthMinor(this, month) + " $year "
-            val mn = if (minute < 10) "0$minute" else "" + minute
-            datetime += "$hour:$mn"
-            datetime += if (c.get(Calendar.AM_PM) == Calendar.AM) " a. m." else " p. m."
-            d = datetime
-        }
 
     private fun getDayLeft(tim: Long): String {
         val d : String
@@ -518,7 +483,7 @@ class ExpandActivity : AppCompatActivity() {
                 val minute = c.get(Calendar.MINUTE)
 
                 val dd = if (day < 10) "0$day" else "$day"
-                var datetime = "$dd " + homeFragment.getMonthMinor(this, month) + " $year "
+                var datetime = "$dd " + Constants.getMonthMinor(this, month) + " $year "
                 val mn = if (minute < 10) "0$minute" else "" + minute
                 datetime += "$hour:$mn"
                 datetime += if(c.get(Calendar.AM_PM) == Calendar.AM) " a. m." else " p. m."
@@ -532,7 +497,7 @@ class ExpandActivity : AppCompatActivity() {
             val minute = c.get(Calendar.MINUTE)
 
             val dd = if (day < 10) "0$day" else "$day"
-            var datetime = "$dd " + homeFragment.getMonthMinor(this, month) + " $year "
+            var datetime = "$dd " + Constants.getMonthMinor(this, month) + " $year "
             val mn = if (minute < 10) "0$minute" else "" + minute
             datetime += "$hour:$mn"
             datetime += if (c.get(Calendar.AM_PM) == Calendar.AM) " a. m." else " p. m."

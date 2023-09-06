@@ -231,12 +231,11 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     class TaskViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
 
         TextView title, status, date, time, subject, inProcess;
-        ImageView subjectIcon, check;
+        ImageView check;
 
         public TaskViewHolder(@NonNull View itemView) {
             super(itemView);
             title = itemView.findViewById(R.id.title_card);
-            subjectIcon = itemView.findViewById(R.id.subject_color);
             subject = itemView.findViewById(R.id.subject);
             status = itemView.findViewById(R.id.status_card);
             date = itemView.findViewById(R.id.date_card);
@@ -261,8 +260,6 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             check.setVisibility(View.GONE);
             inProcess.setVisibility(View.GONE);
 
-            subjectIcon.setColorFilter(element.getTaskColor());
-
             status.setText(element.getStatus());
             status.setBackgroundColor(element.getStatusColor());
 
@@ -277,6 +274,7 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                 inProcess.setVisibility(View.VISIBLE);
             }
 
+            subject.setTextColor(element.getTaskColor());
             subject.setText(element.getSubject());
             date.setText(element.getDate());
             time.setText(element.getTime());

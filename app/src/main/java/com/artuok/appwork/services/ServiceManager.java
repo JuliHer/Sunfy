@@ -165,7 +165,7 @@ public class ServiceManager extends Service {
                     }
                     if(isTasks){
                         if (i > 1) {
-                            String[] taskData = line.split(",");
+                            String[] taskData = line.split(",~~");
                             int id = Integer.parseInt(taskData[0]);
                             long date = Long.parseLong(taskData[1]);
                             long end_date = Long.parseLong(taskData[2]);
@@ -189,7 +189,7 @@ public class ServiceManager extends Service {
                         }
                     }else{
                         if(i != 0){
-                            String[] subjectData = line.split(",");
+                            String[] subjectData = line.split(",~~");
                             int id = Integer.parseInt(subjectData[0]);
                             String name = subjectData[1];
                             int color = Integer.parseInt(subjectData[2]);
@@ -307,7 +307,7 @@ public class ServiceManager extends Service {
             if(tasks.moveToFirst() && subjects.moveToFirst()){
                 int numColumns = subjects.getColumnCount();
                 for (int i = 1; i < numColumns; i++) {
-                    writer.write(subjects.getColumnName(i) + ",");
+                    writer.write(subjects.getColumnName(i) + ",~~");
                 }
                 writer.write("\n");
 
@@ -317,14 +317,14 @@ public class ServiceManager extends Service {
                     int id = subjects.getInt(0);
                     String name = subjects.getString(1);
                     int color = subjects.getInt(2);
-                    String subjectData = id+","+name+","+color+"\n";
+                    String subjectData = id+",~~"+name+",~~"+color+"\n";
                     setNotification(i, max, getString(R.string.creating_backup));
                     writer.write(subjectData);
                 }while(subjects.moveToNext());
                 writer.write("../../../..\n");
                 numColumns = subjects.getColumnCount();
                 for (int j = 1; j < numColumns; j++) {
-                    writer.write(subjects.getColumnName(j) + ",");
+                    writer.write(subjects.getColumnName(j) + ",~~");
                 }
                 writer.write("\n");
                 do {
@@ -338,7 +338,7 @@ public class ServiceManager extends Service {
                     String user = tasks.getString(6);
                     int favorite = tasks.getInt(7);
                     long completed_date = tasks.getLong(8);
-                    String taskData = id + "," + date + "," + end_date + "," + subjectId + "," + desc + "," + status + "," + user + "," + favorite + "," + completed_date + "\n";
+                    String taskData = id + ",~~" + date + ",~~" + end_date + ",~~" + subjectId + ",~~" + desc + ",~~" + status + ",~~" + user + ",~~" + favorite + ",~~" + completed_date + "\n";
                     setNotification(i, max, getString(R.string.creating_backup));
                     writer.write(taskData);
                 }while(tasks.moveToNext());

@@ -10,6 +10,15 @@
     <color name="green_b_500">#218F50</color>
     <color name="green_b_700">#FF27ae61</color>
 
+    <color name="blue_b_100">#218BAC</color>
+    <color name="blue_b_200">#196D87</color>
+    <color name="blue_b_500">#2599D8</color>
+    <color name="blue_b_700">#1EB4E3</color>
+    <color name="blue_b_900">#1E323C</color>
+    <color name="blue_b_800">#2A4753</color>
+    <color name="blue_b_750">#325B68</color>
+    <color name="blue_b_000">#79BCC5</color>
+
     <color name="green_k_000">#B6D8C5</color>
     <color name="green_k_250">#7BC39A</color>
     <color name="green_k_500">#47BD7A</color>

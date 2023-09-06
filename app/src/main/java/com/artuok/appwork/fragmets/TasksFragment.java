@@ -1,34 +1,25 @@
 package com.artuok.appwork.fragmets;
 
-import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.media.MediaPlayer;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.viewpager.widget.ViewPager;
 import androidx.viewpager2.widget.CompositePageTransformer;
 import androidx.viewpager2.widget.MarginPageTransformer;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.artuok.appwork.MainActivity;
 import com.artuok.appwork.R;
-import com.artuok.appwork.adapters.AwaitingAdapter;
 import com.artuok.appwork.adapters.KanbanAdapter;
 import com.artuok.appwork.db.DbHelper;
 import com.artuok.appwork.dialogs.AnnouncementDialog;
@@ -36,10 +27,6 @@ import com.artuok.appwork.kanban.CompletedFragment;
 import com.artuok.appwork.kanban.InProcessFragment;
 import com.artuok.appwork.kanban.PendingFragment;
 import com.artuok.appwork.kanban.TaskFragment;
-import com.artuok.appwork.objects.Item;
-import com.thekhaeng.pushdownanim.PushDownAnim;
-
-import org.checkerframework.checker.units.qual.C;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -54,11 +41,12 @@ public class TasksFragment extends Fragment {
     String kanbanTitle;
     List<Fragment> fragmentList = new ArrayList<>();
 
+    TaskFragment taskFragment = new TaskFragment();
     PendingFragment pendingFragment = new PendingFragment();
     InProcessFragment inProcessFragment = new InProcessFragment();
     CompletedFragment completedFragment = new CompletedFragment();
 
-    TaskFragment taskFragment = new TaskFragment();
+
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -71,12 +59,77 @@ public class TasksFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_tasks, container, false);
-
-        initializateViewPager(root);
+        initViewPager(root);
+        initTable();
         return root;
     }
 
-    private void initializateViewPager(View root){
+    private void initTable(){
+        KanbanAdapter viewPagerAdapter = new KanbanAdapter(requireActivity(), fragmentList);
+        new AverageAsync(new AverageAsync.ListenerOnEvent() {
+            @Override
+            public void onPreExecute() {
+
+            }
+
+            @Override
+            public void onExecute(boolean b) {
+                taskFragment.setOnTaskModify(i -> {
+                    notifyGlobalChanged(i);
+                    inProcessFragment.restart(i);
+                    pendingFragment.restart(i);
+                    completedFragment.restart(i);
+                });
+                pendingFragment.setOnTaskModifyListener(i -> {
+                    NotifyChanged();
+                    notifyGlobalChanged(i);
+                    completedFragment.restart(i);
+                    inProcessFragment.restart(i);
+                    taskFragment.reinitializate();
+                });
+                inProcessFragment.setOnTaskModifyListener(i -> {
+                    NotifyChanged();
+                    notifyGlobalChanged(i);
+                    DbHelper dbHelper = new DbHelper(requireActivity());
+                    SQLiteDatabase db = dbHelper.getReadableDatabase();
+                    Cursor pendingTasks = db.rawQuery("SELECT * FROM " + DbHelper.T_TASK + " WHERE status < '2'", null);
+                    if (pendingTasks.getCount() < 1) {
+                        showCongratulations();
+                    }
+                    pendingTasks.close();
+                    pendingFragment.restart(i);
+                    completedFragment.restart(i);
+                    taskFragment.reinitializate();
+                });
+                completedFragment.setOnTaskModifyListener(i -> {
+                    NotifyChanged();
+                    notifyGlobalChanged(i);
+
+                    inProcessFragment.restart(i);
+                    pendingFragment.restart(i);
+                    taskFragment.reinitializate();
+                });
+                fragmentList.clear();
+                fragmentList.add(taskFragment);
+                fragmentList.add(pendingFragment);
+                fragmentList.add(inProcessFragment);
+                fragmentList.add(completedFragment);
+            }
+
+            @Override
+            public void onPostExecute(boolean b) {
+                viewPager.setAdapter(viewPagerAdapter);
+                viewPager.setCurrentItem(0);
+                viewPagerAdapter.notifyItemRangeInserted(0, fragmentList.size());
+                taskFragment.reinitializate();
+                pendingFragment.reinitializate();
+                inProcessFragment.reinitializate();
+                completedFragment.reinitializate();
+            }
+        }).exec(true);
+    }
+
+    private void initViewPager(View root){
         pageTitle = root.findViewById(R.id.page_title);
         pageTitle.setText(mainTitle);
         viewPager = root.findViewById(R.id.viewpager);
@@ -86,7 +139,7 @@ public class TasksFragment extends Fragment {
         viewPager.getChildAt(0).setOverScrollMode(RecyclerView.OVER_SCROLL_NEVER);
 
         CompositePageTransformer compositePageTransformer = new CompositePageTransformer();
-        compositePageTransformer.addTransformer(new MarginPageTransformer(25));
+        compositePageTransformer.addTransformer(new MarginPageTransformer(40));
         viewPager.setPageTransformer(compositePageTransformer);
 
         viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
@@ -99,85 +152,6 @@ public class TasksFragment extends Fragment {
                 }
             }
         });
-
-        pendingFragment.setOnSwipeListener(()->{
-
-        });
-        inProcessFragment.setOnSwipeListener(()->{
-
-        });
-        completedFragment.setOnSwipeListener(()->{
-
-        });
-
-        pendingFragment.setOnTaskModifyListener(i -> {
-            NotifyChanged();
-            notifyGlobalChanged(i);
-            completedFragment.restart();
-            inProcessFragment.restart();
-            taskFragment.reinitializate();
-        });
-        inProcessFragment.setOnTaskModifyListener(i -> {
-            NotifyChanged();
-            notifyGlobalChanged(i);
-            DbHelper dbHelper = new DbHelper(requireActivity());
-            SQLiteDatabase db = dbHelper.getReadableDatabase();
-            Cursor pendingTasks = db.rawQuery("SELECT * FROM " + DbHelper.T_TASK + " WHERE status < '2'", null);
-            if (pendingTasks.getCount() < 1) {
-                showCongratulations();
-            }
-            pendingTasks.close();
-            pendingFragment.restart();
-            completedFragment.restart();
-            taskFragment.reinitializate();
-        });
-        completedFragment.setOnTaskModifyListener(i -> {
-            NotifyChanged();
-            notifyGlobalChanged(i);
-
-            inProcessFragment.restart();
-            pendingFragment.restart();
-            taskFragment.reinitializate();
-        });
-
-        taskFragment.setOnTaskModify(i -> {
-            notifyGlobalChanged(i);
-
-            inProcessFragment.restart();
-            pendingFragment.restart();
-            completedFragment.restart();
-        });
-        fragmentList.clear();
-        fragmentList.add(taskFragment);
-        fragmentList.add(pendingFragment);
-        fragmentList.add(inProcessFragment);
-        fragmentList.add(completedFragment);
-
-        KanbanAdapter viewPagerAdapter = new KanbanAdapter(requireActivity(), fragmentList);
-        viewPager.setAdapter(viewPagerAdapter);
-        viewPager.setCurrentItem(0);
-        viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
-            @Override
-            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-                super.onPageScrolled(position, positionOffset, positionOffsetPixels);
-            }
-
-            @Override
-            public void onPageSelected(int position) {
-                super.onPageSelected(position);
-            }
-
-            @Override
-            public void onPageScrollStateChanged(int state) {
-                super.onPageScrollStateChanged(state);
-            }
-        });
-        viewPagerAdapter.notifyDataSetChanged();
-
-        pendingFragment.reinitializate();
-        inProcessFragment.reinitializate();
-        completedFragment.reinitializate();
-        taskFragment.reinitializate();
     }
 
 
@@ -203,10 +177,10 @@ public class TasksFragment extends Fragment {
     }
 
     public void NotifyChanged() {
-        pendingFragment.reinitializate();
-        inProcessFragment.reinitializate();
-        completedFragment.reinitializate();
-        taskFragment.reinitializate();
+//        pendingFragment.reinitializate();
+//        inProcessFragment.reinitializate();
+//        completedFragment.reinitializate();
+//        taskFragment.reinitializate();
     }
 
     public void notifyGlobalChanged(int id){

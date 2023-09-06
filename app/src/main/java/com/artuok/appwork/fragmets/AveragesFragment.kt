@@ -270,12 +270,17 @@ class AveragesFragment : Fragment() {
 
 
         val data: ArrayList<LineChartData> = ArrayList()
-
+        val ta = requireActivity().obtainStyledAttributes(R.styleable.AppCustomAttrs)
+        val color = ta.getColor(
+            R.styleable.AppCustomAttrs_iMainColor,
+            requireActivity().getColor(R.color.green_500)
+        )
+        ta.recycle()
         data.add(
             LineChartData(
                 requireActivity().getString(R.string.completed_tasks),
                 getLineChartDataSet(),
-                requireActivity().getColor(R.color.green_500)
+                color
             )
         )
         data.add(

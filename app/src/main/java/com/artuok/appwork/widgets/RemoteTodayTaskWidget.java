@@ -9,7 +9,8 @@ import android.widget.RemoteViewsService;
 
 import com.artuok.appwork.R;
 import com.artuok.appwork.db.DbHelper;
-import com.artuok.appwork.fragmets.homeFragment;
+import com.artuok.appwork.fragmets.HomeFragment;
+import com.artuok.appwork.library.Constants;
 import com.artuok.appwork.objects.AwaitingElement;
 
 import java.util.ArrayList;
@@ -106,12 +107,12 @@ public class RemoteTodayTaskWidget extends RemoteViewsService {
                     int minute = c.get(Calendar.MINUTE);
 
                     String dd = day < 10 ? "0" + day : "" + day;
-                    String dates = dd + " " + homeFragment.getMonthMinor(context, (month));
+                    String dates = dd + " " + Constants.getMonthMinor(context, (month));
                     String mn = minute < 10 ? "0" + minute : "" + minute;
                     String times = hour +":"+mn;
                     times += c.get(Calendar.AM_PM) == Calendar.AM ?  " a. m." : " p. m.";
 
-                    String m = homeFragment.getDayOfWeek(context, c.get(Calendar.DAY_OF_WEEK));
+                    String m = Constants.getDayOfWeek(context, c.get(Calendar.DAY_OF_WEEK));
 
                     AwaitingElement awaiting = new AwaitingElement(id, title, m, dates, times, status);
                     element.add(awaiting);

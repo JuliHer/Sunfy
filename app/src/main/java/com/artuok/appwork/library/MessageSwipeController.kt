@@ -73,30 +73,27 @@ class MessageSwipeController(private val context: Context, private val element :
         isCurrentlyActive: Boolean
     ) {
 
-        if(element[viewHolder.layoutPosition].type != 3){
-            if(!(element[viewHolder.layoutPosition].`object` as MessageElement).isSelect){
-                if((element[viewHolder.layoutPosition].`object` as MessageElement).status != 0){
-                    if (actionState == ACTION_STATE_SWIPE) {
-                        setTouchListener(recyclerView, viewHolder)
+        if(viewHolder.layoutPosition < element.size)
+            if(element[viewHolder.layoutPosition].type != 3){
+                if(!(element[viewHolder.layoutPosition].`object` as MessageElement).isSelect){
+                    if((element[viewHolder.layoutPosition].`object` as MessageElement).status != 0){
+                        if (actionState == ACTION_STATE_SWIPE) {
+                            setTouchListener(recyclerView, viewHolder)
+                        }
+
+                        if (mView.translationX < convertTodp(400) || dX < this.dX) {
+
+                            super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
+                            this.dX = dX
+                            this.attenuedDx = 0f
+                            startTracking = true
+                        }
+
+                        currentItemViewHolder = viewHolder
+                        drawReplyButton(c)
                     }
-
-                    if (mView.translationX < convertTodp(400) || dX < this.dX) {
-
-                        super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
-                        this.dX = dX
-                        this.attenuedDx = 0f
-                        startTracking = true
-                    }
-
-                    currentItemViewHolder = viewHolder
-                    drawReplyButton(c)
                 }
             }
-        }
-
-
-
-
     }
 
     @SuppressLint("ClickableViewAccessibility")

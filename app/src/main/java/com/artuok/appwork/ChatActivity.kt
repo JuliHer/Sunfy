@@ -240,9 +240,11 @@ class ChatActivity : AppCompatActivity() {
 
     private fun getPositionByKey(key : String) : Int {
         for ((x, item) in adapter.data.withIndex()){
-            val msg = item.`object` as MessageElement
-            if (msg.id == key){
-                return x
+            if(item.type != 3){
+                val msg = item.`object` as MessageElement
+                if (msg.id == key){
+                    return x
+                }
             }
         }
         return -1

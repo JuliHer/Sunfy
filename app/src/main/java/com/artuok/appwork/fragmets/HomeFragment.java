@@ -3,6 +3,7 @@ package com.artuok.appwork.fragmets;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.TypedArray;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -24,6 +25,7 @@ import com.artuok.appwork.MainActivity;
 import com.artuok.appwork.R;
 import com.artuok.appwork.adapters.TasksAdapter;
 import com.artuok.appwork.db.DbHelper;
+import com.artuok.appwork.library.Constants;
 import com.artuok.appwork.library.LineChart;
 import com.artuok.appwork.objects.AnnouncesElement;
 import com.artuok.appwork.objects.CountElement;
@@ -47,15 +49,12 @@ import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
-public class homeFragment extends Fragment {
+public class HomeFragment extends Fragment {
 
     //recyclerView
     private Skeleton skeleton;
-    private LinearLayoutManager manager;
-    private RecyclerView recyclerView;
     private TasksAdapter adapter;
     private List<Item> elements;
-    private ArrayList<Integer> history;
     private TasksAdapter.OnRecyclerListener listener;
     int advirments = 0;
 
@@ -64,19 +63,13 @@ public class homeFragment extends Fragment {
             result -> {
                 if (result.getResultCode() == Activity.RESULT_OK) {
                     Intent data = result.getData();
-                    if (data.getIntExtra("requestCode", 0) == 3) {
-                        ((MainActivity) requireActivity()).navigateTo(2);
-                    } else if (data.getIntExtra("requestCode", 0) == 2) {
+                    assert data != null;
+                    if (data.getIntExtra("requestCode", 0) == 2) {
                         ((MainActivity) requireActivity()).notifyAllChanged();
                     }
                 }
             }
     );
-
-    //elementExp
-    int posExp = -1;
-    int min = 0;
-    int total = 0;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
@@ -85,8 +78,33 @@ public class homeFragment extends Fragment {
 
         setListener();
         restartResultLauncher();
-        history = new ArrayList<>();
+        initRecyclerView(root);
 
+        initDashboard(-1);
+
+        return root;
+    }
+
+    private void initDashboard(int pos){
+        new AverageAsync(new AverageAsync.ListenerOnEvent() {
+            @Override
+            public void onPreExecute() {
+
+            }
+
+            @Override
+            public void onExecute(boolean b) {
+                loadTasks(pos);
+            }
+
+            @Override
+            public void onPostExecute(boolean b) {
+                adapter.notifyDataSetChanged();
+            }
+        }).exec(true);
+    }
+
+    private void initRecyclerView(View root){
         elements = new ArrayList<>();
         adapter = new TasksAdapter(requireActivity(), elements, listener);
         adapter.setAddEventListener((view, pos) -> {
@@ -100,6 +118,7 @@ public class homeFragment extends Fragment {
                 e.printStackTrace();
             }
 
+            assert date != null;
             long b = date.getTime();
 
             Intent a = new Intent(requireActivity(), CreateTaskActivity.class);
@@ -108,33 +127,13 @@ public class homeFragment extends Fragment {
 
             resultLauncher.launch(a);
         });
-        manager = new LinearLayoutManager(requireActivity(), LinearLayoutManager.VERTICAL, false);
-        recyclerView = root.findViewById(R.id.home_recyclerView);
+        LinearLayoutManager manager = new LinearLayoutManager(requireActivity(), LinearLayoutManager.VERTICAL, false);
+        RecyclerView recyclerView = root.findViewById(R.id.home_recyclerView);
 
 
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(manager);
         recyclerView.setAdapter(adapter);
-        loadCount();
-
-        new AverageAsync(new AverageAsync.ListenerOnEvent() {
-            @Override
-            public void onPreExecute() {
-
-            }
-
-            @Override
-            public void onExecute(boolean b) {
-                loadTasks(-1);
-            }
-
-            @Override
-            public void onPostExecute(boolean b) {
-                adapter.notifyDataSetChanged();
-            }
-        }).exec(true);
-
-        return root;
     }
 
     void restartResultLauncher() {
@@ -143,6 +142,7 @@ public class homeFragment extends Fragment {
                 result -> {
                     if (result.getResultCode() == Activity.RESULT_OK) {
                         Intent data = result.getData();
+                        assert data != null;
                         if (data.getIntExtra("requestCode", 0) == 3) {
                             ((MainActivity) requireActivity()).navigateTo(2);
                         } else if (data.getIntExtra("requestCode", 0) == 2) {
@@ -155,30 +155,6 @@ public class homeFragment extends Fragment {
 
     void setListener() {
         listener = (view, position) -> ((MainActivity) requireActivity()).navigateTo(1);
-    }
-
-    void loadCount() {
-        DbHelper dbHelper = new DbHelper(requireActivity());
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-
-        Cursor onHold = db.rawQuery("SELECT * FROM " + DbHelper.T_TASK + " WHERE status = '0'", null);
-
-        int holding = onHold.getCount();
-        onHold.close();
-
-
-        String txt = "";
-        String sTxt = "";
-        if (holding == 0) {
-            txt += "Good Morning!";
-            sTxt = "";
-        } else {
-            if (holding < 10) {
-                txt += "0";
-            }
-            txt += "" + holding;
-            sTxt = requireActivity().getString(R.string.pending_tasks);
-        }
     }
 
     private String getTimeDay() {
@@ -225,7 +201,7 @@ public class homeFragment extends Fragment {
 
                 if(!isAdded())
                     return;
-                String title = dow - 1 == dayWeek ? requireActivity().getString(R.string.today) : getDayOfWeek(requireActivity(), dow);
+                String title = dow - 1 == dayWeek ? requireActivity().getString(R.string.today) : Constants.getDayOfWeek(requireActivity(), dow);
                 title = dow - 1 == (dayWeek + 1) % 7 ? requireActivity().getString(R.string.tomorrow) : title;
 
                 int inApp = new Random().nextInt() % 10;
@@ -234,12 +210,9 @@ public class homeFragment extends Fragment {
                 }
 
                 if (i == 2) {
-                    LineChartElement element = new LineChartElement(getWeeklyProgress(), new LineChartElement.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            ((MainActivity) requireActivity()).loadExternalFragment(((MainActivity) requireActivity()).averagesFragment, requireActivity().getString(R.string.average_fragment_menu));
-                        }
-                    });
+                    LineChartElement element = new LineChartElement(getWeeklyProgress(), view ->
+                            ((MainActivity) requireActivity()).loadExternalFragment(((MainActivity) requireActivity()).averagesFragment, requireActivity().getString(R.string.average_fragment_menu))
+                    );
 
                     elements.add(new Item(element, 2));
                 }
@@ -263,6 +236,7 @@ public class homeFragment extends Fragment {
         advirments++;
         AdLoader adLoader = new AdLoader.Builder(requireActivity(), "ca-app-pub-5838551368289900/1451662327")
                 .forNativeAd(nativeAd -> {
+                    int adpos = Math.min(finalPos, elements.size());
                     String title = nativeAd.getHeadline();
                     String body = nativeAd.getBody();
                     String advertiser = nativeAd.getAdvertiser();
@@ -273,8 +247,8 @@ public class homeFragment extends Fragment {
                     AnnouncesElement element = new AnnouncesElement(nativeAd, title, body, advertiser, images, icon);
                     element.setAction(nativeAd.getCallToAction());
                     element.setPrice(price);
-                    elements.add(finalPos, new Item(element, 12));
-                    adapter.notifyItemInserted(finalPos);
+                    elements.add(adpos, new Item(element, 12));
+                    adapter.notifyItemInserted(adpos);
                 }).withAdListener(new AdListener() {
                     @Override
                     public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
@@ -331,8 +305,15 @@ public class homeFragment extends Fragment {
                 if (!hourFormat) {
                     time += m.get(Calendar.AM_PM) == Calendar.AM ? " a. m." : " p. m.";
                 }
+                int subject = cursor.getInt(3);
+                Cursor q = db.rawQuery("SELECT * FROM "+DbHelper.t_subjects+" WHERE id = ?", new String[]{subject+""});
+                int color = requireActivity().getColor(R.color.gray_400);
+                if(q.moveToFirst()){
+                    color = q.getInt(2);
+                }
+                q.close();
 
-                tasks.add(new TaskElement(check, title, time, m.getTimeInMillis()));
+                tasks.add(new TaskElement(check, title, time, color, m.getTimeInMillis()));
             } while (cursor.moveToNext());
         }
         cursor.close();
@@ -342,74 +323,29 @@ public class homeFragment extends Fragment {
 
     public void NotifyDataAdd() {
         elements.clear();
-        loadTasks(-1);
+        initDashboard(-1);
     }
 
     public void NotifyDataChanged(int pos) {
-        loadTasks(pos);
+        initDashboard(pos);
     }
 
-    public static String getMonthMinor(Context context, int MM) {
-        switch (MM) {
-            case 0:
-                return context.getString(R.string.m_january);
-            case 1:
-                return context.getString(R.string.m_february);
-            case 2:
-                return context.getString(R.string.m_march);
-            case 3:
-                return context.getString(R.string.m_april);
-            case 4:
-                return context.getString(R.string.m_may);
-            case 5:
-                return context.getString(R.string.m_june);
-            case 6:
-                return context.getString(R.string.m_july);
-            case 7:
-                return context.getString(R.string.m_august);
-            case 8:
-                return context.getString(R.string.m_september);
-            case 9:
-                return context.getString(R.string.m_october);
-            case 10:
-                return context.getString(R.string.m_november);
-            case 11:
-                return context.getString(R.string.m_december);
-            default:
-                return "";
-        }
-    }
 
-    public static String getDayOfWeek(Context context, int dd) {
-        switch (dd) {
-            case 1:
-                return context.getString(R.string.sunday);
-            case 2:
-                return context.getString(R.string.monday);
-            case 3:
-                return context.getString(R.string.tuesday);
-            case 4:
-                return context.getString(R.string.wednesday);
-            case 5:
-                return context.getString(R.string.thursday);
-            case 6:
-                return context.getString(R.string.friday);
-            case 7:
-                return context.getString(R.string.saturday);
-            default:
-                return "";
-        }
-    }
+
 
     ArrayList<LineChart.LineChartData> getWeeklyProgress() {
 
-        ArrayList<LineChart.LineChartData> data = new ArrayList();
+        ArrayList<LineChart.LineChartData> data = new ArrayList<>();
+
+        TypedArray ta = requireActivity().obtainStyledAttributes(R.styleable.AppCustomAttrs);
+        int color = ta.getColor(R.styleable.AppCustomAttrs_iMainColor, requireActivity().getColor(R.color.green_500));
+        ta.recycle();
 
         data.add(
                 new LineChart.LineChartData(
                         requireActivity().getString(R.string.completed_tasks),
                         getLineChartDataSet(),
-                        requireActivity().getColor(R.color.green_500)
+                        color
                 )
         );
         data.add(
@@ -427,7 +363,7 @@ public class homeFragment extends Fragment {
         DbHelper dbHelper = new DbHelper(requireActivity());
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
-        ArrayList<LineChart.LineChartDataSet> data = new ArrayList();
+        ArrayList<LineChart.LineChartDataSet> data = new ArrayList<>();
         Calendar calendar = Calendar.getInstance();
         for (int i = 0; i <= 6; i++) {
             calendar.set(Calendar.HOUR_OF_DAY, 0);
@@ -449,9 +385,9 @@ public class homeFragment extends Fragment {
             );
 
             if (cursor.moveToFirst()) {
-                data.add(new LineChart.LineChartDataSet(getMinDayOfWeek(i), cursor.getCount()));
+                data.add(new LineChart.LineChartDataSet(Constants.getMinDayOfWeek(requireActivity(), i), cursor.getCount()));
             } else {
-                data.add(new LineChart.LineChartDataSet(getMinDayOfWeek(i), 0));
+                data.add(new LineChart.LineChartDataSet(Constants.getMinDayOfWeek(requireActivity(), i), 0));
             }
             cursor.close();
 
@@ -464,7 +400,7 @@ public class homeFragment extends Fragment {
         DbHelper dbHelper = new DbHelper(requireActivity());
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
-        ArrayList<LineChart.LineChartDataSet> data = new ArrayList();
+        ArrayList<LineChart.LineChartDataSet> data = new ArrayList<>();
         Calendar calendar = Calendar.getInstance();
         for (int i = 0; i <= 6; i++) {
 
@@ -484,53 +420,14 @@ public class homeFragment extends Fragment {
             );
 
             if (cursor.moveToFirst()) {
-                data.add(new LineChart.LineChartDataSet(getMinDayOfWeek(i), cursor.getCount()));
+                data.add(new LineChart.LineChartDataSet(Constants.getMinDayOfWeek(requireActivity(), i), cursor.getCount()));
             } else {
-                data.add(new LineChart.LineChartDataSet(getMinDayOfWeek(i), 0));
+                data.add(new LineChart.LineChartDataSet(Constants.getMinDayOfWeek(requireActivity(), i), 0));
             }
             cursor.close();
         }
 
 
         return data;
-    }
-
-    private String getMinDayOfWeek(int dayOfWeek) {
-        switch (dayOfWeek) {
-            case 0:
-                return requireContext().getString(R.string.min_sunday);
-            case 1:
-                return requireContext().getString(R.string.min_monday);
-            case 2:
-                return requireContext().getString(R.string.min_tuesday);
-            case 3:
-                return requireContext().getString(R.string.min_wednesday);
-            case 4:
-                return requireContext().getString(R.string.min_thursday);
-            case 5:
-                return requireContext().getString(R.string.min_friday);
-            case 6:
-                return requireContext().getString(R.string.min_saturday);
-        }
-        return "";
-    }
-
-    long getStartEndOFWeek(int enterWeek, int enterYear, boolean start) {
-        Calendar calendar = Calendar.getInstance();
-        calendar.clear();
-        calendar.set(Calendar.WEEK_OF_YEAR, enterWeek);
-        calendar.set(Calendar.YEAR, enterYear);
-        long startDateInStr = calendar.getTimeInMillis();
-        calendar.add(Calendar.DATE, 6);
-        calendar.set(Calendar.HOUR_OF_DAY, 23);
-        calendar.set(Calendar.MINUTE, 59);
-        calendar.set(Calendar.SECOND, 59);
-        long endDaString = calendar.getTimeInMillis();
-
-        if (start) {
-            return startDateInStr;
-        } else {
-            return endDaString;
-        }
     }
 }

@@ -6,12 +6,18 @@ public class TaskElement {
     String title;
     String date;
     long millisSeconds;
+    int color;
 
-    public TaskElement(boolean check, String title, String date, long millisSeconds) {
+    public TaskElement(boolean check, String title, String date, int color, long millisSeconds) {
         this.check = check;
         this.title = title;
         this.date = date;
         this.millisSeconds = millisSeconds;
+        this.color = color;
+    }
+
+    public int getColor() {
+        return color;
     }
 
     public boolean isCheck() {

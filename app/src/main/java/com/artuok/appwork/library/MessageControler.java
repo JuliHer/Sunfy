@@ -4,59 +4,30 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.os.AsyncTask;
 import android.text.TextUtils;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.artuok.appwork.db.DbChat;
-import com.artuok.appwork.fragmets.homeFragment;
-import com.artuok.appwork.objects.ChatElement;
+import com.artuok.appwork.fragmets.HomeFragment;
 import com.artuok.appwork.objects.EventMessageElement;
 import com.artuok.appwork.objects.Item;
 import com.artuok.appwork.objects.MessageElement;
 import com.artuok.appwork.objects.TextElement;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.messaging.Constants;
-import com.google.firebase.messaging.FirebaseMessaging;
-import com.google.firebase.messaging.RemoteMessage;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.TimeZone;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 
 public class MessageControler {
     private String id;
@@ -185,7 +156,7 @@ public class MessageControler {
         Calendar c = Calendar.getInstance();
         c.setTimeInMillis(time);
 
-        String date = c.get(Calendar.DAY_OF_MONTH) + " " + homeFragment.getMonthMinor(context, c.get(Calendar.MONTH))+" "+c.get(Calendar.YEAR);
+        String date = c.get(Calendar.DAY_OF_MONTH) + " " + Constants.getMonthMinor(context, c.get(Calendar.MONTH))+" "+c.get(Calendar.YEAR);
 
         return date;
     }

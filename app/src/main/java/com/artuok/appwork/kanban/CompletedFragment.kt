@@ -28,7 +28,8 @@ import com.artuok.appwork.db.DbHelper
 import com.artuok.appwork.dialogs.PermissionDialog
 import com.artuok.appwork.fragmets.AverageAsync
 import com.artuok.appwork.fragmets.TasksFragment
-import com.artuok.appwork.fragmets.homeFragment
+import com.artuok.appwork.fragmets.HomeFragment
+import com.artuok.appwork.library.Constants
 import com.artuok.appwork.library.FalseSkeleton
 import com.artuok.appwork.objects.AnnouncesElement
 import com.artuok.appwork.objects.AwaitElement
@@ -58,31 +59,23 @@ class CompletedFragment : Fragment() {
     var advirments = 0
 
     private lateinit var skeleton: Skeleton
-    private lateinit var swipeListener: PendingFragment.OnSwipeListener
     private lateinit var taskModifyListener: PendingFragment.OnTaskModifyListener
-
-    public fun setOnSwipeListener(swipeListener: PendingFragment.OnSwipeListener){
-        this.swipeListener = swipeListener
-    }
 
     public fun setOnTaskModifyListener(taskModifyListener: PendingFragment.OnTaskModifyListener){
         this.taskModifyListener = taskModifyListener
     }
 
-    public fun restart(){
+    public fun restart(id : Int){
         if(::skeleton.isInitialized){
-            skeleton.showSkeleton()
-            adapter.notifyDataSetChanged()
             AverageAsync(object : AverageAsync.ListenerOnEvent {
                 override fun onPreExecute() {}
 
                 override fun onExecute(b: Boolean) {
-                    addCompleted()
+                    taskModify(id)
                 }
 
                 override fun onPostExecute(b: Boolean) {
-                    adapter.notifyDataSetChanged()
-                    skeleton.showOriginal()
+
                 }
             }).exec(true)
         }
@@ -107,16 +100,75 @@ class CompletedFragment : Fragment() {
         }
     }
 
-    fun containsId(id : Int) : Boolean{
-        for((x, item:Item) in elements.withIndex()){
-            if(item.type == 0){
-                val element :AwaitElement = (item.`object` as AwaitElement)
-                if(element.id == id){
-                    return true
+    private fun taskModify(id : Int){
+        val i = getElementPositionById(id)
+
+        if(i >= 0){
+            removeElement(i)
+        }
+        val task = newTask(id);
+        if(task != null){
+            val pos = 1
+            elements.add(pos, Item(task, 0))
+            adapter.notifyItemInserted(pos)
+        }
+    }
+
+    private fun removeElement(pos: Int){
+        elements.removeAt(pos)
+        adapter.notifyItemRemoved(pos)
+    }
+
+    private fun getElementPositionById(id: Int) : Int{
+        for ((i, element) in elements.withIndex()){
+            if(element.type == 0){
+                val item = element.`object` as AwaitElement
+                if(item.id == id){
+                    return i
                 }
             }
         }
-        return false
+        return -1;
+    }
+
+    private fun newTask(id : Int) : AwaitElement?{
+        val dbHelper = DbHelper(requireActivity())
+        val db = dbHelper.readableDatabase
+
+        val q = db.rawQuery("SELECT * FROM ${DbHelper.T_TASK} WHERE id = ? AND status = '2'", arrayOf(id.toString()))
+        if(q.moveToFirst()){
+            val c = Calendar.getInstance()
+            val today = c.timeInMillis
+            val date = q.getLong(2)
+            val dates = Constants.getDateString(requireContext(), date)
+            val times = Constants.getTimeString(requireContext(), date)
+            val done = q.getInt(5) == 1
+            val liked = q.getInt(7) == 1
+            val subjectName = q.getInt(3)
+            val s = db.rawQuery(
+                "SELECT * FROM " + DbHelper.t_subjects + " WHERE id = " + subjectName,
+                null
+            )
+            var colors = 0
+            var subject: String? = ""
+            if (s.moveToFirst()) {
+                colors = s.getInt(2)
+                subject = s.getString(1)
+            }
+            s.close()
+            val id = q.getInt(0)
+            val title = q.getString(4)
+            val status: String = getString(R.string.done_string)
+            val statusColor: Int = statusColor(today >= date, date)
+            val eb = AwaitElement(id, title, status, dates, times, colors, statusColor, true)
+            eb.isDone = done
+            eb.subject = subject
+            eb.isLiked = liked
+            return eb
+        }
+        q.close()
+
+        return null
     }
 
 
@@ -218,7 +270,6 @@ class CompletedFragment : Fragment() {
                     val id = (elements[position].`object`as AwaitElement).id
                     continueTask(position)
                     (requireActivity() as MainActivity).updateWidget()
-                    swipeListener.onSwipe()
                     taskModifyListener.onTaskModify(id)
                 }
 
@@ -229,7 +280,6 @@ class CompletedFragment : Fragment() {
                     val id = (elements[position].`object`as AwaitElement).id
                     removeTask(position)
                     (requireActivity() as MainActivity).updateWidget()
-                    swipeListener.onSwipe()
                     taskModifyListener.onTaskModify(id)
                 }
 
@@ -247,83 +297,7 @@ class CompletedFragment : Fragment() {
         }
     }
 
-    fun addCompleted(){
-        if (!isAdded) return
-        val dbHelper = DbHelper(requireActivity().applicationContext)
-        val db = dbHelper.readableDatabase
-        val cursor = db.rawQuery(
-            "SELECT * FROM " + DbHelper.T_TASK + " WHERE status = '2' ORDER BY completed_date DESC",
-            null
-        )
-        if (cursor.moveToFirst()) {
-            var i = 1
-            do {
-                val id = cursor.getInt(0)
-                if(!containsId(id)){
-                    val c = Calendar.getInstance()
-                    val date = cursor.getLong(2)
-                    c.timeInMillis = date
-                    val day = c[Calendar.DAY_OF_MONTH]
-                    val month = c[Calendar.MONTH]
-                    val year = c[Calendar.YEAR]
-                    val hourFormat = DateFormat.is24HourFormat(requireActivity())
-                    var hour = c[Calendar.HOUR_OF_DAY]
-                    if (!hourFormat) hour = if (c[Calendar.HOUR] == 0) 12 else c[Calendar.HOUR]
-                    val minute = c[Calendar.MINUTE]
 
-                    val dd = if (day < 10) "0$day" else "" + day
-                    if (!isAdded) return
-                    val dates = dd + " " + homeFragment.getMonthMinor(
-                        requireActivity(),
-                        month
-                    ) + " " + year + " "
-                    val mn = if (minute < 10) "0$minute" else "" + minute
-                    var times = "$hour:$mn"
-                    if (!hourFormat) {
-                        times += if (c[Calendar.AM_PM] == Calendar.AM) " a. m." else " p. m."
-                    }
-                    val done = cursor.getInt(5) == 2
-                    val liked = cursor.getInt(7) == 1
-                    val subjectName = cursor.getInt(3)
-                    val s = db.rawQuery(
-                        "SELECT * FROM " + DbHelper.t_subjects + " WHERE id = " + subjectName,
-                        null
-                    )
-                    var colors = 0
-                    var subject: String? = ""
-                    if (s.moveToFirst()) {
-                        colors = s.getInt(2)
-                        subject = s.getString(1)
-                    }
-                    s.close()
-
-                    val title = cursor.getString(4)
-                    val status: String = getString(R.string.done_string)
-                    val statusColor: Int = statusColor(true, date)
-                    val eb = AwaitElement(id, title, status, dates, times, colors, statusColor, true)
-                    eb.isDone = done
-                    eb.subject = subject
-                    eb.isLiked = liked
-
-                    if(i < elements.size)
-                        if(elements[i].type == 12){
-                            i++
-                        }
-
-                    val inApp = Random().nextInt() % 4
-                    if (inApp == 3) {
-                        setAnnounce(i)
-                    }
-                    elements.add(i.coerceAtMost(elements.size), Item(eb, 0))
-
-                }
-
-                i++
-            } while (cursor.moveToNext())
-        }
-
-        cursor.close()
-    }
 
     fun loadCompleted() {
         if (!isAdded) return
@@ -338,32 +312,9 @@ class CompletedFragment : Fragment() {
         elements.add(Item(el, 2))
         if (cursor.moveToFirst()) {
             do {
-                val c = Calendar.getInstance()
-                val e = true
                 val date = cursor.getLong(2)
-                c.timeInMillis = date
-                val day = c[Calendar.DAY_OF_MONTH]
-                val month = c[Calendar.MONTH]
-                val year = c[Calendar.YEAR]
-                val hourFormat = DateFormat.is24HourFormat(requireActivity())
-                var hour = c[Calendar.HOUR_OF_DAY]
-                if (!hourFormat) hour = if (c[Calendar.HOUR] == 0) 12 else c[Calendar.HOUR]
-                val minute = c[Calendar.MINUTE]
-                val inApp = Random().nextInt() % 5
-                if (inApp == 4) {
-                    setAnnounce(elements.size)
-                }
-                val dd = if (day < 10) "0$day" else "" + day
-                if (!isAdded) return
-                val dates = dd + " " + homeFragment.getMonthMinor(
-                    requireActivity(),
-                    month
-                ) + " " + year + " "
-                val mn = if (minute < 10) "0$minute" else "" + minute
-                var times = "$hour:$mn"
-                if (!hourFormat) {
-                    times += if (c[Calendar.AM_PM] == Calendar.AM) " a. m." else " p. m."
-                }
+                val dates = Constants.getDateString(requireContext(), date)
+                val times = Constants.getTimeString(requireContext(), date)
                 val done = cursor.getInt(5) == 2
                 val liked = cursor.getInt(7) == 1
                 val subjectName = cursor.getInt(3)

@@ -11,8 +11,8 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.artuok.appwork.R;
-import com.artuok.appwork.fragmets.homeFragment;
 import com.artuok.appwork.library.CalendarWeekView;
+import com.artuok.appwork.library.Constants;
 import com.thekhaeng.pushdownanim.PushDownAnim;
 
 import java.util.List;
@@ -70,7 +70,7 @@ public class ScheduleAdapter extends RecyclerView.Adapter<ScheduleAdapter.Recurr
         }
 
         void onBindServices(CalendarWeekView.EventsTask element, int pos) {
-            String mon = homeFragment.getDayOfWeek(mInflater.getContext(), element.getDay() + 1);
+            String mon = Constants.getDayOfWeek(mInflater.getContext(), element.getDay() + 1);
             day.setText(mon);
             long hourStartMillis = element.getHour();
             int hour = (int) (hourStartMillis / 3600);
