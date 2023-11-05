@@ -17,9 +17,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.work.ExistingPeriodicWorkPolicy;
@@ -32,13 +30,8 @@ import com.artuok.appwork.library.MessageControler;
 import com.artuok.appwork.services.AlarmWorkManager;
 import com.artuok.appwork.services.MessageWorkManager;
 import com.google.android.gms.ads.MobileAds;
-import com.google.android.gms.ads.RequestConfiguration;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.messaging.FirebaseMessaging;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -72,7 +65,7 @@ public class InActivity extends AppCompatActivity {
         setAlarm();
         activateAlarms();
         setAlarmSchedule();
-        setTokenInDatabase();
+        setMainProject();
         if(SettingsFragment.isLogged(this)){
             MessageControler.restateUserChat(this, null);
             WorkManager workManager = WorkManager.getInstance(this);
@@ -82,12 +75,20 @@ public class InActivity extends AppCompatActivity {
         new Handler().postDelayed(() -> loadMain(), 500);
     }
 
-    void setTokenInDatabase(){
-        FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
-            if(task.isSuccessful()){
-                String token = task.getResult();
-            }
-        });
+    void setMainProject(){
+        DbHelper dbHelper = new DbHelper(this);
+        SQLiteDatabase dbr = dbHelper.getReadableDatabase();
+        SQLiteDatabase dbw = dbHelper.getWritableDatabase();
+        String name = getString(R.string.personal);
+        Cursor query = dbr.rawQuery("SELECT * FROM "+DbHelper.T_PROJECTS+" WHERE name = ?", new String[]{name});
+        if(!query.moveToFirst()){
+            ContentValues values = new ContentValues();
+            values.put("id", 0);
+            values.put("name", name);
+            values.put("description", "User project");
+            dbw.insert(DbHelper.T_PROJECTS, null, values);
+        }
+        query.close();
     }
 
     @Override
@@ -101,7 +102,8 @@ public class InActivity extends AppCompatActivity {
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
             if (extras.getInt("task", 0) == 1) {
-                intent = new Intent(this, CreateTaskActivity.class);
+                intent = new Intent(this, MainActivity.class);
+                intent.putExtra("task", "new task");
             }
         }
         startActivity(intent);

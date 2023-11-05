@@ -73,7 +73,7 @@
             android:layout_width="match_parent"
             android:layout_height="64dp"
             android:orientation="horizontal"
-            android:padding="8dp"
+            android:padding="18dp"
             android:background="@drawable/background_dregree_tb"
             android:gravity="center_vertical"
             app:layout_constraintEnd_toEndOf="parent"
@@ -82,12 +82,21 @@
 
             <TextView
                 android:id="@+id/page_title"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:text="@string/task_to_do"
                 android:textSize="25sp"
-                android:paddingHorizontal="10dp"
                 android:textFontWeight="700"/>
+            <LinearLayout
+                android:id="@+id/dotsLayout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal|bottom"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+            </LinearLayout>
         </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </FrameLayout>

@@ -241,10 +241,7 @@ class ProfileEditActivity : AppCompatActivity() {
                 profilePicture.setImageBitmap(map)
             }
             if (!SettingsFragment.isPhotoProfile(this))
-                if (!SettingsFragment.isMobileData(this)
-                || !SettingsFragment.isSaverModeActive(this)) {
                     SettingsFragment.updatedPhotoProfile(this)
-                }
         }
     }
 

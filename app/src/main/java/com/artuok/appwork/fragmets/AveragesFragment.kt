@@ -140,7 +140,7 @@ class AveragesFragment : Fragment() {
 
 
             val cursor = db.rawQuery(
-                "SELECT * FROM ${DbHelper.T_TASK} WHERE status = '2' AND completed_date > '$date1' AND completed_date <= '$date2'",
+                "SELECT * FROM ${DbHelper.T_TASK} WHERE status = '2' AND complete_date > '$date1' AND complete_date <= '$date2'",
                 null
             )
 
@@ -174,7 +174,7 @@ class AveragesFragment : Fragment() {
 
 
             val cursor = db.rawQuery(
-                "SELECT * FROM ${DbHelper.T_TASK} WHERE status < '2' AND end_date > '$date1' AND end_date < '$date2'",
+                "SELECT * FROM ${DbHelper.T_TASK} WHERE status < '2' AND deadline > '$date1' AND deadline < '$date2'",
                 null
             )
 
@@ -220,7 +220,7 @@ class AveragesFragment : Fragment() {
         val end = getStartEndOFWeek(week, year, false)
 
         var cursor = db.rawQuery(
-            "SELECT * FROM ${DbHelper.T_TASK} WHERE status = '2' AND completed_date > '$start' AND completed_date <= '$end' AND completed_date < end_date",
+            "SELECT * FROM ${DbHelper.T_TASK} WHERE status = '2' AND complete_date > '$start' AND complete_date <= '$end' AND complete_date < deadline",
             null
         )
 
@@ -228,7 +228,7 @@ class AveragesFragment : Fragment() {
         cursor.close()
 
         cursor = db.rawQuery(
-            "SELECT * FROM ${DbHelper.T_TASK} WHERE status = '2' AND end_date > '$start' AND end_date <= '$end' AND completed_date >= end_date",
+            "SELECT * FROM ${DbHelper.T_TASK} WHERE status = '2' AND deadline > '$start' AND deadline <= '$end' AND complete_date >= deadline",
             null
         )
         pendingTask.text = cursor.count.toString()
@@ -240,8 +240,8 @@ class AveragesFragment : Fragment() {
             var deltaTime = 0L
             var i = 0
             do {
-                val created = cursor.getLong(1)
-                val finished = cursor.getLong(8)
+                val created = cursor.getLong(2)
+                val finished = cursor.getLong(4)
                 deltaTime += finished - created
                 i++
             } while (cursor.moveToNext())
@@ -339,7 +339,7 @@ class AveragesFragment : Fragment() {
         }
         val dbHelper = DbHelper(requireActivity())
         val db = dbHelper.readableDatabase
-        val cursor = db.rawQuery("SELECT * FROM ${DbHelper.t_subjects} ORDER BY name", null)
+        val cursor = db.rawQuery("SELECT * FROM ${DbHelper.T_TAG} ORDER BY name", null)
 
         elements.add(Item(ItemSubjectElement(
             1
@@ -401,7 +401,7 @@ class AveragesFragment : Fragment() {
         val values = ContentValues()
         values.put("name", name)
         values.put("color", color)
-        db.insert(DbHelper.t_subjects, null, values)
+        db.insert(DbHelper.T_TAG, null, values)
         notifyDataChanged()
     }
 
@@ -452,7 +452,7 @@ class AveragesFragment : Fragment() {
         val db = dbHelper.writableDatabase
         subject = DatabaseUtils.sqlEscapeString(subject)
         val c =
-            dbr.rawQuery("SELECT id FROM " + DbHelper.t_subjects + " WHERE name = " + subject, null)
+            dbr.rawQuery("SELECT id FROM " + DbHelper.T_TAG + " WHERE name = " + subject, null)
         var idSubject = -1
         if (c.moveToFirst()) {
             idSubject = c.getInt(0)
@@ -460,7 +460,7 @@ class AveragesFragment : Fragment() {
         if (idSubject >= 0) {
             db.delete(DbHelper.T_TASK, "subject = $subject", null)
             db.delete(DbHelper.t_event, "subject = '$idSubject'", null)
-            db.delete(DbHelper.t_subjects, "name = $subject", null)
+            db.delete(DbHelper.T_TAG, "name = $subject", null)
             (requireActivity() as MainActivity).notifyAllChanged()
             notifyDataChanged()
         }

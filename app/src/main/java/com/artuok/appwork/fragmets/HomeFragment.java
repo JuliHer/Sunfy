@@ -1,16 +1,17 @@
 package com.artuok.appwork.fragmets;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.content.res.TypedArray;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.text.format.DateFormat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -20,17 +21,20 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.artuok.appwork.CreateTaskActivity;
 import com.artuok.appwork.MainActivity;
+import com.artuok.appwork.ProjectActivity;
 import com.artuok.appwork.R;
 import com.artuok.appwork.adapters.TasksAdapter;
 import com.artuok.appwork.db.DbHelper;
+import com.artuok.appwork.dialogs.CreateTaskDialog;
 import com.artuok.appwork.library.Constants;
 import com.artuok.appwork.library.LineChart;
 import com.artuok.appwork.objects.AnnouncesElement;
 import com.artuok.appwork.objects.CountElement;
 import com.artuok.appwork.objects.Item;
 import com.artuok.appwork.objects.LineChartElement;
+import com.artuok.appwork.objects.ProyectElement;
+import com.artuok.appwork.objects.ProyectsElement;
 import com.artuok.appwork.objects.TaskElement;
 import com.artuok.appwork.objects.TasksElement;
 import com.faltenreich.skeletonlayout.Skeleton;
@@ -47,7 +51,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.Random;
 
 public class HomeFragment extends Fragment {
 
@@ -121,11 +124,13 @@ public class HomeFragment extends Fragment {
             assert date != null;
             long b = date.getTime();
 
-            Intent a = new Intent(requireActivity(), CreateTaskActivity.class);
-            a.putExtra("deadline", b);
-            a.getIntExtra("requestCode", 2);
+            CreateTaskDialog dialog = new CreateTaskDialog(b);
+            dialog.setOnCheckListener((view1, id) -> {
+                dialog.dismiss();
+                ((MainActivity)requireActivity()).notifyAllChanged();
+            });
+            dialog.show(requireActivity().getSupportFragmentManager(), "Create Task");
 
-            resultLauncher.launch(a);
         });
         LinearLayoutManager manager = new LinearLayoutManager(requireActivity(), LinearLayoutManager.VERTICAL, false);
         RecyclerView recyclerView = root.findViewById(R.id.home_recyclerView);
@@ -186,6 +191,10 @@ public class HomeFragment extends Fragment {
 
         elements.add(new Item(resume, 1));
 
+        List<Item> elemetns = getProjects();
+
+
+
         boolean changedData = pos >= 0;
         Calendar c = Calendar.getInstance();
         long d = c.getTimeInMillis();
@@ -204,11 +213,6 @@ public class HomeFragment extends Fragment {
                 String title = dow - 1 == dayWeek ? requireActivity().getString(R.string.today) : Constants.getDayOfWeek(requireActivity(), dow);
                 title = dow - 1 == (dayWeek + 1) % 7 ? requireActivity().getString(R.string.tomorrow) : title;
 
-                int inApp = new Random().nextInt() % 10;
-                if (inApp == 4 && i > 1) {
-                    setAnnounce(elements.size());
-                }
-
                 if (i == 2) {
                     LineChartElement element = new LineChartElement(getWeeklyProgress(), view ->
                             ((MainActivity) requireActivity()).loadExternalFragment(((MainActivity) requireActivity()).averagesFragment, requireActivity().getString(R.string.average_fragment_menu))
@@ -223,12 +227,37 @@ public class HomeFragment extends Fragment {
 
                 elements.add(new Item(new TasksElement(title, time, i, task), 0));
             }
+
+
+            setAnnounce(4);
         } else {
             long today = d + (day * pos);
             List<TaskElement> task = getTaskDay(today);
             ((TasksElement) elements.get(pos).getObject()).setData(task);
-
         }
+        if(elemetns.size() > 0){
+            /*elements.add(3,new Item(new ProyectsElement(elemetns, (view, position) -> {
+                Intent i = new Intent(requireContext(), ProjectActivity.class);
+                startActivity(i);
+            }), 3));*/
+        }
+    }
+
+    private List<Item> getProjects(){
+        DbHelper helper = new DbHelper(requireActivity());
+        SQLiteDatabase dbr = helper.getReadableDatabase();
+        Cursor query = dbr.rawQuery("SELECT * FROM "+DbHelper.T_PROJECTS+" ORDER BY name DESC", null);
+        List<Item> projects = new ArrayList<>();
+        if(query.moveToFirst()){
+            do{
+                String name = query.getString(1);
+                int id = query.getInt(0);
+                String key = query.getString(3) == null ? "" : query.getString(3);
+                projects.add(new Item(new ProyectElement(id, key, name, null), 0));
+            }while (query.moveToNext());
+        }
+        query.close();
+        return projects;
     }
 
     private void setAnnounce(int pos) {
@@ -284,12 +313,12 @@ public class HomeFragment extends Fragment {
         c.set(y, mm, dd, 23, 59, 59);
         long tm = c.getTimeInMillis();
 
-        Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.T_TASK + " WHERE end_date BETWEEN '" + td + "' AND '" + tm + "' ORDER BY end_date ASC", null);
+        Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.T_TASK + " WHERE deadline BETWEEN '" + td + "' AND '" + tm + "' ORDER BY deadline ASC", null);
         if (cursor.moveToFirst()) {
             do {
-                boolean check = Integer.parseInt(cursor.getString(5)) > 1;
-                String title = cursor.getString(4);
-                long t = cursor.getLong(2);
+                boolean check = Integer.parseInt(cursor.getString(7)) > 1;
+                String title = cursor.getString(1);
+                long t = cursor.getLong(5);
                 Calendar m = Calendar.getInstance();
                 m.setTimeInMillis(t);
                 int minute = m.get(Calendar.MINUTE);
@@ -305,8 +334,8 @@ public class HomeFragment extends Fragment {
                 if (!hourFormat) {
                     time += m.get(Calendar.AM_PM) == Calendar.AM ? " a. m." : " p. m.";
                 }
-                int subject = cursor.getInt(3);
-                Cursor q = db.rawQuery("SELECT * FROM "+DbHelper.t_subjects+" WHERE id = ?", new String[]{subject+""});
+                int subject = cursor.getInt(6);
+                Cursor q = db.rawQuery("SELECT * FROM "+DbHelper.T_TAG +" WHERE id = ?", new String[]{subject+""});
                 int color = requireActivity().getColor(R.color.gray_400);
                 if(q.moveToFirst()){
                     color = q.getInt(2);
@@ -380,7 +409,7 @@ public class HomeFragment extends Fragment {
 
 
             Cursor cursor = db.rawQuery(
-                    "SELECT * FROM " + DbHelper.T_TASK + " WHERE status = '2' AND completed_date > '" + date1 + "' AND completed_date <= '" + date2 + "'",
+                    "SELECT * FROM " + DbHelper.T_TASK + " WHERE status = '2' AND complete_date > '" + date1 + "' AND complete_date <= '" + date2 + "'",
                     null
             );
 
@@ -415,7 +444,7 @@ public class HomeFragment extends Fragment {
 
 
             Cursor cursor = db.rawQuery(
-                    "SELECT * FROM " + DbHelper.T_TASK + " WHERE status < '2' AND end_date > '" + date1 + "' AND end_date <= '" + date2 + "'",
+                    "SELECT * FROM " + DbHelper.T_TASK + " WHERE status < '2' AND deadline > '" + date1 + "' AND deadline <= '" + date2 + "'",
                     null
             );
 

@@ -19,6 +19,7 @@ import android.os.Handler;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.text.format.DateFormat;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -46,6 +47,16 @@ public class AlarmActivity extends AppCompatActivity {
     LinearLayout linearLayout1;
 
     int height = 0;
+
+    BroadcastReceiver receiverS = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction() == AlarmWorkManager.ACTION_ACTIVITY_DISMISS) {
+                cancelVibration(true);
+                finish();
+            }
+        }
+    };
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -130,34 +141,31 @@ public class AlarmActivity extends AppCompatActivity {
             }
         };
 
-        BroadcastReceiver receiverS = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                if (intent.getAction() == AlarmWorkManager.ACTION_DISMISS) {
-                    cancelVibration();
-                    finish();
-                }
-            }
-        };
+
 
         ImageView button = findViewById(R.id.put_off);
         PushDownAnim.setPushDownAnimTo(button)
                 .setScale(PushDownAnim.MODE_SCALE, 0.98f)
                 .setDurationPush(100).setOnClickListener(view -> {
-                    cancelVibration();
+                    cancelVibration(false);
                     finish();
                 });
 
         postpone = new Handler();
         postpone.postDelayed(() -> {
             if (!isCancelP) {
-                cancelVibration();
+                cancelVibration(false);
+                Log.d("CattoNotifications", "SendingBroadcast");
+                Intent i = new Intent(this, AlarmWorkManager.class)
+                        .setAction(AlarmWorkManager.ACTION_TIME_TO_DO_HOMEWORK)
+                        .putExtra("notify", true);
+                sendBroadcast(i);
                 finish();
             }
         }, 300000);
 
 
-        registerReceiver(receiverS, new IntentFilter(AlarmWorkManager.ACTION_DISMISS));
+        registerReceiver(receiverS, new IntentFilter(AlarmWorkManager.ACTION_ACTIVITY_DISMISS));
         registerReceiver(receiver, new IntentFilter(Intent.ACTION_TIME_TICK));
 
         vibrate();
@@ -189,7 +197,10 @@ public class AlarmActivity extends AppCompatActivity {
         if (receiver != null) {
             unregisterReceiver(receiver);
         }
-        cancelVibration();
+        if(receiverS != null){
+            unregisterReceiver(receiverS);
+        }
+        cancelVibration(false);
         super.onStop();
     }
 
@@ -210,10 +221,12 @@ public class AlarmActivity extends AppCompatActivity {
         ringtoneAlarm.play();
     }
 
-    void cancelVibration() {
-        Intent intent = new Intent(this, AlarmWorkManager.class)
-                .setAction(AlarmWorkManager.ACTION_DISMISS);
-        sendBroadcast(intent);
+    void cancelVibration(boolean fromNotification) {
+        if(!fromNotification) {
+            Intent intent = new Intent(this, AlarmWorkManager.class)
+                    .setAction(AlarmWorkManager.ACTION_DISMISS);
+            sendBroadcast(intent);
+        }
         Vibrator vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
         vibrator.cancel();
         postpone.removeCallbacksAndMessages(null);

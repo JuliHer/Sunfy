@@ -26,6 +26,7 @@ import com.artuok.appwork.AlarmActivity;
 import com.artuok.appwork.InActivity;
 import com.artuok.appwork.R;
 import com.artuok.appwork.db.DbHelper;
+import com.artuok.appwork.library.Constants;
 
 import java.util.Calendar;
 import java.util.Random;
@@ -62,7 +63,7 @@ public class NotificationService extends Service {
                     destroy();
                     break;
                 case AlarmWorkManager.ACTION_TIME_TO_DO_HOMEWORK:
-                    notifyDoHomework();
+                    notifyDoHomework(extras.getBoolean("notify", false));
                     destroy();
                     break;
                 case AlarmWorkManager.ACTION_POSTPONE:
@@ -114,6 +115,8 @@ public class NotificationService extends Service {
     }
 
     private void cancelDoHomework() {
+        Intent cancel = new Intent(AlarmWorkManager.ACTION_ACTIVITY_DISMISS);
+        sendBroadcast(cancel);
         NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         if (manager != null) {
             manager.cancel(2);
@@ -242,7 +245,7 @@ public class NotificationService extends Service {
         calendar.set(dy, dm, dd, 23, 59, 59);
         long tomorrowe = calendar.getTimeInMillis();
 
-        Cursor row = db.rawQuery("SELECT * FROM " + DbHelper.T_TASK + " WHERE end_date > '" + tomorrows + "' AND end_date < '" + tomorrowe + "' ORDER BY end_date ASC", null);
+        Cursor row = db.rawQuery("SELECT * FROM " + DbHelper.T_TASK + " WHERE deadline > '" + tomorrows + "' AND deadline < '" + tomorrowe + "' ORDER BY deadline ASC", null);
 
 
         if (row.moveToFirst()) {
@@ -259,7 +262,7 @@ public class NotificationService extends Service {
             manager.notify(i, notification);
             do {
                 Calendar c = Calendar.getInstance();
-                c.setTimeInMillis(row.getLong(2));
+                c.setTimeInMillis(row.getLong(5));
 
                 int m = c.get(Calendar.MINUTE);
                 String min = m < 10 ? "0" + m : m + "";
@@ -267,7 +270,7 @@ public class NotificationService extends Service {
                 String hr = c.get(Calendar.HOUR) == 0 ? "12" : c.get(Calendar.HOUR) + "";
                 String hour = hr + ":" + min + " " + tm;
                 String time = getString(R.string.will_end) + " " + hour;
-                notifyTEvent(row.getInt(0), row.getString(4), time);
+                notifyTEvent(row.getInt(0), row.getString(1), time);
             } while (row.moveToNext());
         }
 
@@ -355,7 +358,7 @@ public class NotificationService extends Service {
                 .build();
         NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         assert manager != null;
-        manager.notify(2, foreground);
+        manager.notify(4, foreground);
     }
 
     private boolean getAlarmStatus() {
@@ -364,10 +367,9 @@ public class NotificationService extends Service {
         return s.getBoolean("alarm", false);
     }
 
-    private void notifyDoHomework() {
+    private void notifyDoHomework(boolean notify) {
         int count = awaitingActivities();
-
-        if (getAlarmStatus() && count > 0) {
+        if (getAlarmStatus() && count > 0 && !notify) {
             showAlarmNotification(count);
         } else {
             showNotifyDH(count);
@@ -462,9 +464,11 @@ public class NotificationService extends Service {
     }
 
     public void foregroundNotify() {
+        Random random = new Random();
+        String doing = getString(Constants.backgroundLines[random.nextInt(Constants.backgroundLines.length-1)]);
         Notification foreground = new NotificationCompat.Builder(this, InActivity.CHANNEL_ID_2)
                 .setSmallIcon(R.drawable.ic_stat_name)
-                .setContentTitle("Activating")
+                .setContentTitle(doing)
                 .setAutoCancel(true)
                 .build();
         NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
@@ -495,7 +499,7 @@ public class NotificationService extends Service {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         long a = Calendar.getInstance().getTimeInMillis();
 
-        Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.T_TASK + " WHERE status = '0'", null);
+        Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.T_TASK + " WHERE status < '2'", null);
 
         int b = cursor.getCount();
 
@@ -552,6 +556,7 @@ public class NotificationService extends Service {
         if (!name.equals("") && time != 0 && duration != 0) {
             setNotify(name, time, duration);
         }
+        v.close();
 
     }
 

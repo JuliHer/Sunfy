@@ -4,8 +4,6 @@ import android.content.ContentValues
 import android.content.res.TypedArray
 import android.graphics.Color
 import android.os.Bundle
-import android.text.format.DateFormat
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -16,14 +14,17 @@ import com.artuok.appwork.R
 import com.artuok.appwork.adapters.AwaitingAdapter
 import com.artuok.appwork.db.DbHelper
 import com.artuok.appwork.fragmets.AverageAsync
-import com.artuok.appwork.fragmets.HomeFragment
 import com.artuok.appwork.library.Constants
 import com.artuok.appwork.library.FalseSkeleton
+import com.artuok.appwork.objects.AnnouncesElement
 import com.artuok.appwork.objects.AwaitElement
 import com.artuok.appwork.objects.Item
 import com.faltenreich.skeletonlayout.Skeleton
+import com.google.android.gms.ads.AdLoader
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.nativead.NativeAd
+import com.google.android.gms.ads.nativead.NativeAdOptions
 import java.util.Calendar
-import java.util.Random
 
 class TaskFragment : Fragment() {
 
@@ -31,7 +32,7 @@ class TaskFragment : Fragment() {
     private lateinit var adapter: AwaitingAdapter
     private lateinit var manager: LinearLayoutManager
     private val elements : ArrayList<Item> = ArrayList()
-    private var listener : PendingFragment.OnTaskModifyListener? = null
+    private var listener : KanbanFragment.OnTaskModifyListener? = null
     private lateinit var skeleton: Skeleton
 
     override fun onCreateView(
@@ -45,7 +46,7 @@ class TaskFragment : Fragment() {
         return root
     }
 
-    public fun setOnTaskModify(listener: PendingFragment.OnTaskModifyListener){
+    public fun setOnTaskModify(listener: KanbanFragment.OnTaskModifyListener){
         this.listener = listener
     }
 
@@ -66,31 +67,29 @@ class TaskFragment : Fragment() {
 
     private fun loadTasks(){
         if(!isAdded) {
-            Log.d("CattoAdded", "Not Added")
             return
         }
         val dbHelper = DbHelper(requireActivity())
         val db = dbHelper.readableDatabase
-        val q = db.rawQuery("SELECT * FROM ${DbHelper.T_TASK} ORDER BY status ASC, end_date ASC", null)
+        val q = db.rawQuery("SELECT * FROM ${DbHelper.T_TASK} ORDER BY status ASC, deadline ASC", null)
 
+        val size = q.count
+        setAd(if(size > 0) 1 else size)
         if(q.moveToFirst()){
             do{
                 val c = Calendar.getInstance()
                 val today = c.timeInMillis
-                val date = q.getLong(2)
+                val date = q.getLong(5)
                 val dates = Constants.getDateString(requireContext(), date)
                 val times = Constants.getTimeString(requireContext(), date)
                 if (!isAdded) return
-                val inApp = Random().nextInt() % 5
-                if (inApp == 4) {
-                    //setAnnounce(elements.size)
-                }
-                val stat = q.getInt(5) == 1
-                val done = q.getInt(5) == 2
-                val liked = q.getInt(7) == 1
-                val subjectName = q.getInt(3)
+
+                val stat = q.getInt(7) == 1
+                val done = q.getInt(7) == 2
+                val liked = q.getInt(9) == 1
+                val subjectName = q.getInt(6)
                 val s = db.rawQuery(
-                    "SELECT * FROM " + DbHelper.t_subjects + " WHERE id = " + subjectName,
+                    "SELECT * FROM " + DbHelper.T_TAG + " WHERE id = " + subjectName,
                     null
                 )
                 var colors = 0
@@ -101,7 +100,7 @@ class TaskFragment : Fragment() {
                 }
                 s.close()
                 val id = q.getInt(0)
-                val title = q.getString(4)
+                val title = q.getString(1)
                 val status: String = if(!done) daysLeft(today < date, date) else requireActivity().getString(R.string.done_string)
                 val statusColor: Int =  statusColor(if(!done) today >= date else true, date )
                 val eb = AwaitElement(id, title, status, dates, times, colors, statusColor, stat)
@@ -131,15 +130,15 @@ class TaskFragment : Fragment() {
         val q = db.rawQuery("SELECT * FROM ${DbHelper.T_TASK} WHERE id = $id", null)
 
         if(q.moveToFirst()){
-            val title = q.getString(4)
+            val title = q.getString(1)
             val c = Calendar.getInstance()
             val today = c.timeInMillis
-            val date = q.getLong(2)
+            val date = q.getLong(5)
             val dates = Constants.getDateString(requireActivity(), date)
             val times = Constants.getTimeString(requireActivity(), date)
-            val subjectName = q.getInt(3)
+            val subjectName = q.getInt(6)
             val s = db.rawQuery(
-                "SELECT * FROM " + DbHelper.t_subjects + " WHERE id = " + subjectName,
+                "SELECT * FROM " + DbHelper.T_TAG + " WHERE id = " + subjectName,
                 null
             )
             var colors = 0
@@ -149,9 +148,9 @@ class TaskFragment : Fragment() {
                 subject = s.getString(1)
             }
 
-            val stat = q.getInt(5) == 1
-            val done = q.getInt(5) == 2
-            val liked = q.getInt(7) == 1
+            val stat = q.getInt(7) == 1
+            val done = q.getInt(7) == 2
+            val liked = q.getInt(9) == 1
             val statusColor: Int =  statusColor(if(!done) today >= date else true, date )
             val status: String = if(!done) daysLeft(today < date, date) else requireActivity().getString(R.string.done_string)
             val te = AwaitElement(id.toInt(), title, status, dates, times, colors, statusColor, stat)
@@ -165,6 +164,34 @@ class TaskFragment : Fragment() {
 
         q.close()
         return null
+    }
+
+    private fun setAd(pos : Int){
+        val finalPos = pos
+        val adLoader = AdLoader.Builder(requireActivity(), "ca-app-pub-5838551368289900/1451662327")
+            .forNativeAd { nativeAd: NativeAd ->
+                val title = nativeAd.headline
+                val body = nativeAd.body
+                val advertiser = nativeAd.advertiser
+                val price = nativeAd.price
+                val images =
+                    nativeAd.images
+                val icon = nativeAd.icon
+                val element =
+                    AnnouncesElement(nativeAd, title, body, advertiser, images, icon)
+                element.action = nativeAd.callToAction
+                element.price = price
+                val s = if(finalPos >= elements.size) elements.size else finalPos
+                elements.add(s, Item(element, 12))
+                adapter.notifyItemInserted(s)
+            }.withNativeAdOptions(
+                NativeAdOptions.Builder()
+                    .setMediaAspectRatio(NativeAdOptions.NATIVE_MEDIA_ASPECT_RATIO_LANDSCAPE)
+                    .setRequestMultipleImages(false)
+                    .setAdChoicesPlacement(NativeAdOptions.ADCHOICES_TOP_LEFT)
+                    .build()
+            ).build()
+        adLoader.loadAd(AdRequest.Builder().build())
     }
 
     private fun initRecycler(){
@@ -205,7 +232,7 @@ class TaskFragment : Fragment() {
         val stat = if(check) 2 else 0
         values.put("status", stat)
         if(check)
-            values.put("completed_date", Calendar.getInstance().timeInMillis)
+            values.put("complete_date", Calendar.getInstance().timeInMillis)
         db.update(DbHelper.T_TASK, values, "id = ?", arrayOf("$id"))
     }
 

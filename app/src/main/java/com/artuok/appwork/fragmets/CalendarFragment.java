@@ -1,8 +1,6 @@
 package com.artuok.appwork.fragmets;
 
-import android.app.Activity;
 import android.app.Dialog;
-import android.content.Intent;
 import android.content.res.TypedArray;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
@@ -10,7 +8,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,18 +16,16 @@ import android.view.Window;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.artuok.appwork.CreateActivity;
 import com.artuok.appwork.MainActivity;
 import com.artuok.appwork.R;
 import com.artuok.appwork.adapters.BottomEventAdapter;
 import com.artuok.appwork.adapters.ScheduleAdapter;
 import com.artuok.appwork.db.DbHelper;
+import com.artuok.appwork.dialogs.ScheduleMakerDialog;
 import com.artuok.appwork.library.CalendarWeekView;
 import com.artuok.appwork.objects.Item;
 import com.artuok.appwork.objects.TaskEvent;
@@ -74,7 +69,7 @@ public class CalendarFragment extends Fragment {
         TypedArray pa = requireActivity().obtainStyledAttributes(R.styleable.AppCustomAttrs);
         selectColor = pa.getColor(R.styleable.AppCustomAttrs_backgroundDialog, Color.WHITE);
         pa.recycle();
-        registLaunchers();
+
         LinearLayoutManager manager = new LinearLayoutManager(requireActivity(), RecyclerView.VERTICAL, false);
         recyclerView.setLayoutManager(manager);
         recyclerView.setHasFixedSize(true);
@@ -115,8 +110,17 @@ public class CalendarFragment extends Fragment {
             loadEvents(d, m, y);
             adapter.notifyDataSetChanged();
         });
-        weekView.setDateListener(c1 -> showSubjectInfo(c1.getEvent().getTitle()));
-        weekView.setSelectListener(this::startCreateActivity);
+        weekView.setDateListener(c1 -> {
+//            showSubjectInfo(c1.getEvent().getTitle());
+            ScheduleMakerDialog dialog = new ScheduleMakerDialog(c1.getEvent());
+            dialog.setOnCreateScheduleListener(this::NotifyChanged);
+            dialog.show(requireActivity().getSupportFragmentManager(), "Schedule Edit");
+        });
+        weekView.setSelectListener(eventsTask -> {
+            ScheduleMakerDialog dialog = new ScheduleMakerDialog(eventsTask.getDay(), eventsTask.getHour());
+            dialog.setOnCreateScheduleListener(() -> NotifyChanged());
+            dialog.show(requireActivity().getSupportFragmentManager(), "schedule Maker Dialog");
+        });
 
         return root;
     }
@@ -145,45 +149,6 @@ public class CalendarFragment extends Fragment {
             schedule.setTextColor(selectColor);
         }
     }
-
-
-
-    public void startCreateActivity(CalendarWeekView.EventsTask e) {
-        Intent intent = new Intent(requireActivity(), CreateActivity.class);
-        if (e != null) {
-            intent.putExtra("day", e.getDay());
-            intent.putExtra("hour", e.getHour());
-            intent.putExtra("duration", e.getDuration());
-        }
-
-        resultLauncher.launch(intent);
-    }
-
-    private void registLaunchers() {
-        resultLauncher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                result -> {
-                    if (result.getResultCode() == Activity.RESULT_OK) {
-                        Intent data = result.getData();
-                        if (data.getIntExtra("requestCode", 0) == 1) {
-                            NotifyChanged();
-                        }
-                    }
-                }
-        );
-    }
-
-    ActivityResultLauncher<Intent> resultLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if (result.getResultCode() == Activity.RESULT_OK) {
-                    Intent data = result.getData();
-                    if (data.getIntExtra("requestCode", 0) == 1) {
-                        NotifyChanged();
-                    }
-                }
-            }
-    );
 
     public void NotifyChanged() {
         elements = new ArrayList<>();
@@ -220,11 +185,11 @@ public class CalendarFragment extends Fragment {
         Cursor c = db.rawQuery("SELECT * FROM " + DbHelper.T_TASK, null);
         if (c.moveToFirst()) {
             do {
-                String ti = c.getString(4);
-                long tim = c.getLong(2);
-                int sub = c.getInt(3);
+                String ti = c.getString(1);
+                long tim = c.getLong(5);
+                int sub = c.getInt(6);
 
-                Cursor b = db.rawQuery("SELECT color FROM " + DbHelper.t_subjects + " WHERE id = " + sub, null);
+                Cursor b = db.rawQuery("SELECT color FROM " + DbHelper.T_TAG + " WHERE id = " + sub, null);
 
 
                 int color = 0;
@@ -257,14 +222,14 @@ public class CalendarFragment extends Fragment {
 
         element.add(new Item(new TextElement(dt), 1));
 
-        Cursor c = db.rawQuery("SELECT * FROM " + DbHelper.T_TASK + " WHERE end_date BETWEEN '" + dated + "' AND '" + dating + "' ORDER BY end_date ASC", null);
+        Cursor c = db.rawQuery("SELECT * FROM " + DbHelper.T_TASK + " WHERE deadline BETWEEN '" + dated + "' AND '" + dating + "' ORDER BY deadline ASC", null);
         if (c.moveToFirst()) {
             do {
-                String ti = c.getString(4);
-                long tim = c.getLong(2);
-                int sub = c.getInt(3);
+                String ti = c.getString(1);
+                long tim = c.getLong(5);
+                int sub = c.getInt(6);
 
-                Cursor b = db.rawQuery("SELECT color FROM " + DbHelper.t_subjects + " WHERE id = " + sub, null);
+                Cursor b = db.rawQuery("SELECT color FROM " + DbHelper.T_TAG + " WHERE id = " + sub, null);
                 int color = 0;
                 if (b.moveToFirst()) {
                     color = b.getInt(0);
@@ -298,6 +263,8 @@ public class CalendarFragment extends Fragment {
 
 
     private void showSubjectInfo(String subject) {
+
+
         final Dialog dialog = new Dialog(requireContext());
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView(R.layout.bottom_task_layout);
@@ -350,7 +317,7 @@ public class CalendarFragment extends Fragment {
         DbHelper dbHelper = new DbHelper(requireActivity());
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         n = DatabaseUtils.sqlEscapeString(n);
-        Cursor c = db.rawQuery("SELECT * FROM " + DbHelper.t_subjects + " WHERE name = " + n + "", null);
+        Cursor c = db.rawQuery("SELECT * FROM " + DbHelper.T_TAG + " WHERE name = " + n + "", null);
         if (c.moveToFirst()) {
             int id = c.getInt(0);
             Cursor s = db.rawQuery("SELECT * FROM " + DbHelper.t_event + " WHERE subject = '" + id + "' ORDER BY day_of_week ASC, time ASC", null);

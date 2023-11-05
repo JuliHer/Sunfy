@@ -11,8 +11,8 @@ import com.artuok.appwork.fragmets.HomeFragment;
 
 public class Constants {
 
-    public static int VERSION = 4;
-    public static String VERSION_CODE = "1.0.3";
+    public static int VERSION = 5;
+    public static String VERSION_CODE = "1.0.4";
 
     public static String parseText(String input) {
         String formattedString = input.trim();
@@ -21,6 +21,8 @@ public class Constants {
 
         return formattedString;
     }
+
+    public static int[] backgroundLines = {R.string.in_stealth_mode, R.string.master_of_multitasking, R.string.working_in_shadows, R.string.ninja_productivity, R.string.operating_in_secret, R.string.work_in_silence, R.string.invisible_work};
 
     public static boolean isInternetAvailable(Context context) {
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);

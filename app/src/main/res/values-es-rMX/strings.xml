@@ -275,4 +275,5 @@
     <string name="task_to_do">Tareas a Hacer</string>
     <string name="in_process">En Proceso</string>
     <string name="kanban_table">Tabla Kanban</string>
+    <string name="add_task">Agregar tarea</string>
 </resources>

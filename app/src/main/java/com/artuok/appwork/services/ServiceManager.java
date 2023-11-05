@@ -19,10 +19,8 @@ import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.os.Binder;
 import android.os.IBinder;
-import android.util.Log;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.Person;
@@ -35,10 +33,7 @@ import com.artuok.appwork.db.DbHelper;
 import com.artuok.appwork.fragmets.SettingsFragment;
 import com.artuok.appwork.library.Constants;
 import com.artuok.appwork.library.MessageControler;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -153,7 +148,7 @@ public class ServiceManager extends Service {
                 String line;
                 DbHelper helper = new DbHelper(this);
                 SQLiteDatabase db = helper.getWritableDatabase();
-                db.execSQL("DROP TABLE " + DbHelper.t_subjects);
+                db.execSQL("DROP TABLE " + DbHelper.T_TAG);
                 db.execSQL("DROP TABLE " + DbHelper.T_TASK);
                 DbHelper.createTables(db);
                 int i = 0;
@@ -178,13 +173,14 @@ public class ServiceManager extends Service {
                             ContentValues values = new ContentValues();
                             values.put("id", id);
                             values.put("date", date);
-                            values.put("end_date", end_date);
+                            values.put("deadline", end_date);
+                            values.put("process_date", 0);
                             values.put("subject", subject);
                             values.put("description", desc);
                             values.put("status", status);
                             values.put("user", user);
                             values.put("favorite", favorite);
-                            values.put("completed_date", completed_date);
+                            values.put("complete_date", completed_date);
                             db.insert(DbHelper.T_TASK, null, values);
                         }
                     }else{
@@ -197,7 +193,7 @@ public class ServiceManager extends Service {
                             values.put("id", id);
                             values.put("name", name);
                             values.put("color", color);
-                            db.insert(DbHelper.t_subjects, null, values);
+                            db.insert(DbHelper.T_TAG, null, values);
                         }
                     }
 
@@ -271,7 +267,7 @@ public class ServiceManager extends Service {
     private long checkSubject(String name) {
         DbHelper helper = new DbHelper(this);
         SQLiteDatabase db = helper.getReadableDatabase();
-        Cursor c = db.rawQuery("SELECT * FROM " + DbHelper.t_subjects + " WHERE name = '" + name + "'", null);
+        Cursor c = db.rawQuery("SELECT * FROM " + DbHelper.T_TAG + " WHERE name = '" + name + "'", null);
         if (c.moveToFirst()) {
             int w = c.getInt(0);
             c.close();
@@ -281,7 +277,7 @@ public class ServiceManager extends Service {
             ContentValues values = new ContentValues();
             values.put("name", name);
             values.put("color", 0XEA1E63);
-            return dbw.insert(DbHelper.t_subjects, null, values);
+            return dbw.insert(DbHelper.T_TAG, null, values);
         }
     }
 
@@ -300,7 +296,7 @@ public class ServiceManager extends Service {
             DbHelper helper = new DbHelper(this);
             SQLiteDatabase db = helper.getReadableDatabase();
             Cursor tasks = db.rawQuery("SELECT * FROM " + DbHelper.T_TASK, null);
-            Cursor subjects = db.rawQuery("SELECT * FROM " + DbHelper.t_subjects, null);
+            Cursor subjects = db.rawQuery("SELECT * FROM " + DbHelper.T_TAG, null);
 
 
             FileWriter writer = new FileWriter(backupFile);
@@ -329,15 +325,15 @@ public class ServiceManager extends Service {
                 writer.write("\n");
                 do {
                     int id = tasks.getInt(0);
-                    long date = tasks.getLong(1);
-                    long end_date = tasks.getLong(2);
-                    int subjectId = tasks.getInt(3);
+                    long date = tasks.getLong(2);
+                    long end_date = tasks.getLong(5);
+                    int subjectId = tasks.getInt(6);
 
-                    String desc = tasks.getString(4);
-                    int status = tasks.getInt(5);
-                    String user = tasks.getString(6);
-                    int favorite = tasks.getInt(7);
-                    long completed_date = tasks.getLong(8);
+                    String desc = tasks.getString(1);
+                    int status = tasks.getInt(7);
+                    String user = tasks.getString(8);
+                    int favorite = tasks.getInt(9);
+                    long completed_date = tasks.getLong(4);
                     String taskData = id + ",~~" + date + ",~~" + end_date + ",~~" + subjectId + ",~~" + desc + ",~~" + status + ",~~" + user + ",~~" + favorite + ",~~" + completed_date + "\n";
                     setNotification(i, max, getString(R.string.creating_backup));
                     writer.write(taskData);

@@ -11,11 +11,13 @@ import androidx.annotation.Nullable;
 
 import com.artuok.appwork.db.DbChat;
 import com.artuok.appwork.fragmets.HomeFragment;
+import com.artuok.appwork.fragmets.SettingsFragment;
 import com.artuok.appwork.objects.EventMessageElement;
 import com.artuok.appwork.objects.Item;
 import com.artuok.appwork.objects.MessageElement;
 import com.artuok.appwork.objects.TextElement;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -317,7 +319,7 @@ public class MessageControler {
         long i = db.insert(DbChat.T_CHATS_MSG, null, values);
         if(msg.getTask() != null){
             ContentValues task = new ContentValues();
-            task.put("end_date", msg.getTask().getDeadline());
+            task.put("deadline", msg.getTask().getDeadline());
             task.put("message", i);
             task.put("description", msg.getTask().getDescription());
             task.put("user", msg.getTask().getUser());
@@ -443,7 +445,7 @@ public class MessageControler {
         long i = db.insert(DbChat.T_CHATS_MSG, null, values);
         if(msg.getTask() != null){
             ContentValues task = new ContentValues();
-            task.put("end_date", msg.getTask().getDeadline());
+            task.put("deadline", msg.getTask().getDeadline());
             task.put("message", i);
             task.put("description", msg.getTask().getDescription());
             task.put("user", msg.getTask().getUser());
@@ -475,8 +477,12 @@ public class MessageControler {
 
 
     public static void restateUserChat(Context context, OnRestateListener listener){
-
-        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if(user == null){
+            SettingsFragment.Logout(context);
+            return;
+        }
+        String userId = user.getUid();
         FirebaseDatabase.getInstance().getReference().child("user")
                 .child(userId).child("chat")
                 .addListenerForSingleValueEvent(new ValueEventListener() {
@@ -639,7 +645,7 @@ public class MessageControler {
         long i = db.insert(DbChat.T_CHATS_MSG, null, values);
         if(msg.getTask() != null){
             ContentValues task = new ContentValues();
-            task.put("end_date", msg.getTask().getDeadline());
+            task.put("deadline", msg.getTask().getDeadline());
             task.put("message", i);
             task.put("description", msg.getTask().getDescription());
             task.put("user", msg.getTask().getUser());

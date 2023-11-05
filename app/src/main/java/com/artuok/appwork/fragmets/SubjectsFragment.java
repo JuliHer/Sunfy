@@ -160,7 +160,7 @@ public class SubjectsFragment extends Fragment {
         values.put("name", name);
         values.put("color", color);
 
-        db.insert(DbHelper.t_subjects, null, values);
+        db.insert(DbHelper.T_TAG, null, values);
         new TaskAsinc().execute(false);
     }
 
@@ -175,7 +175,7 @@ public class SubjectsFragment extends Fragment {
         }));
         DbHelper helper = new DbHelper(requireActivity().getApplicationContext());
         SQLiteDatabase db = helper.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.t_subjects + " ORDER BY name COLLATE NOCASE ASC", null);
+        Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.T_TAG + " ORDER BY name COLLATE NOCASE ASC", null);
         if (cursor.moveToFirst()) {
             do {
                 int subject = cursor.getInt(0);
@@ -198,12 +198,12 @@ public class SubjectsFragment extends Fragment {
             int pending = 0, overdue = 0, done = 0;
             if (cursor.moveToFirst()) {
                 do {
-                    boolean taskDone = cursor.getInt(5) == 1;
+                    boolean taskDone = cursor.getInt(7) == 2;
                     if (taskDone) {
                         done++;
                     } else {
                         long today = Calendar.getInstance().getTimeInMillis();
-                        boolean taskPending = cursor.getLong(2) > today;
+                        boolean taskPending = cursor.getLong(5) > today;
                         if (taskPending) {
                             pending++;
                         } else {
@@ -282,7 +282,7 @@ public class SubjectsFragment extends Fragment {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         subject = DatabaseUtils.sqlEscapeString(subject);
 
-        Cursor c = dbr.rawQuery("SELECT id FROM " + DbHelper.t_subjects + " WHERE name = " + subject, null);
+        Cursor c = dbr.rawQuery("SELECT id FROM " + DbHelper.T_TAG + " WHERE name = " + subject, null);
         int idSubject = -1;
         if (c.moveToFirst()) {
             idSubject = c.getInt(0);
@@ -290,7 +290,7 @@ public class SubjectsFragment extends Fragment {
         if (idSubject >= 0) {
             db.delete(DbHelper.T_TASK, "subject = " + subject, null);
             db.delete(DbHelper.t_event, "subject = '" + idSubject + "'", null);
-            db.delete(DbHelper.t_subjects, "name = " + subject, null);
+            db.delete(DbHelper.T_TAG, "name = " + subject, null);
             ((MainActivity) requireActivity()).notifyAllChanged();
             new TaskAsinc().execute(false);
         }

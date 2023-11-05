@@ -1,13 +1,18 @@
 package com.artuok.appwork;
 
+import static android.appwidget.AppWidgetManager.ACTION_APPWIDGET_UPDATE;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -24,6 +29,8 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.artuok.appwork.dialogs.AnnouncementDialog;
+import com.artuok.appwork.dialogs.CreateTaskDialog;
+import com.artuok.appwork.dialogs.ScheduleMakerDialog;
 import com.artuok.appwork.fragmets.AlarmsFragment;
 import com.artuok.appwork.fragmets.AveragesFragment;
 import com.artuok.appwork.fragmets.TasksFragment;
@@ -35,6 +42,7 @@ import com.artuok.appwork.fragmets.SocialFragment;
 import com.artuok.appwork.fragmets.HomeFragment;
 import com.artuok.appwork.library.CalendarWeekView;
 import com.artuok.appwork.library.Constants;
+import com.artuok.appwork.widgets.TodayTaskWidget;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationBarView;
@@ -120,22 +128,34 @@ public class MainActivity extends AppCompatActivity {
                         int day = calendar.get(Calendar.DAY_OF_WEEK)-1;
                         long hour = 43200;
                         long duration = 3600;
-                        calendarFragment.startCreateActivity(new CalendarWeekView.EventsTask(day, hour, duration, 0, ""));
+
+                        ScheduleMakerDialog dialog = new ScheduleMakerDialog(day, hour);
+                        dialog.setOnCreateScheduleListener(() -> calendarFragment.NotifyChanged());
+                        dialog.show(getSupportFragmentManager(), "Schedule Maker");
                         return;
                     }
                 }
             }
-            toggleFABs();
+            CreateTaskDialog create = new CreateTaskDialog(0);
+            create.setOnCheckListener ((views, id) ->{
+                create.dismiss();
+                notifyAllChanged();
+                updateWidget();
+            });
+            create.show(getSupportFragmentManager(), "Create Task");
         });
         PushDownAnim.setPushDownAnimTo(subFAB1)
                 .setScale(PushDownAnim.MODE_SCALE, 0.78f)
                 .setDurationPush(100)
                 .setOnClickListener(view -> {
 
-                    Intent i = new Intent(this, CreateTaskActivity.class);
-                    i.getIntExtra("requestCode", 2);
-
-                    resultLauncher.launch(i);
+                    CreateTaskDialog create = new CreateTaskDialog(0);
+                    create.setOnCheckListener ((views, id) ->{
+                        create.dismiss();
+                        notifyAllChanged();
+                        updateWidget();
+                    });
+                    create.show(getSupportFragmentManager(), "Create Task");
                 });
 
         if (navigation != null)
@@ -146,9 +166,13 @@ public class MainActivity extends AppCompatActivity {
         if (getIntent().getExtras() != null) {
             Bundle extras = getIntent().getExtras();
             if (extras.getString("task", "").equals("new task")) {
-                Intent i = new Intent(this, CreateTaskActivity.class);
-                i.getIntExtra("requestCode", 2);
-                startActivity(i);
+                CreateTaskDialog create = new CreateTaskDialog(0);
+                create.setOnCheckListener ((views, id) ->{
+                    create.dismiss();
+                    notifyAllChanged();
+                    updateWidget();
+                });
+                create.show(getSupportFragmentManager(), "Create Task");
             }
         }
 
@@ -317,22 +341,14 @@ public class MainActivity extends AppCompatActivity {
             }
     }
 
-    ActivityResultLauncher<Intent> resultLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if (result.getResultCode() == Activity.RESULT_OK) {
-                    Intent data = result.getData();
-                    assert data != null;
-                    if (data.getIntExtra("requestCode", 0) == 2) {
-                        updateWidget();
-                        notifyAllChanged();
-                    }
-                }
-            }
-    );
+
 
     public void updateWidget() {
-
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
+        int[] appWidgetsIds = appWidgetManager.getAppWidgetIds(new ComponentName(this, TodayTaskWidget.class));
+        Intent uw = new Intent(ACTION_APPWIDGET_UPDATE)
+                .putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetsIds);
+        sendBroadcast(uw);
     }
 
     public void showAnnouncementChat() {

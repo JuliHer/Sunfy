@@ -216,6 +216,7 @@ class SocialFragment : Fragment() {
             image.getFile(file).addOnCompleteListener {
                 if (it.isSuccessful) {
                     val bitmap = BitmapFactory.decodeFile(file.path)
+
                     adapter.changeImage(n, bitmap)
                     adapter.notifyItemChanged(n)
                 }

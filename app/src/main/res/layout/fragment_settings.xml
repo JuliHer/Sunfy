@@ -136,44 +136,6 @@
                 android:textColor="?subTextColor"/>
 
             <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/ic_signal"
-                    android:padding="16dp"
-                    app:tint="?subTextColor" />
-
-                <LinearLayout
-                    android:layout_weight="1"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:paddingTop="16dp"
-                    android:layout_marginEnd="16dp">
-
-                    <Switch
-                        android:id="@+id/saver_mode"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:textSize="16sp"
-                        android:textFontWeight="500"
-                        android:text="@string/use_wifi"
-                        tools:ignore="UseSwitchCompatOrMaterialXml" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/active_wifi_saver"
-                        android:textSize="12sp"
-                        android:textColor="?subTextColor" />
-                </LinearLayout>
-            </LinearLayout>
-
-            <LinearLayout
                 android:id="@+id/backup_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

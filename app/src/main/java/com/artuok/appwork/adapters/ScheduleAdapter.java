@@ -1,6 +1,7 @@
 package com.artuok.appwork.adapters;
 
 import android.content.Context;
+import android.text.format.DateFormat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,7 +18,7 @@ import com.thekhaeng.pushdownanim.PushDownAnim;
 
 import java.util.List;
 
-public class ScheduleAdapter extends RecyclerView.Adapter<ScheduleAdapter.Recurrence> {
+public class ScheduleAdapter extends RecyclerView.Adapter<ScheduleAdapter.ScheduleViewHolder> {
 
     OnClickListener listener;
     OnClickListener removeListener;
@@ -33,19 +34,83 @@ public class ScheduleAdapter extends RecyclerView.Adapter<ScheduleAdapter.Recurr
 
     @NonNull
     @Override
-    public Recurrence onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = mInflater.inflate(R.layout.recurrence_layout, parent, false);
-        return new Recurrence(view);
+    public ScheduleViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = mInflater.inflate(R.layout.item_schedule_layout, parent, false);
+        return new ScheduleViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull Recurrence holder, int position) {
-        holder.onBindServices(mData.get(position), position);
+    public void onBindViewHolder(@NonNull ScheduleViewHolder holder, int position) {
+        holder.onBindData(mData.get(position));
     }
 
     @Override
     public int getItemCount() {
         return mData.size();
+    }
+
+    public class ScheduleViewHolder extends RecyclerView.ViewHolder {
+
+        TextView duration, day, hour;
+        public ScheduleViewHolder(@NonNull View itemView) {
+            super(itemView);
+
+            duration = itemView.findViewById(R.id.duration);
+            day = itemView.findViewById(R.id.day);
+            hour = itemView.findViewById(R.id.hour);
+
+            PushDownAnim.setPushDownAnimTo(itemView)
+                    .setOnClickListener(view -> listener.onClick(view, getLayoutPosition()));
+        }
+
+        public void onBindData(CalendarWeekView.EventsTask element){
+            String d = parseMiliToString(element.getDuration());
+            duration.setText(d);
+
+            String mon = Constants.getDayOfWeek(mInflater.getContext(), element.getDay() + 1);
+            String dayS = mon.toUpperCase().substring(0, 3);
+            day.setText(dayS);
+            String times = getTimeString(element.getHour());
+            hour.setText(times);
+        }
+
+        public String parseMiliToString(long milisegundos) {
+            long segundos = milisegundos;
+
+            if (segundos < 3600) {
+                long minutos = segundos / 60;
+
+                return minutos + "m";
+            } else {
+                long horas = segundos / 3600;
+                long minutosRestantes = (segundos % 3600) / 60;
+                if (minutosRestantes == 0) {
+                    return horas + "h";
+                } else {
+                    return horas + "h+";
+                }
+            }
+        }
+
+        String getTimeString(long hourMillis){
+            int hours = (int) (hourMillis / 3600);
+            int minutes = (int) (hourMillis / 60) % 60;
+            hours = hours % 24;
+            boolean is24H = DateFormat.is24HourFormat(mInflater.getContext());
+            String tm = "";
+            if(!is24H){
+                tm += hours > 11 ? "\npm" : "\nam";
+            }
+
+            if(!is24H){
+                hours = hours > 12 ? hours - 12 : hours;
+                if(hours == 0) hours = 12;
+            }
+
+            String minute = minutes < 10 ? "0"+minutes:minutes+"";
+
+            return hours +":"+minute+tm;
+        }
     }
 
     public class Recurrence extends RecyclerView.ViewHolder implements View.OnClickListener {

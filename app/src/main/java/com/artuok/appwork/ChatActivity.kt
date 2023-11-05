@@ -2,29 +2,24 @@ package com.artuok.appwork
 
 import android.app.Dialog
 import android.content.ContentValues
-import android.content.res.TypedArray
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
-import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.view.Window
-import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.artuok.appwork.adapters.ColorSelectAdapter
 import com.artuok.appwork.adapters.MessageAdapter
 import com.artuok.appwork.adapters.SubjectAdapter
 import com.artuok.appwork.db.DbChat
@@ -35,7 +30,6 @@ import com.artuok.appwork.library.MessageControler.ChatType
 import com.artuok.appwork.library.MessageControler.Message
 import com.artuok.appwork.library.MessageSwipeController
 import com.artuok.appwork.library.SwipeControllerActions
-import com.artuok.appwork.objects.ColorSelectElement
 import com.artuok.appwork.objects.EventMessageElement
 import com.artuok.appwork.objects.Item
 import com.artuok.appwork.objects.ItemSubjectElement
@@ -392,13 +386,14 @@ class ChatActivity : AppCompatActivity() {
 
         val values = ContentValues()
         values.put("date", Calendar.getInstance().timeInMillis)
-        values.put("end_date", deadline)
+        values.put("deadline", deadline)
         values.put("subject", subject)
+        values.put("process_date", 0)
         values.put("description", task)
         values.put("status", 0)
         values.put("user", user)
         values.put("favorite", 0)
-        values.put("completed_date", 0L)
+        values.put("complete_date", 0L)
 
         db.insert(DbHelper.T_TASK, null, values)
     }
@@ -434,7 +429,7 @@ class ChatActivity : AppCompatActivity() {
         val dbHelper = DbHelper(this)
         val db = dbHelper.readableDatabase
         val elements: MutableList<ItemSubjectElement> = java.util.ArrayList()
-        val cursor = db.rawQuery("SELECT * FROM ${DbHelper.t_subjects} ORDER BY name DESC", null)
+        val cursor = db.rawQuery("SELECT * FROM ${DbHelper.T_TAG} ORDER BY name DESC", null)
         if (cursor.moveToFirst()) {
             do {
                 elements.add(

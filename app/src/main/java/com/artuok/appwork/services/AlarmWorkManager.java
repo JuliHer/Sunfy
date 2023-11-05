@@ -9,6 +9,9 @@ public class AlarmWorkManager extends BroadcastReceiver {
     public static final String ACTION_TIME_TO_DO_HOMEWORK = "com.artuok.appwork.services.HOMEWORK";
     public static final String ACTION_POSTPONE = "com.artuok.appwork.services.POSTPONE";
     public static final String ACTION_DISMISS = "com.artuok.appwork.services.DISMISS";
+
+    public static final String ACTION_ACTIVITY_DISMISS = "com.artuok.appwork.services.ACTIVITY_DISMISS";
+
     public static final String ACTION_EVENT = "com.artuok.appwork.services.EVENT";
     public static final String ACTION_TOMORROW_EVENTS = "com.artuok.appwork.services.TEVENTS";
     public static final String ACTION_TOMORROW_SUBJECTS = "com.artuok.appwork.services.TSUBJECTS";
@@ -34,6 +37,7 @@ public class AlarmWorkManager extends BroadcastReceiver {
                     intent1.setAction(ACTION_TIME_TO_DO_HOMEWORK);
                     intent1.putExtra("time", intent.getLongExtra("time", 0));
                     intent1.putExtra("alarm", intent.getIntExtra("alarm", 0));
+                    intent1.putExtra("notify", intent.getBooleanExtra("notify", false));
                     context.startForegroundService(intent1);
                     break;
                 case ACTION_DISMISS:

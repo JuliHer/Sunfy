@@ -8,6 +8,8 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -23,9 +25,7 @@ import com.artuok.appwork.R;
 import com.artuok.appwork.adapters.KanbanAdapter;
 import com.artuok.appwork.db.DbHelper;
 import com.artuok.appwork.dialogs.AnnouncementDialog;
-import com.artuok.appwork.kanban.CompletedFragment;
-import com.artuok.appwork.kanban.InProcessFragment;
-import com.artuok.appwork.kanban.PendingFragment;
+import com.artuok.appwork.kanban.KanbanFragment;
 import com.artuok.appwork.kanban.TaskFragment;
 
 import java.text.ParseException;
@@ -42,11 +42,11 @@ public class TasksFragment extends Fragment {
     List<Fragment> fragmentList = new ArrayList<>();
 
     TaskFragment taskFragment = new TaskFragment();
-    PendingFragment pendingFragment = new PendingFragment();
-    InProcessFragment inProcessFragment = new InProcessFragment();
-    CompletedFragment completedFragment = new CompletedFragment();
+    KanbanFragment pendingFragment = new KanbanFragment(0, 0);
+    KanbanFragment inProcessFragment = new KanbanFragment(0, 1);
+    KanbanFragment completedFragment = new KanbanFragment(0, 2);
 
-
+    LinearLayout dotsView;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -58,10 +58,17 @@ public class TasksFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
+        initKanban();
         View root = inflater.inflate(R.layout.fragment_tasks, container, false);
         initViewPager(root);
         initTable();
         return root;
+    }
+
+    private void initKanban(){
+        pendingFragment.setTitle(requireContext().getString(R.string.pending_activities));
+        inProcessFragment.setTitle(requireContext().getString(R.string.in_process_activities));
+        completedFragment.setTitle(requireContext().getString(R.string.completed_tasks));
     }
 
     private void initTable(){
@@ -119,19 +126,54 @@ public class TasksFragment extends Fragment {
             @Override
             public void onPostExecute(boolean b) {
                 viewPager.setAdapter(viewPagerAdapter);
-                viewPager.setCurrentItem(0);
                 viewPagerAdapter.notifyItemRangeInserted(0, fragmentList.size());
                 taskFragment.reinitializate();
-                pendingFragment.reinitializate();
-                inProcessFragment.reinitializate();
-                completedFragment.reinitializate();
+                pendingFragment.reInit();
+                inProcessFragment.reInit();
+                completedFragment.reInit();
+                initDots(viewPagerAdapter.getItemCount());
             }
         }).exec(true);
+    }
+
+    private void initDots(int numPages){
+        ImageView[] images = new ImageView[numPages];
+        for (int i = 0; i < numPages; i++) {
+            images[i] = new ImageView(requireActivity());
+            if(i == 0){
+                images[i].setImageResource(R.drawable.dot_selected);
+            }else{
+                images[i].setImageResource(R.drawable.dot_unselected);
+            }
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+            params.setMargins(8, 0, 8, 0);
+            dotsView.addView(images[i], params);
+        }
+    }
+
+    private void onIndicatorChange(int position){
+
+
+        for (int i = 0; i < dotsView.getChildCount(); i++) {
+            ImageView image = (ImageView) dotsView.getChildAt(i);
+            if(i == position){
+                image.setImageResource(R.drawable.dot_selected);
+            }else{
+                image.setImageResource(R.drawable.dot_unselected);
+            }
+
+            image.requestLayout();
+        }
+
     }
 
     private void initViewPager(View root){
         pageTitle = root.findViewById(R.id.page_title);
         pageTitle.setText(mainTitle);
+        dotsView = root.findViewById(R.id.dotsLayout);
         viewPager = root.findViewById(R.id.viewpager);
         viewPager.setClipToPadding(false);
         viewPager.setClipChildren(false);
@@ -150,6 +192,7 @@ public class TasksFragment extends Fragment {
                 }else{
                     pageTitle.setText(kanbanTitle);
                 }
+                onIndicatorChange(position);
             }
         });
     }
@@ -207,7 +250,7 @@ public class TasksFragment extends Fragment {
 
         int pos = -1;
         if (i.moveToFirst()) {
-            long date = i.getLong(2);
+            long date = i.getLong(5);
 
 
             Calendar c = Calendar.getInstance();
