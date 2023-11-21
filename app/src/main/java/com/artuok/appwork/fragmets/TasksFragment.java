@@ -27,6 +27,11 @@ import com.artuok.appwork.db.DbHelper;
 import com.artuok.appwork.dialogs.AnnouncementDialog;
 import com.artuok.appwork.kanban.KanbanFragment;
 import com.artuok.appwork.kanban.TaskFragment;
+import com.artuok.appwork.library.Constants;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.LoadAdError;
+import com.google.android.gms.ads.interstitial.InterstitialAd;
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -40,11 +45,11 @@ public class TasksFragment extends Fragment {
     String mainTitle;
     String kanbanTitle;
     List<Fragment> fragmentList = new ArrayList<>();
-
+    private InterstitialAd mInterstitialAd;
     TaskFragment taskFragment = new TaskFragment();
-    KanbanFragment pendingFragment = new KanbanFragment(0, 0);
-    KanbanFragment inProcessFragment = new KanbanFragment(0, 1);
-    KanbanFragment completedFragment = new KanbanFragment(0, 2);
+    KanbanFragment pendingFragment = new KanbanFragment();
+    KanbanFragment inProcessFragment = new KanbanFragment();
+    KanbanFragment completedFragment = new KanbanFragment();
 
     LinearLayout dotsView;
 
@@ -58,16 +63,38 @@ public class TasksFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
+        AdRequest adRequest = new AdRequest.Builder().build();
+
+        InterstitialAd.load(requireActivity(), "ca-app-pub-5838551368289900/3738961693", adRequest,
+                new InterstitialAdLoadCallback() {
+                    @Override
+                    public void onAdLoaded(@NonNull InterstitialAd interstitialAd) {
+                        // The mInterstitialAd reference will be null until
+                        // an ad is loaded.
+                        mInterstitialAd = interstitialAd;
+
+                    }
+
+                    @Override
+                    public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
+                        // Handle the error
+                        mInterstitialAd = null;
+                    }
+                });
         initKanban();
         View root = inflater.inflate(R.layout.fragment_tasks, container, false);
         initViewPager(root);
         initTable();
+
         return root;
     }
 
     private void initKanban(){
+        pendingFragment.initProject(0);
         pendingFragment.setTitle(requireContext().getString(R.string.pending_activities));
+        inProcessFragment.initProject(1);
         inProcessFragment.setTitle(requireContext().getString(R.string.in_process_activities));
+        completedFragment.initProject(2);
         completedFragment.setTitle(requireContext().getString(R.string.completed_tasks));
     }
 
@@ -104,6 +131,7 @@ public class TasksFragment extends Fragment {
                         showCongratulations();
                     }
                     pendingTasks.close();
+                    mInterstitialAd.show(requireActivity());
                     pendingFragment.restart(i);
                     completedFragment.restart(i);
                     taskFragment.reinitializate();
@@ -137,6 +165,8 @@ public class TasksFragment extends Fragment {
     }
 
     private void initDots(int numPages){
+        if(!isAdded())
+            return;
         ImageView[] images = new ImageView[numPages];
         for (int i = 0; i < numPages; i++) {
             images[i] = new ImageView(requireActivity());

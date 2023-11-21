@@ -472,7 +472,7 @@ public class SettingsFragment extends Fragment {
 
 
     void notifyChatChanged(){
-        ((MainActivity)requireActivity()).notifyToChatChanged();
+
     }
 
     void deleteAllConversations() {

@@ -136,6 +136,7 @@
     <string name="danger_zone">Zona de riesgo</string>
     <string name="del_all">Eliminar Todo</string>
     <string name="close_pho_sesion">Cerrar Sesión en el Teléfono</string>
+    <string name="project_delete">se eliminara, junto con sus etiquetas, tareas y horarios. Esta decision es permanente y no se podra recuperar.</string>
     <string name="subject_delete">se eliminara, junto con sus tareas y horarios</string>
     <string name="enter_code">Ingresar codigo</string>
     <string name="login_able_chat">Inicia sesión para chatear</string>
@@ -276,4 +277,20 @@
     <string name="in_process">En Proceso</string>
     <string name="kanban_table">Tabla Kanban</string>
     <string name="add_task">Agregar tarea</string>
+    <string name="personal">Personal</string>
+    <string name="in_stealth_mode">Trabajando en modo sigilo</string>
+    <string name="master_of_multitasking">Soy un maestro de las multitareas</string>
+    <string name="working_in_shadows">Trabajando en las sombras</string>
+    <string name="ninja_productivity">Ninja de la productividad</string>
+    <string name="operating_in_secret">Operando en secreto</string>
+    <string name="work_in_silence">Trabajando en silencio</string>
+    <string name="invisible_work">El trabajo invisible</string>
+    <string name="time">Hora</string>
+    <string name="duration">Duración</string>
+    <string name="start_at">Comienza a las</string>
+    <string name="your_projects">Tus proyectos</string>
+    <string name="text_hint">Texto...</string>
+    <string name="new_project_hint">Nuevo proyecto...</string>
+    <string name="backup_created_successfully">¡Copia creada exitosamente!</string>
+    <string name="answered">Respondió</string>
 </resources>

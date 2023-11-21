@@ -1,5 +1,6 @@
 package com.artuok.appwork;
 
+import android.Manifest;
 import android.app.AlarmManager;
 import android.app.KeyguardManager;
 import android.app.PendingIntent;
@@ -8,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.media.Ringtone;
@@ -264,7 +266,11 @@ public class AlarmActivity extends AppCompatActivity {
     }
 
     private void setPAlarm(int hour, int minute, int time) {
-
+        if(Build.VERSION.SDK_INT > Build.VERSION_CODES.TIRAMISU){
+            if(checkSelfPermission(Manifest.permission.SCHEDULE_EXACT_ALARM) != PackageManager.PERMISSION_GRANTED){
+                return;
+            }
+        }
         hour = hour + (minute / 60);
 
         minute = minute % 60;
@@ -285,7 +291,7 @@ public class AlarmActivity extends AppCompatActivity {
         PendingIntent pendingNotify = PendingIntent.getBroadcast(
                 this,
                 1, notify,
-                PendingIntent.FLAG_UPDATE_CURRENT);
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
         manager.cancel(pendingNotify);
         manager.setExact(AlarmManager.RTC_WAKEUP, whe, pendingNotify);

@@ -597,9 +597,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void notifyToChatChanged(){
-
-    }
 
     public void notifyChanged(int pos) {
         if (homefragment.isAdded() && position != 1) {

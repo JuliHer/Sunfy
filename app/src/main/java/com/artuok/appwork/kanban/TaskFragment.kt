@@ -34,6 +34,11 @@ class TaskFragment : Fragment() {
     private val elements : ArrayList<Item> = ArrayList()
     private var listener : KanbanFragment.OnTaskModifyListener? = null
     private lateinit var skeleton: Skeleton
+    private var projectId = -1;
+
+    public fun initProject(project: Int){
+        this.projectId = project
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -71,10 +76,21 @@ class TaskFragment : Fragment() {
         }
         val dbHelper = DbHelper(requireActivity())
         val db = dbHelper.readableDatabase
-        val q = db.rawQuery("SELECT * FROM ${DbHelper.T_TASK} ORDER BY status ASC, deadline ASC", null)
+
+        val query = """
+            SELECT t.*, e.name AS name, e.color AS color, p.name
+            FROM ${DbHelper.T_TASK} AS t
+            JOIN ${DbHelper.T_TAG} AS e ON t.subject = e.id
+            JOIN ${DbHelper.T_PROJECTS} AS p ON e.proyect = p.id
+            WHERE ${if (projectId >= 0) "p.id = ?" else 1} ORDER BY t.status ASC, t.deadline ASC;
+        """.trimIndent()
+        val arguments = if(projectId >= 0) arrayOf("$projectId") else null
+        val q = db.rawQuery(query, arguments)
 
         val size = q.count
+
         setAd(if(size > 0) 1 else size)
+
         if(q.moveToFirst()){
             do{
                 val c = Calendar.getInstance()
@@ -82,32 +98,23 @@ class TaskFragment : Fragment() {
                 val date = q.getLong(5)
                 val dates = Constants.getDateString(requireContext(), date)
                 val times = Constants.getTimeString(requireContext(), date)
-                if (!isAdded) return
-
-                val stat = q.getInt(7) == 1
                 val done = q.getInt(7) == 2
+                val stat = q.getInt(7) == 1
                 val liked = q.getInt(9) == 1
-                val subjectName = q.getInt(6)
-                val s = db.rawQuery(
-                    "SELECT * FROM " + DbHelper.T_TAG + " WHERE id = " + subjectName,
-                    null
-                )
-                var colors = 0
-                var subject: String? = ""
-                if (s.moveToFirst()) {
-                    colors = s.getInt(2)
-                    subject = s.getString(1)
-                }
-                s.close()
+                val colors = q.getInt(11)
+                val subject: String? = q.getString(10)
+
+
                 val id = q.getInt(0)
                 val title = q.getString(1)
-                val status: String = if(!done) daysLeft(today < date, date) else requireActivity().getString(R.string.done_string)
-                val statusColor: Int =  statusColor(if(!done) today >= date else true, date )
+                val status: String = if (done) requireActivity().getString(R.string.done_string) else daysLeft(today < date, date)
+                val statusColor: Int = statusColor(today >= date && !done, date)
                 val eb = AwaitElement(id, title, status, dates, times, colors, statusColor, stat)
+                eb.projectName = q.getString(12)
                 eb.isDone = done
                 eb.subject = subject
                 eb.isLiked = liked
-                elements.add(Item(eb, 4))
+                elements.add(Item(eb, 0))
             }while (q.moveToNext())
         }
         q.close()
@@ -168,14 +175,13 @@ class TaskFragment : Fragment() {
 
     private fun setAd(pos : Int){
         val finalPos = pos
-        val adLoader = AdLoader.Builder(requireActivity(), "ca-app-pub-5838551368289900/1451662327")
+        val adLoader = AdLoader.Builder(requireActivity(), Constants.ID_PUB_AD)
             .forNativeAd { nativeAd: NativeAd ->
                 val title = nativeAd.headline
                 val body = nativeAd.body
                 val advertiser = nativeAd.advertiser
                 val price = nativeAd.price
-                val images =
-                    nativeAd.images
+                val images = nativeAd.mediaContent
                 val icon = nativeAd.icon
                 val element =
                     AnnouncesElement(nativeAd, title, body, advertiser, images, icon)

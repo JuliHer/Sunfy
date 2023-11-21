@@ -19,13 +19,13 @@ import com.artuok.appwork.objects.AnnouncesElement;
 import com.artuok.appwork.objects.CountElement;
 import com.artuok.appwork.objects.Item;
 import com.artuok.appwork.objects.LineChartElement;
-import com.artuok.appwork.objects.ProyectsElement;
+import com.artuok.appwork.objects.ProjectsElement;
 import com.artuok.appwork.objects.TasksElement;
+import com.google.android.gms.ads.nativead.MediaView;
 import com.google.android.gms.ads.nativead.NativeAd;
 import com.google.android.gms.ads.nativead.NativeAdView;
 import com.thekhaeng.pushdownanim.PushDownAnim;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -61,8 +61,8 @@ public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             View view = mInflater.inflate(R.layout.item_weekly_layout, parent, false);
             return new WeeklySummaryViewHolder(view);
         } else if (viewType == 3) {
-            View view = mInflater.inflate(R.layout.item_proyects_layout, parent, false);
-            return new ProyectsViewHolder(view);
+            View view = mInflater.inflate(R.layout.item_projects_layout, parent, false);
+            return new ProjectsViewHolder(view);
         } else if (viewType == 12) {
             View view = mInflater.inflate(R.layout.item_ad_tasks_layout, parent, false);
             return new TasksAdViewHolder(view);
@@ -84,8 +84,8 @@ public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             LineChartElement element = (LineChartElement) mData.get(position).getObject();
             ((WeeklySummaryViewHolder) holder).onBindData(element);
         } else if (view == 3) {
-            ProyectsElement element = (ProyectsElement) mData.get(position).getObject();
-            ((ProyectsViewHolder) holder).onBindData(element);
+            ProjectsElement element = (ProjectsElement) mData.get(position).getObject();
+            ((ProjectsViewHolder) holder).onBindData(element);
         } else if (view == 12) {
             AnnouncesElement element = (AnnouncesElement) mData.get(position).getObject();
             ((TasksAdViewHolder) holder).onBindData(element);
@@ -99,7 +99,10 @@ public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
 
     @Override
     public int getItemViewType(int position) {
-        return mData.get(position).getType();
+        if(mData.size() > position)
+            return mData.get(position).getType();
+        else
+            return 0;
     }
 
     class PresentationViewHolder extends RecyclerView.ViewHolder {
@@ -146,13 +149,11 @@ public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         LineChart lineChart;
         CardView btn;
         LineChartElement.OnClickListener viewMoreListener;
-        TextView tipText;
 
         public WeeklySummaryViewHolder(@NonNull View itemView) {
             super(itemView);
             lineChart = itemView.findViewById(R.id.line_chart);
             btn = itemView.findViewById(R.id.view_more_btn);
-            tipText = itemView.findViewById(R.id.tip);
         }
 
 
@@ -189,7 +190,6 @@ public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             }
 
             String tiptip = mContext.getString(R.string.tip) + ": " + tip;
-            tipText.setText(tiptip);
 
             PushDownAnim.setPushDownAnimTo(btn)
                     .setDurationPush(100)
@@ -200,23 +200,19 @@ public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
 
     class TasksViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         RecyclerView recyclerView;
-        TextView date_title, date_txt, date;
-        CardView display_card;
-        LinearLayout linearLayout, dayNoData, add;
+        TextView dateTitle, taskTile;
+        LinearLayout linearLayout, add;
 
         public TasksViewHolder(@NonNull View itemView) {
             super(itemView);
             recyclerView = itemView.findViewById(R.id.tasks_recycler);
-            recyclerView.setHasFixedSize(true);
             LinearLayoutManager manager = new LinearLayoutManager(mContext, RecyclerView.VERTICAL, false);
             recyclerView.setLayoutManager(manager);
-            date_title = itemView.findViewById(R.id.date_title);
-            date_txt = itemView.findViewById(R.id.date_txt);
-            display_card = itemView.findViewById(R.id.display_card);
+
+            taskTile = itemView.findViewById(R.id.task_title);
+            dateTitle = itemView.findViewById(R.id.date_title);
             linearLayout = itemView.findViewById(R.id.empty_tasks);
-            date = itemView.findViewById(R.id.date);
             add = itemView.findViewById(R.id.add);
-            dayNoData = itemView.findViewById(R.id.day_no_data);
             recyclerView.setOnClickListener(this);
             itemView.setOnClickListener(this);
             PushDownAnim.setPushDownAnimTo(add)
@@ -224,26 +220,27 @@ public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         }
 
         void onBindData(TasksElement element) {
-            display_card.setVisibility(View.VISIBLE);
-            date_title.setText(element.getTitle());
-            date_txt.setText(element.getDate());
+            dateTitle.setText(element.getTitle());
             linearLayout.setVisibility(View.GONE);
-            date.setText(element.getTitle());
 
-            if (element.getData().size() == 0 &&
-                    element.getDay() != 0 &&
-                    element.getDay() != 1) {
-                display_card.setVisibility(View.GONE);
-                dayNoData.setVisibility(View.VISIBLE);
+            if(!element.getDate().isEmpty()){
+                taskTile.setText(element.getDate());
+            }else {
+                taskTile.setText(mInflater.getContext().getString(R.string.pending_activities));
+            }
+
+            if (element.getData().size() == 0){
+                linearLayout.setVisibility(View.VISIBLE);
             } else {
                 TaskAdapter adapter = new TaskAdapter(mContext, element.getData());
                 recyclerView.setAdapter(adapter);
-                display_card.setVisibility(View.VISIBLE);
-                dayNoData.setVisibility(View.GONE);
+                linearLayout.setVisibility(View.GONE);
             }
 
-            if (element.getData().size() == 0) {
-                linearLayout.setVisibility(View.VISIBLE);
+            if(element.getDay() == 1){
+                add.setVisibility(View.GONE);
+            }else {
+                add.setVisibility(View.VISIBLE);
             }
 
 
@@ -257,7 +254,8 @@ public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
 
     class TasksAdViewHolder extends RecyclerView.ViewHolder {
         TextView title, body, announser, price, cta;
-        ImageView content, icon;
+        ImageView icon;
+        MediaView content;
         NativeAdView adView;
 
         public TasksAdViewHolder(@NonNull View itemView) {
@@ -282,9 +280,8 @@ public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             if (element.getIcon() != null)
                 icon.setImageDrawable(element.getIcon().getDrawable());
 
-            List<NativeAd.Image> images = element.getImages();
-            if (images != null)
-                content.setImageDrawable(images.get(0).getDrawable());
+            content.setMediaContent(element.getContent());
+            content.setImageScaleType(ImageView.ScaleType.CENTER_CROP);
 
             adView.setHeadlineView(title);
             adView.setAdvertiserView(announser);
@@ -292,28 +289,24 @@ public class TasksAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             adView.setIconView(icon);
             adView.setPriceView(price);
             adView.setCallToActionView(cta);
-            adView.setImageView(content);
+            adView.setMediaView(content);
             adView.setNativeAd(element.getNativeAd());
 
         }
     }
 
-    private class ProyectsViewHolder extends RecyclerView.ViewHolder {
+    private class ProjectsViewHolder extends RecyclerView.ViewHolder {
         RecyclerView recyclerView;
-        ProyectsAdapter adapter;
-        List<Item> proyects = new ArrayList<>();
-        public ProyectsViewHolder(@NonNull View itemView) {
+        public ProjectsViewHolder(@NonNull View itemView) {
             super(itemView);
-
             recyclerView = itemView.findViewById(R.id.recycler);
-
+            recyclerView.setLayoutManager(new LinearLayoutManager(mContext, RecyclerView.HORIZONTAL, false));
         }
 
-        public void onBindData(ProyectsElement element){
-            adapter = new ProyectsAdapter(mContext, proyects, element.getListener());
+        public void onBindData(ProjectsElement element){
 
-            recyclerView.setLayoutManager(new LinearLayoutManager(mContext, RecyclerView.HORIZONTAL, false));
-            proyects.addAll(element.getElements());
+            ProjectAdapter adapter = new ProjectAdapter(mContext, element.getElements(), element.getListener());
+
 
             recyclerView.setAdapter(adapter);
         }

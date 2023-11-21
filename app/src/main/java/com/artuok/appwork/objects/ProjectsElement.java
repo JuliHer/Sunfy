@@ -4,13 +4,13 @@ import android.view.View;
 
 import java.util.List;
 
-public class ProyectsElement {
+public class ProjectsElement {
 
     private List<Item> elements;
     private OnProyectOpenListener listener;
 
 
-    public ProyectsElement(List<Item> elements, OnProyectOpenListener listener) {
+    public ProjectsElement(List<Item> elements, OnProyectOpenListener listener) {
         this.elements = elements;
         this.listener = listener;
     }

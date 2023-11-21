@@ -4,7 +4,7 @@
     <string name="awaiting_fragment_menu">To Do</string>
     <string name="subjects_fragment_menu">Subjects</string>
     <string name="average_fragment_menu">Averages</string>
-    <string name="subject">Subject</string>
+    <string name="subject">Tag</string>
     <string name="awaiting">Awaiting</string>
     <string name="settings_menu">Settings</string>
     <string name="task_is_open">Open</string>
@@ -154,7 +154,8 @@
     <string name="del_all">Delete All</string>
     <string name="close_pho_sesion">Close Phone Session</string>
     <string name="alarms">Alarms</string>
-    <string name="subject_delete">will be deleted, along with its task and schedules</string>
+    <string name="project_delete">will be deleted, along with its tags, tasks and schedules. This decision will be permanent and cannot be recovered.</string>
+    <string name="subject_delete">will be deleted, along with its tasks and schedules</string>
     <string name="enter_code">Enter code</string>
     <string name="login_able_chat">Login to be able to chat</string>
     <string name="add_images">New image</string>
@@ -171,7 +172,7 @@
     <string name="task">Task</string>
 
     <string name="version_changes">We hope you enjoy this new update!</string>
-    <string name="version_code" translatable="false">1.4.0</string>
+    <string name="version_code" translatable="false">1.1.1</string>
 
     <string name="v_unstable">Unstable version</string>
     <string name="contact_with_progr_unstable_v">This version could be unstable and may produce error (closes the app or app useless), in this case contact with tha programmer and tell him the problem.</string>
@@ -303,4 +304,10 @@
     <string name="time">Time</string>
     <string name="duration">Duration</string>
     <string name="start_at">Start at</string>
+    <string name="your_projects">Your projects</string>
+    <string name="text_hint">Text...</string>
+    <string name="new_project_hint">New project...</string>
+    <string name="backup_created_successfully">Backup created successfully!</string>
+    <string name="answered">Answered</string>
+    <string name="project">Project</string>
 </resources>

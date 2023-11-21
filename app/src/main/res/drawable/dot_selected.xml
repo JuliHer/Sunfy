@@ -6,8 +6,8 @@
             <solid
                 android:color="?iMainColor"/>
             <size
-                android:height="7dp"
-                android:width="7dp"/>
+                android:height="5dp"
+                android:width="5dp"/>
         </shape>
     </item>
 </selector>

@@ -4,16 +4,23 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
+import android.os.Build;
 import android.text.format.DateFormat;
 
 import com.artuok.appwork.R;
 import com.artuok.appwork.fragmets.HomeFragment;
+import com.artuok.appwork.objects.Item;
+
+import java.util.Arrays;
+import java.util.List;
 
 public class Constants {
 
-    public static int VERSION = 5;
-    public static String VERSION_CODE = "1.0.4";
+    public static int VERSION = 8;
+    public static String VERSION_CODE = "1.1.3";
 
+    public static String ID_PUB_AD = "ca-app-pub-5838551368289900/9523174443";
+//"ca-app-pub-5838551368289900/1451662327"
     public static String parseText(String input) {
         String formattedString = input.trim();
 
@@ -23,7 +30,13 @@ public class Constants {
     }
 
     public static int[] backgroundLines = {R.string.in_stealth_mode, R.string.master_of_multitasking, R.string.working_in_shadows, R.string.ninja_productivity, R.string.operating_in_secret, R.string.work_in_silence, R.string.invisible_work};
-
+    public static int[] ICON_LIST = {R.drawable.ic_centaur_heart,
+            R.drawable.ic_discussion,
+            R.drawable.ic_eagle_emblem,
+            R.drawable.ic_graduate_cap,
+            R.drawable.ic_spanner,
+            R.drawable.ic_light_bulb
+            };
     public static boolean isInternetAvailable(Context context) {
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         Network network = connectivityManager.getActiveNetwork();
@@ -124,5 +137,28 @@ public class Constants {
         }
 
         return times;
+    }
+
+    public static String getDeviceName() {
+        String manufacturer = Build.MANUFACTURER;
+        String model = Build.MODEL;
+
+        if (model.startsWith(manufacturer)) {
+            return capitalize(model);
+        } else {
+            return capitalize(manufacturer) + " " + model;
+        }
+    }
+
+    private static String capitalize(String s) {
+        if (s == null || s.length() == 0) {
+            return "";
+        }
+        char first = s.charAt(0);
+        if (Character.isUpperCase(first)) {
+            return s;
+        } else {
+            return Character.toUpperCase(first) + s.substring(1);
+        }
     }
 }

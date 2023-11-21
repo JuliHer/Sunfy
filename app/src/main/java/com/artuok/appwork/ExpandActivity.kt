@@ -28,8 +28,9 @@ import com.artuok.appwork.adapters.PublicationImageAdapter
 import com.artuok.appwork.db.DbChat
 import com.artuok.appwork.db.DbHelper
 import com.artuok.appwork.dialogs.PermissionDialog
+import com.artuok.appwork.library.ChatControler
 import com.artuok.appwork.library.Constants
-import com.artuok.appwork.library.MessageControler
+import com.artuok.appwork.library.Message
 import com.artuok.appwork.library.TextViewLetterAnimator
 import com.artuok.appwork.objects.*
 import com.thekhaeng.pushdownanim.PushDownAnim
@@ -548,10 +549,10 @@ class ExpandActivity : AppCompatActivity() {
 
     private fun sendMessage(chat : String, name: String){
         val task = getTaskById(id)
-        val message = MessageControler.Message.Builder(getString(R.string.task))
+        val message = Message.Builder(getString(R.string.task))
             .setTask(task)
             .build()
-        val msgController = MessageControler(this, chat, name, MessageControler.ChatType.CONTACT)
+        val msgController = ChatControler(this, chat, name, Message.ChatType.CONTACT)
         msgController.send(message)
     }
 
@@ -589,7 +590,7 @@ class ExpandActivity : AppCompatActivity() {
                 val timestamp = chatsQ.getLong(3)
                 val status = chatsQ.getInt(5)
 
-                val msg = MessageControler.Message.Builder(message)
+                val msg = Message.Builder(message)
 
                     .setStatus(status)
                     .setTimestamp(timestamp)
@@ -608,7 +609,7 @@ class ExpandActivity : AppCompatActivity() {
         return chats
     }
 
-    private fun getChatById(db : SQLiteDatabase, chat : Int, msg : MessageControler.Message) : ChatElement?{
+    private fun getChatById(db : SQLiteDatabase, chat : Int, msg : Message) : ChatElement?{
         val chats = db.rawQuery("SELECT * FROM ${DbChat.T_CHATS} WHERE id = '$chat'", null)
         if(chats.moveToFirst()){
             val name = chats.getString(1)

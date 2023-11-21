@@ -75,6 +75,7 @@ public class CreateTaskDialog extends DialogFragment {
     private Bitmap img;
 
     int subject = -1;
+    int project = -1;
     int color = -1;
     int status = 0;
 
@@ -95,11 +96,18 @@ public class CreateTaskDialog extends DialogFragment {
         this.onCheckListener = onCheckListener;
     }
 
+    public CreateTaskDialog(int project, int status){
+        this.project = project;
+        this.status = status;
+    }
+
     public CreateTaskDialog(int status){
+        this.project = 0;
         this.status = status;
     }
 
     public CreateTaskDialog(){
+        this.project = 0;
         this.status = 0;
     }
 
@@ -244,7 +252,6 @@ public class CreateTaskDialog extends DialogFragment {
                         saveImagesInDevice(tempImage, id);
                         if(onCheckListener != null){
                             onCheckListener.onCheck(view, id);
-
                         }
                     }
                 });
@@ -294,13 +301,12 @@ public class CreateTaskDialog extends DialogFragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View root = super.onCreateView(inflater, container, savedInstanceState);
         getDialog().getWindow().setBackgroundDrawable(requireActivity().getDrawable(R.drawable.transparent_background));
-
         return root;
     }
 
 
     private void setSelectSubject(TextView a) {
-        SubjectDialog dialog = new SubjectDialog();
+        SubjectDialog dialog = new SubjectDialog(project);
         dialog.setOnSubjectListener(subjectE -> {
             subject = subjectE.getId();
             a.setText(subjectE.getName());

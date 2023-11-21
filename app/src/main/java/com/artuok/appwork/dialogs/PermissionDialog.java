@@ -87,7 +87,7 @@ public class PermissionDialog extends DialogFragment {
         }
 
         ImageView draw = root.findViewById(R.id.drawable_dialog);
-        draw.setImageDrawable(requireActivity().getDrawable(drawable));
+        draw.setImageResource(drawable);
 
         builder.setView(root);
         if (negative != null) {

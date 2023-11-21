@@ -1,5 +1,6 @@
 package com.artuok.appwork.dialogs;
 
+import android.Manifest;
 import android.app.AlarmManager;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -7,9 +8,11 @@ import android.app.PendingIntent;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -354,7 +357,11 @@ public class ScheduleMakerDialog extends DialogFragment {
     }
 
     void setNotify(String name, long diff, long duration) {
-
+        if(Build.VERSION.SDK_INT > Build.VERSION_CODES.TIRAMISU){
+            if(requireActivity().checkSelfPermission(Manifest.permission.SCHEDULE_EXACT_ALARM) != PackageManager.PERMISSION_GRANTED){
+                return;
+            }
+        }
         long start = Calendar.getInstance().getTimeInMillis() + diff;
 
         Intent notify = new Intent(requireActivity(), AlarmWorkManager.class)
@@ -366,7 +373,7 @@ public class ScheduleMakerDialog extends DialogFragment {
         PendingIntent pendingNotify = PendingIntent.getBroadcast(
                 requireActivity(),
                 1, notify,
-                PendingIntent.FLAG_UPDATE_CURRENT);
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
 
         AlarmManager manager = (AlarmManager) requireActivity().getSystemService(Context.ALARM_SERVICE);

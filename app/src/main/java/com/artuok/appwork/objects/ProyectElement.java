@@ -6,10 +6,10 @@ public class ProyectElement {
     private long id;
     private String pId;
     private String name;
-    private Bitmap image;
+    private int image = -1;
 
 
-    public ProyectElement(long id, String pId, String name, Bitmap image) {
+    public ProyectElement(long id, String pId, String name, int image) {
         this.id = id;
         this.pId = pId;
         this.name = name;
@@ -28,7 +28,7 @@ public class ProyectElement {
         return name;
     }
 
-    public Bitmap getImage() {
+    public int getImage() {
         return image;
     }
 }

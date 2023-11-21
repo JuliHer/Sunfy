@@ -101,8 +101,8 @@ class RemoteTodayTaskWidgetFactory implements RemoteViewsService.RemoteViewsFact
                 "FROM "+DbHelper.T_TASK+" AS t " +
                 "JOIN "+DbHelper.T_TAG+" AS e ON t.subject = e.id " +
                 "JOIN "+DbHelper.T_PROJECTS+" AS p ON e.proyect = p.id " +
-                "WHERE p.id = ? AND t.status < ? ORDER BY t.deadline ASC;";
-        Cursor q = db.rawQuery(query, new String[]{"0", "2"});
+                "WHERE t.status < ? ORDER BY t.deadline ASC;";
+        Cursor q = db.rawQuery(query, new String[]{"2"});
 
         if(q.moveToFirst()){
             do{

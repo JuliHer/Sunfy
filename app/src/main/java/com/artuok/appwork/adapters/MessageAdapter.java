@@ -288,6 +288,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         }
     }
 
+
     class MessageTaskViewHolder extends RecyclerView.ViewHolder{
 
         TextView text, texty, time, timey, date, datey, task, tasky;

@@ -1,11 +1,13 @@
 package com.artuok.appwork
 
 import android.app.Dialog
+import android.app.NotificationManager
 import android.content.ContentValues
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
+import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -24,10 +26,10 @@ import com.artuok.appwork.adapters.MessageAdapter
 import com.artuok.appwork.adapters.SubjectAdapter
 import com.artuok.appwork.db.DbChat
 import com.artuok.appwork.db.DbHelper
+import com.artuok.appwork.library.ChatControler
 import com.artuok.appwork.library.Constants
-import com.artuok.appwork.library.MessageControler
-import com.artuok.appwork.library.MessageControler.ChatType
-import com.artuok.appwork.library.MessageControler.Message
+import com.artuok.appwork.library.Message
+import com.artuok.appwork.library.Message.ChatType
 import com.artuok.appwork.library.MessageSwipeController
 import com.artuok.appwork.library.SwipeControllerActions
 import com.artuok.appwork.objects.EventMessageElement
@@ -45,14 +47,13 @@ import com.google.firebase.database.Query
 import com.google.firebase.database.ValueEventListener
 import java.io.File
 import java.util.Calendar
-import java.util.TimeZone
 
 
 class ChatActivity : AppCompatActivity() {
     private lateinit var title : TextView
     private lateinit var username : String
     private lateinit var id : String
-    private lateinit var messageControler: MessageControler
+    private lateinit var messageControler: ChatControler
     private lateinit var sendButton : ImageView
     private lateinit var textInput : EditText
     private var chatType : ChatType = ChatType.SEARCH
@@ -104,14 +105,14 @@ class ChatActivity : AppCompatActivity() {
         id = extras.getString("id")!!
         val cachePicture = extras.getString("cachePicture", "")
         if(cachePicture.isNotEmpty()){
-
             checkAndSetPicture(cachePicture)
         }
         val t = extras.getInt("chatType", 0)
         chatType = if(t == 1){ChatType.CONTACT}else if(t == 2){ ChatType.GROUP}else{ChatType.SEARCH}
 
         title.text = username
-        messageControler = MessageControler(this, id, username, chatType)
+
+        messageControler = ChatControler(this, id, username, chatType)
 
 
         recyclerMessage.itemAnimator = AddItemAnimator()
@@ -186,7 +187,6 @@ class ChatActivity : AppCompatActivity() {
     }
 
     fun TextView.getHeightMeasuered(): Int {
-
         val lineHeight = this.lineHeight
         return lineHeight * (lineCount + 2)
     }
@@ -213,7 +213,14 @@ class ChatActivity : AppCompatActivity() {
                 if(snapshot.exists()){
                     for (child in snapshot.children){
                         if(!exists){
-                            setListener(child.key!!)
+                            messageControler.chat = child.key!!
+                            if(!ChatControler.existChat(this@ChatActivity, messageControler.chat)){
+                                val u = ChatControler.createChat("", messageControler.chat, messageControler.chatCode, "", "", this@ChatActivity)
+                                ChatControler.setNameChat(this@ChatActivity, messageControler.chat)
+                                messageControler.chatId = u.toInt()
+                            }
+
+                            setListener(messageControler.chat)
 
                             listenerVerify.removeEventListener(verifyIfExists)
                             exists = true
@@ -248,69 +255,57 @@ class ChatActivity : AppCompatActivity() {
         childListener = object : ChildEventListener{
             override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
                 if(snapshot.exists()){
-                    val keym = snapshot.key!!
-                    val type = snapshot.child("userId").value.toString()
-                    val stat = snapshot.child("status").value.toString().toInt()
+                    val mKey = snapshot.key!!
+                    val user = snapshot.child("userId").value.toString()
+                    val status = snapshot.child("status").value.toString().toInt()
+                    val messageText = snapshot.child("message").value.toString()
                     var replyId = ""
                     if(snapshot.child("reply").exists())
                         replyId = snapshot.child("reply").value.toString()
-                    val calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT"))
-                    val timestamp = calendar.timeInMillis
-
-                    if(messageControler.checkIfExists(keym)){
-                        val p = getPositionByKey(keym)
+                    val timestamp = Calendar.getInstance().timeInMillis
+                    if(messageControler.checkIfExists(mKey) && getPositionByKey(mKey) != -1){
+                        val p = getPositionByKey(mKey)
                         if(p >= 0){
-                            messageControler.updateStatus(keym, stat)
-                            adapter.modifyStatus(p, stat)
+                            messageControler.updateStatus(mKey, status)
+                            adapter.modifyStatus(p, status)
                             adapter.notifyItemChanged(p)
                         }
-                    }else if(type != FirebaseAuth.getInstance().currentUser!!.uid){
-                        if(stat < 2){
-                            var msg = snapshot.child("message").value.toString()
+                        val manager =
+                            (getSystemService(NOTIFICATION_SERVICE) as NotificationManager)!!
+                        manager.cancel(8000+messageControler.chatId)
+                    }else if(user != FirebaseAuth.getInstance().currentUser?.uid!! && status < 2){
+                        val message = Message.Builder(messageText)
+                            .setId(mKey)
+                            .setStatus(3)
+                            .setTimestamp(timestamp)
+                            .setUser(user)
+                            .setReplyId(replyId)
+                        var event : EventMessageElement? = null
+                        val element = MessageElement(mKey, messageText, timestamp, 1, user, status)
+                        if(snapshot.child("task").exists()){
+                            val taskDesc = snapshot.child("task").child("description").value.toString()
+                            val taskUser = snapshot.child("task").child("user").value.toString()
+                            val taskDeadline = snapshot.child("task").child("deadline").value.toString().toLong()
 
-                            val message = Message.Builder(msg)
-                                .setId(keym)
-                                .setStatus(stat)
-                                .setUser(type)
-                                .setReplyId(replyId)
-                                .setTimestamp(timestamp)
-
-                            var event : EventMessageElement? = null
-                            if(snapshot.child("task").exists()){
-                                val desc = snapshot.child("task").child("description").value.toString()
-                                val user = snapshot.child("task").child("user").value.toString()
-                                val deadline = snapshot.child("task").child("deadline").value.toString().toLong()
-
-                                event = EventMessageElement(deadline, desc, user)
-                                message.setTask(event)
-                            }
-                            val element = MessageElement(keym, msg, timestamp, 1, type, stat)
-                            element.reply = getMsgById(replyId)
-                            val p = adapter.itemCount
-
-                            if(event == null)
-                                if(element.reply == null)
-                                    adapter.addMessage(Item(element, 0))
-                                else
-                                    adapter.addMessage(Item(element, 1))
-                            else{
-                                element.task = event
-                                adapter.addMessage(Item(element, 2))
-                            }
-
-                            adapter.notifyItemInserted(0)
-                            messageControler.insertMessage(message.build())
-                            recyclerMessage.smoothScrollToPosition(0)
-
-                            FirebaseDatabase.getInstance().reference.child("chat").child(key)
-                                .child("messages").child(keym).child("status").setValue(3)
-                                .addOnCompleteListener {
-                                    if(it.isSuccessful){
-                                        messageControler.removeMessagesViewed()
-                                    }
-                                }
+                            event = EventMessageElement(taskDeadline, taskDesc, taskUser)
+                            message.setTask(event)
+                            element.task = event
                         }
+                        element.reply = getMsgById(replyId)
+                        adapter.addMessage(Item(element, if(event == null) if (element.reply == null) 0 else 1 else  2))
+                        adapter.notifyItemInserted(0)
+                        messageControler.insertMessage(message.build())
+                        recyclerMessage.smoothScrollToPosition(0)
+
+                        FirebaseDatabase.getInstance().reference.child("chat").child(key)
+                            .child("messages").child(mKey).child("status").setValue(3)
+                            .addOnCompleteListener {
+                                if(it.isSuccessful){
+                                    messageControler.removeMessagesViewed()
+                                }
+                            }
                     }
+
                 }
             }
 
@@ -369,7 +364,7 @@ class ChatActivity : AppCompatActivity() {
     }
 
     private fun loadMessages(){
-        adapter.changeMessage(messageControler.loadMessages())
+        adapter.changeMessage(messageControler.getChatRecycler())
         adapter.notifyDataSetChanged()
     }
 

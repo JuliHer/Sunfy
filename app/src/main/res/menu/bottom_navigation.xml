@@ -8,7 +8,7 @@
     <item
         android:id="@+id/awaiting_fragment"
         android:title="@string/awaiting_fragment_menu"
-        android:icon="@drawable/ic_clock" />
+        android:icon="@drawable/ic_columns" />
 
     <item
         android:id="@+id/calendar_fragment"

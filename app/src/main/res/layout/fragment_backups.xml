@@ -10,99 +10,100 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingBottom="60dp"
-        android:paddingTop="25dp"
         android:clipToPadding="false">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:paddingHorizontal="15dp">
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/backup"
                 android:textSize="25sp"
-                android:paddingHorizontal="10dp"
-                android:textFontWeight="700"/>
+                android:textFontWeight="700"
+                android:layout_marginTop="25dp"
+                android:layout_marginBottom="10dp"/>
             <LinearLayout
-                android:id="@+id/create_backup_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:layout_width="wrap_content"
+                android:background="@drawable/textinput_background"
+                android:orientation="vertical"
+                android:paddingBottom="15dp">
+                <LinearLayout
+                    android:id="@+id/create_backup_layout"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:src="@drawable/ic_upload"
-                    android:padding="16dp"
-                    app:tint="?subTextColor" />
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/ic_upload"
+                        android:padding="16dp"
+                        app:tint="?subTextColor" />
+
+                    <LinearLayout
+                        android:layout_weight="1"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:paddingTop="16dp"
+                        android:layout_marginEnd="16dp">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/create_backup"
+                            android:textSize="16sp"
+                            android:textFontWeight="500" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textSize="12sp"
+                            android:textColor="?subTextColor"
+                            android:text="@string/create_backup_desc" />
+                    </LinearLayout>
+                </LinearLayout>
 
                 <LinearLayout
-                    android:layout_weight="1"
-                    android:layout_width="0dp"
+                    android:id="@+id/restore_backup_layout"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:paddingTop="16dp"
-                    android:layout_marginEnd="16dp">
+                    android:orientation="horizontal">
 
-                    <TextView
-                        android:layout_width="match_parent"
+                    <ImageView
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/create_backup"
-                        android:textSize="16sp"
-                        android:textFontWeight="500" />
+                        android:src="@drawable/ic_download"
+                        android:padding="16dp"
+                        app:tint="?subTextColor" />
 
-                    <TextView
-                        android:layout_width="match_parent"
+                    <LinearLayout
+                        android:layout_weight="1"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:textSize="12sp"
-                        android:textColor="?subTextColor"
-                        android:text="@string/create_backup_desc" />
+                        android:orientation="vertical"
+                        android:paddingTop="16dp"
+                        android:layout_marginEnd="16dp">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/restore_backup"
+                            android:textSize="16sp"
+                            android:textFontWeight="500" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textSize="12sp"
+                            android:textColor="?subTextColor"
+                            android:text="@string/restore_backup_desc" />
+                    </LinearLayout>
                 </LinearLayout>
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/restore_backup_layout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/ic_download"
-                    android:padding="16dp"
-                    app:tint="?subTextColor" />
-
-                <LinearLayout
-                    android:layout_weight="1"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:paddingTop="16dp"
-                    android:layout_marginEnd="16dp">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/restore_backup"
-                        android:textSize="16sp"
-                        android:textFontWeight="500" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:textSize="12sp"
-                        android:textColor="?subTextColor"
-                        android:text="@string/restore_backup_desc" />
-                </LinearLayout>
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginVertical="10dp">
-
             </LinearLayout>
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

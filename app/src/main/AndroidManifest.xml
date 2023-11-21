@@ -60,7 +60,7 @@
             android:value="ca-app-pub-3940256099942544/2247696110"/>
         -->
         <activity
-            android:name=".CreateGroupActivity"
+            android:name=".ProjectKanbanActivity"
             android:exported="false">
             <meta-data
                 android:name="android.app.lib_name"

@@ -49,7 +49,16 @@ public class SubjectDialog extends DialogFragment {
 
     OnSubjectListener listener;
 
+    int project = 0;
     int colorNewSubject = Color.parseColor("#ffeb3c");
+
+    public SubjectDialog(int project){
+        this.project = project;
+    }
+
+    public SubjectDialog(){
+
+    }
 
     public void setOnSubjectListener(OnSubjectListener listener){
         this.listener = listener;
@@ -120,6 +129,7 @@ public class SubjectDialog extends DialogFragment {
         ContentValues values = new ContentValues();
         values.put("name", name);
         values.put("color", color);
+        values.put("proyect", project);
         return db.insert(DbHelper.T_TAG, null, values);
     }
 
@@ -129,7 +139,9 @@ public class SubjectDialog extends DialogFragment {
         DbHelper dbHelper = new DbHelper(requireActivity());
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         List<ItemSubjectElement> elements = new ArrayList<>();
-        Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.T_TAG + " ORDER BY name DESC", null);
+        String query = project >= 0 ? "proyect = ?" : "1";
+        String[] arguments = project >= 0 ? new String[]{project+""} : null;
+        Cursor cursor = db.rawQuery("SELECT * FROM " + DbHelper.T_TAG + " WHERE "+query+" ORDER BY name DESC", arguments);
         if (cursor.moveToFirst()) {
             do {
                 elements.add(new ItemSubjectElement(new SubjectElement(cursor.getInt(0), cursor.getString(1), "", cursor.getInt(2)), 2));

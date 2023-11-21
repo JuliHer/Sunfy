@@ -1,19 +1,20 @@
 package com.artuok.appwork.kanban
 
 import android.app.Activity
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.ContentValues
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.res.TypedArray
 import android.graphics.Color
 import android.os.Bundle
-import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.artuok.appwork.ExpandActivity
@@ -33,18 +34,18 @@ import com.artuok.appwork.objects.AnnouncesElement
 import com.artuok.appwork.objects.AwaitElement
 import com.artuok.appwork.objects.Item
 import com.artuok.appwork.objects.TextElement
+import com.artuok.appwork.widgets.TodayTaskWidget
 import com.faltenreich.skeletonlayout.Skeleton
 import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdLoader
 import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.nativead.NativeAd
 import com.google.android.gms.ads.nativead.NativeAdOptions
 import java.text.ParseException
 import java.util.Calendar
 import java.util.Random
 
-class KanbanFragment(private val project: Int, private val status:Int) : Fragment() {
+class KanbanFragment : Fragment() {
 
     //Recycler
     private val elements : ArrayList<Item> = ArrayList()
@@ -55,12 +56,24 @@ class KanbanFragment(private val project: Int, private val status:Int) : Fragmen
     private var advirments = 0
     private var title : String? = null
 
+    private var project: Int = -1
+    private var status:Int = -1
+
     //Listeners
     private lateinit var moveListener: OnMoveListener
     private lateinit var taskModifyListener : OnTaskModifyListener
     private lateinit var clickListener: OnClickListener
     private lateinit var resultLauncher : ActivityResultLauncher<Intent>
 
+
+    public fun initProject(project: Int, status:Int){
+        this.project = project
+        this.status = status
+    }
+
+    public fun initProject(status:Int){
+        this.status = status
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -78,7 +91,7 @@ class KanbanFragment(private val project: Int, private val status:Int) : Fragmen
             override fun onMoveLeft(view: View?, position: Int) {
                 if(elements[position].type == 0){
                     val id = (elements[position].`object`as AwaitElement).id
-                    (requireActivity() as MainActivity).updateWidget()
+                    updateWidget()
                     if(status == 0){
                         removeTask(position)
                     }else{
@@ -91,7 +104,7 @@ class KanbanFragment(private val project: Int, private val status:Int) : Fragmen
             override fun onMoveRight(view: View?, position: Int) {
                 if(elements[position].type == 0){
                     val id = (elements[position].`object`as AwaitElement).id
-                    (requireActivity() as MainActivity).updateWidget()
+                    updateWidget()
                     if(status == 2){
                         removeTask(position)
                     }else{
@@ -110,7 +123,7 @@ class KanbanFragment(private val project: Int, private val status:Int) : Fragmen
                 i.putExtra("id", id)
                 resultLauncher.launch(i)
             }else if(elements[p].type == 5){
-                val create = CreateTaskDialog(status)
+                val create = CreateTaskDialog(project, status)
                 create.setOnCheckListener { _, id ->
                     create.dismiss()
                     taskModify(id.toInt())
@@ -130,11 +143,25 @@ class KanbanFragment(private val project: Int, private val status:Int) : Fragmen
                     modifyTask(i)
                 }
                 if (data?.getIntExtra("shareCode", 0) == 2) {
-                    (requireActivity() as MainActivity).notifyToChatChanged()
+
                 }
             }
         }
     }
+
+    fun updateWidget() {
+        val appWidgetManager = AppWidgetManager.getInstance(requireActivity())
+        val appWidgetsIds = appWidgetManager.getAppWidgetIds(
+            ComponentName(
+                requireActivity(),
+                TodayTaskWidget::class.java
+            )
+        )
+        val uw = Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE)
+            .putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetsIds)
+        requireActivity().sendBroadcast(uw)
+    }
+
     private fun initRecycler(root: View){
         adapter = AwaitingAdapter(requireContext(), elements)
         adapter.setOnClickListener(clickListener)
@@ -182,15 +209,16 @@ class KanbanFragment(private val project: Int, private val status:Int) : Fragmen
         val dbHelper = DbHelper(requireActivity().applicationContext)
         val db = dbHelper.readableDatabase
         val query = """
-            SELECT t.*, e.name AS name, e.color AS color
+            SELECT t.*, e.name AS name, e.color AS color, p.name
             FROM ${DbHelper.T_TASK} AS t
             JOIN ${DbHelper.T_TAG} AS e ON t.subject = e.id
             JOIN ${DbHelper.T_PROJECTS} AS p ON e.proyect = p.id
-            WHERE p.id = ? AND t.status = ? ORDER BY t.complete_date DESC;
+            WHERE ${if (project >= 0) "p.id = ?" else 1} AND t.status = ? ORDER BY t.complete_date DESC;
         """.trimIndent()
+        val arguments = if(project >= 0) arrayOf("$project", "$status") else arrayOf("$status")
         val cursor = db.rawQuery(
             query,
-            arrayOf("$project", "$status")
+            arguments
         )
 
         if(title != null){
@@ -220,6 +248,7 @@ class KanbanFragment(private val project: Int, private val status:Int) : Fragmen
                 val status: String = if (done) requireActivity().getString(R.string.done_string) else daysLeft(today < date, date)
                 val statusColor: Int = statusColor(today >= date && !done, date)
                 val eb = AwaitElement(id, title, status, dates, times, colors, statusColor, true)
+                eb.projectName = cursor.getString(12)
                 eb.isDone = done
                 eb.subject = subject
                 eb.isLiked = liked
@@ -316,13 +345,14 @@ class KanbanFragment(private val project: Int, private val status:Int) : Fragmen
         val db = dbHelper.readableDatabase
 
         val query = """
-            SELECT t.*, e.name AS name, e.color AS color
+            SELECT t.*, e.name AS name, e.color AS color, p.name
             FROM ${DbHelper.T_TASK} AS t
             JOIN ${DbHelper.T_TAG} AS e ON t.subject = e.id
             JOIN ${DbHelper.T_PROJECTS} AS p ON e.proyect = p.id
-            WHERE t.id = ? AND p.id = ? AND t.status = ? ORDER BY t.complete_date DESC;
+            WHERE t.id = ? AND ${if (project >= 0) "p.id = ?" else 1} AND t.status = ? ORDER BY t.complete_date DESC;
         """.trimIndent()
-        val q = db.rawQuery(query, arrayOf(id.toString(), "$project", "$status"))
+        val arguments = if(project >= 0) arrayOf(id.toString(), "$project", "$status") else arrayOf(id.toString(), "$status")
+        val q = db.rawQuery(query, arguments)
         if(q.moveToFirst()){
             val c = Calendar.getInstance()
             val today = c.timeInMillis
@@ -338,6 +368,7 @@ class KanbanFragment(private val project: Int, private val status:Int) : Fragmen
             val status: String = getString(R.string.done_string)
             val statusColor: Int = statusColor(today >= date, date)
             val eb = AwaitElement(id, title, status, dates, times, colors, statusColor, true)
+            eb.projectName = q.getString(12)
             eb.isDone = done
             eb.subject = subject
             eb.isLiked = liked
@@ -378,11 +409,12 @@ class KanbanFragment(private val project: Int, private val status:Int) : Fragmen
                 } catch (e: ParseException) {
                     e.printStackTrace()
                 }
-                if (i >= 0) {
-                    (requireActivity() as MainActivity).notifyChanged(i)
-                } else {
-                    (requireActivity() as MainActivity).notifyAllChanged()
-                }
+                if(project < 0)
+                    if (i >= 0) {
+                        (requireActivity() as MainActivity).notifyChanged(i)
+                    } else {
+                        (requireActivity() as MainActivity).notifyAllChanged()
+                    }
                 dialog.dismiss()
             }
             dialog.show(requireActivity().supportFragmentManager, "Remove")
@@ -401,6 +433,8 @@ class KanbanFragment(private val project: Int, private val status:Int) : Fragmen
                 val values = ContentValues()
                 item.isDone = nS == 2
                 values.put("status", nS)
+                if(nS == 2)
+                    values.put("complete_date", Calendar.getInstance().timeInMillis)
                 dbw.update(DbHelper.T_TASK, values, "id = ?", arrayOf("$id"))
                 taskModify(id)
                 var i = 0
@@ -409,11 +443,16 @@ class KanbanFragment(private val project: Int, private val status:Int) : Fragmen
                 } catch (e: ParseException) {
                     e.printStackTrace()
                 }
-                if (i >= 0) {
-                    (requireActivity() as MainActivity).notifyChanged(i)
-                } else {
-                    (requireActivity() as MainActivity).notifyAllChanged()
+                if(project < 0){
+                    if (i >= 0) {
+                        (requireActivity() as MainActivity).notifyChanged(i)
+                    } else {
+                        (requireActivity() as MainActivity).notifyAllChanged()
+                    }
+                }else{
+                    
                 }
+
             }
 
             query.close()
@@ -422,14 +461,13 @@ class KanbanFragment(private val project: Int, private val status:Int) : Fragmen
     private fun setAnnounce(pos: Int) {
         val finalPos = pos + advirments
         advirments++
-        val adLoader = AdLoader.Builder(requireActivity(), "ca-app-pub-5838551368289900/1451662327")
+        val adLoader = AdLoader.Builder(requireActivity(), Constants.ID_PUB_AD)
             .forNativeAd { nativeAd: NativeAd ->
                 val title = nativeAd.headline
                 val body = nativeAd.body
                 val advertiser = nativeAd.advertiser
                 val price = nativeAd.price
-                val images =
-                    nativeAd.images
+                val images = nativeAd.mediaContent
                 val icon = nativeAd.icon
                 advirments--
                 val element =

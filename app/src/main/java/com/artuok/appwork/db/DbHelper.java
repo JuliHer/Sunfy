@@ -3,13 +3,14 @@ package com.artuok.appwork.db;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 
 import com.google.firebase.auth.FirebaseAuth;
 
 public class DbHelper extends SQLiteOpenHelper {
-    public static final int DatabaseVersion = 23;
+    public static final int DatabaseVersion = 26;
     private static final String DatabaseName = "Calendar";
 
     public static final String T_TAG = "subject";
@@ -39,7 +40,8 @@ public class DbHelper extends SQLiteOpenHelper {
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "name TEXT NOT NULL," +
                 "color INTEGER NOT NULL," +
-                "proyect INTEGER NOT NULL DEFAULT 0)");
+                "proyect INTEGER NOT NULL DEFAULT 0," +
+                "FOREIGN KEY (proyect) REFERENCES "+T_PROJECTS+"(id) ON DELETE CASCADE)");
         sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS "+ T_TASK +"(" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "description TEXT NOT NULL," +
@@ -50,10 +52,12 @@ public class DbHelper extends SQLiteOpenHelper {
                 "subject INTEGER NOT NULL," +
                 "status INTEGER NOT NULL," +
                 "user TEXT NOT NULL," +
-                "favorite INTEGER NOT NULL)");
+                "favorite INTEGER NOT NULL," +
+                "FOREIGN KEY (subject) REFERENCES "+T_TAG+"(id) ON DELETE CASCADE)");
         sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS "+ T_PROJECTS +"(" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "name TEXT NOT NULL," +
+                "icon INTEGER NOT NULL," +
                 "description TEXT," +
                 "project_key TEXT)");
         sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS " + t_event + "(" +
@@ -81,6 +85,10 @@ public class DbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
+        if(i < 24){
+            sqLiteDatabase.execSQL("DROP TABLE IF EXISTS "+T_PROJECTS);
+        }
+
         onCreate(sqLiteDatabase);
 
         if(i < 21){
@@ -96,6 +104,8 @@ public class DbHelper extends SQLiteOpenHelper {
                     " FROM "+t_subject+";";
             sqLiteDatabase.execSQL(sqlQuery);
         }
+
+
 
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " +T_TASKS);
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " +t_subject);

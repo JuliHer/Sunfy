@@ -8,7 +8,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -19,8 +18,9 @@ import com.artuok.appwork.R;
 import com.artuok.appwork.objects.AnnouncesElement;
 import com.artuok.appwork.objects.AwaitElement;
 import com.artuok.appwork.objects.Item;
-import com.artuok.appwork.objects.StatisticsElement;
 import com.artuok.appwork.objects.TextElement;
+import com.google.android.gms.ads.MediaContent;
+import com.google.android.gms.ads.nativead.MediaView;
 import com.google.android.gms.ads.nativead.NativeAdView;
 import com.thekhaeng.pushdownanim.PushDownAnim;
 
@@ -121,13 +121,14 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     }
 
     class AwaitingGridViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
-        TextView title, status, date, time, subject;
+        TextView title, status, date, time, subject, project;
         ImageView arrowLeft, arrowRight;
 
         public AwaitingGridViewHolder(@NonNull View itemView) {
             super(itemView);
             title = itemView.findViewById(R.id.title_card);
             subject = itemView.findViewById(R.id.subject);
+            project = itemView.findViewById(R.id.project_name);
             status = itemView.findViewById(R.id.status_card);
             date = itemView.findViewById(R.id.date_card);
             time = itemView.findViewById(R.id.time);
@@ -159,8 +160,6 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             title.setPaintFlags(title.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
             title.setTextColor(color);
 
-
-
             status.setText(element.getStatus());
             status.setBackgroundColor(element.getStatusColor());
 
@@ -175,6 +174,9 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                 arrowRight.setVisibility(View.GONE);
                 arrowLeft.setVisibility(View.GONE);
             }
+
+            if(element.getProjectName() != null)
+                project.setText(element.getProjectName());
 
             subject.setTextColor(element.getTaskColor());
             subject.setText(element.getSubject());
@@ -192,7 +194,8 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     class AwaitingAdViewHolder extends RecyclerView.ViewHolder{
 
         TextView title, body, announser, price, action;
-        ImageView content, icon;
+        ImageView icon;
+        MediaView content;
         NativeAdView adView;
         public AwaitingAdViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -218,8 +221,8 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                 icon.setImageDrawable(element.getIcon().getDrawable());
             }
 
-            if (element.getImages() != null)
-                content.setImageDrawable(element.getImages().get(0).getDrawable());
+            content.setMediaContent(element.getContent());
+            content.setImageScaleType(ImageView.ScaleType.CENTER_CROP);
 
             adView.setHeadlineView(title);
             adView.setAdvertiserView(announser);
@@ -227,7 +230,7 @@ public class AwaitingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             adView.setIconView(icon);
             adView.setPriceView(price);
             adView.setCallToActionView(action);
-            adView.setImageView(content);
+            adView.setMediaView(content);
 
             adView.setNativeAd(element.getNativeAd());
         }

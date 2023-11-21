@@ -1,31 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Púrpura -->
     <color name="purple_100">#b97aff</color>
     <color name="purple_200">#9a61f9</color>
     <color name="purple_500">#7a48f2</color>
     <color name="purple_700">#5929d0</color>
+    <color name="purple_750">#403059</color>
+    <color name="purple_800">#392A50</color>
+    <color name="purple_900">#2A1F3A</color>
 
+    <!-- Verde Bosque -->
     <color name="green_b_100">#147529</color>
     <color name="green_b_200">#16602B</color>
     <color name="green_b_500">#218F50</color>
     <color name="green_b_700">#FF27ae61</color>
+    <color name="green_b_750">#326849</color>
+    <color name="green_b_800">#2A533B</color>
+    <color name="green_b_900">#1E3C2B</color>
+    <color name="green_000">#79C599</color>
 
+    <!-- Azul Bosque -->
+    <color name="blue_b_000">#79BCC5</color>
     <color name="blue_b_100">#218BAC</color>
     <color name="blue_b_200">#196D87</color>
     <color name="blue_b_500">#2599D8</color>
     <color name="blue_b_700">#1EB4E3</color>
-    <color name="blue_b_900">#1E323C</color>
-    <color name="blue_b_800">#2A4753</color>
     <color name="blue_b_750">#325B68</color>
-    <color name="blue_b_000">#79BCC5</color>
+    <color name="blue_b_800">#2A4753</color>
+    <color name="blue_b_900">#1E323C</color>
 
+    <!-- Verde K -->
     <color name="green_k_000">#B6D8C5</color>
     <color name="green_k_250">#7BC39A</color>
     <color name="green_k_500">#47BD7A</color>
     <color name="green_k_750">#27ae61</color>
 
+    <!-- Azul Teal -->
     <color name="teal_200">#FF03DAC5</color>
     <color name="teal_700">#FF018786</color>
+
+    <!-- Otros colores -->
     <color name="black">#FF000000</color>
     <color name="black_transparent">#22000000</color>
     <color name="black_transparent_500">#88000000</color>
@@ -50,16 +64,11 @@
     <color name="black_500">#FF0e0e0e</color>
     <color name="gray_300_transparent">#66888888</color>
 
+    <!-- Paletas -->
     <color name="palette_purple_100">#5929d0</color>
     <color name="palette_purple_200">#6D48D8</color>
     <color name="palette_purple_300">#c472ff</color>
     <color name="palette_purple_400">#E96EFF</color>
-    <attr name="shimmingColor">#00000000</attr>
-    <attr name="MaskingColor">#00000000</attr>
-    <color name="light_blue_50">#FFE1F5FE</color>
-    <color name="light_blue_200">#FF81D4FA</color>
-    <color name="light_blue_600">#FF039BE5</color>
-    <color name="light_blue_900">#FF01579B</color>
 
     <color name="palette_blue_w_700">#FF86e3ce</color>
     <color name="palette_green_w_700">#FFd0e6a5</color>
@@ -72,20 +81,24 @@
     <color name="palette_yellow_n_700">#FFf1c40f</color>
     <color name="palette_red_n_700">#FFe84c3d</color>
     <color name="palette_purple_n_700">#FF9a59b5</color>
+
     <color name="palette_blue_b_700">#FF297fb8</color>
     <color name="palette_green_b_700">#FF27ae61</color>
     <color name="palette_yellow_b_700">#FFf39c11</color>
     <color name="palette_red_b_700">#FFc1392b</color>
     <color name="palette_purple_b_700">#FF8d44af</color>
 
-    <color name="purple_900">#2A1F3A</color>
-    <color name="purple_800">#392A50</color>
-    <color name="purple_750">#403059</color>
-    <color name="green_900">#1E3C2B</color>
-    <color name="green_800">#2A533B</color>
-    <color name="green_750">#326849</color>
-    <color name="green_000">#79C599</color>
+    <!-- Otros -->
+    <attr name="shimmingColor">#00000000</attr>
+    <attr name="MaskingColor">#00000000</attr>
 
+    <!-- Azul Claro -->
+    <color name="light_blue_50">#FFE1F5FE</color>
+    <color name="light_blue_200">#FF81D4FA</color>
+    <color name="light_blue_600">#FF039BE5</color>
+    <color name="light_blue_900">#FF01579B</color>
+
+    <!-- Otros -->
     <color name="bluew_100">#DBECF3</color>
     <color name="bluew_200">#CEDFE6</color>
     <color name="bluew_300">#BFDDEA</color>

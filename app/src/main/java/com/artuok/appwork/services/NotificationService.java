@@ -1,5 +1,6 @@
 package com.artuok.appwork.services;
 
+import android.Manifest;
 import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -9,6 +10,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
@@ -18,6 +20,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.text.SpannableString;
 import android.text.style.ImageSpan;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
@@ -368,7 +371,9 @@ public class NotificationService extends Service {
     }
 
     private void notifyDoHomework(boolean notify) {
+
         int count = awaitingActivities();
+
         if (getAlarmStatus() && count > 0 && !notify) {
             showAlarmNotification(count);
         } else {
@@ -402,7 +407,7 @@ public class NotificationService extends Service {
             PendingIntent fullScreenPendingIntent = PendingIntent.getActivity(this,
                     0,
                     fullScreenIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_MUTABLE);
 
             Notification foreground = new NotificationCompat.Builder(this, InActivity.CHANNEL_ID_3)
                     .setSmallIcon(R.drawable.ic_stat_name)
@@ -416,7 +421,7 @@ public class NotificationService extends Service {
                     .addAction(R.drawable.ic_stat_name, getString(R.string.Cancel_M), cancelPendingIntent)
                     .setFullScreenIntent(fullScreenPendingIntent, true)
                     .build();
-
+            Log.d("MyApp", "Sending notification: " + foreground.toString());
             NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
             assert manager != null;
@@ -561,7 +566,11 @@ public class NotificationService extends Service {
     }
 
     void setNotify(String name, long diff, long duration) {
-
+        if(Build.VERSION.SDK_INT > Build.VERSION_CODES.TIRAMISU){
+            if(checkSelfPermission(Manifest.permission.SCHEDULE_EXACT_ALARM) != PackageManager.PERMISSION_GRANTED){
+                return;
+            }
+        }
         long start = Calendar.getInstance().getTimeInMillis() + diff;
 
         Intent notify = new Intent(this, AlarmWorkManager.class)
@@ -638,6 +647,11 @@ public class NotificationService extends Service {
 
 
     private void setTimeOut(String type, Long diff){
+        if(Build.VERSION.SDK_INT > Build.VERSION_CODES.TIRAMISU){
+            if(checkSelfPermission(Manifest.permission.SCHEDULE_EXACT_ALARM) != PackageManager.PERMISSION_GRANTED){
+                return;
+            }
+        }
         long start = Calendar.getInstance().getTimeInMillis()+ diff;
 
         Calendar t = Calendar.getInstance();
