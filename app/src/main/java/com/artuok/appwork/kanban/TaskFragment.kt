@@ -4,8 +4,6 @@ import android.content.ContentValues
 import android.content.res.TypedArray
 import android.graphics.Color
 import android.os.Bundle
-import android.text.format.DateFormat
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -14,16 +12,19 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.artuok.appwork.R
 import com.artuok.appwork.adapters.AwaitingAdapter
-import com.artuok.appwork.db.DbChat
 import com.artuok.appwork.db.DbHelper
 import com.artuok.appwork.fragmets.AverageAsync
-import com.artuok.appwork.fragmets.homeFragment
+import com.artuok.appwork.library.Constants
 import com.artuok.appwork.library.FalseSkeleton
+import com.artuok.appwork.objects.AnnouncesElement
 import com.artuok.appwork.objects.AwaitElement
 import com.artuok.appwork.objects.Item
 import com.faltenreich.skeletonlayout.Skeleton
+import com.google.android.gms.ads.AdLoader
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.nativead.NativeAd
+import com.google.android.gms.ads.nativead.NativeAdOptions
 import java.util.Calendar
-import java.util.Random
 
 class TaskFragment : Fragment() {
 
@@ -31,8 +32,13 @@ class TaskFragment : Fragment() {
     private lateinit var adapter: AwaitingAdapter
     private lateinit var manager: LinearLayoutManager
     private val elements : ArrayList<Item> = ArrayList()
-    private var listener : PendingFragment.OnTaskModifyListener? = null
+    private var listener : KanbanFragment.OnTaskModifyListener? = null
     private lateinit var skeleton: Skeleton
+    private var projectId = -1;
+
+    public fun initProject(project: Int){
+        this.projectId = project
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -45,7 +51,7 @@ class TaskFragment : Fragment() {
         return root
     }
 
-    public fun setOnTaskModify(listener: PendingFragment.OnTaskModifyListener){
+    public fun setOnTaskModify(listener: KanbanFragment.OnTaskModifyListener){
         this.listener = listener
     }
 
@@ -66,49 +72,49 @@ class TaskFragment : Fragment() {
 
     private fun loadTasks(){
         if(!isAdded) {
-            Log.d("CattoAdded", "Not Added")
             return
         }
         val dbHelper = DbHelper(requireActivity())
         val db = dbHelper.readableDatabase
-        val q = db.rawQuery("SELECT * FROM ${DbHelper.T_TASK} ORDER BY status ASC, end_date ASC", null)
+
+        val query = """
+            SELECT t.*, e.name AS name, e.color AS color, p.name
+            FROM ${DbHelper.T_TASK} AS t
+            JOIN ${DbHelper.T_TAG} AS e ON t.subject = e.id
+            JOIN ${DbHelper.T_PROJECTS} AS p ON e.proyect = p.id
+            WHERE ${if (projectId >= 0) "p.id = ?" else 1} ORDER BY t.status ASC, t.deadline ASC;
+        """.trimIndent()
+        val arguments = if(projectId >= 0) arrayOf("$projectId") else null
+        val q = db.rawQuery(query, arguments)
+
+        val size = q.count
+
+        setAd(if(size > 0) 1 else size)
 
         if(q.moveToFirst()){
             do{
                 val c = Calendar.getInstance()
                 val today = c.timeInMillis
-                val date = q.getLong(2)
-                val dates = getDateString(date)
-                val times = getTimeString(date)
-                if (!isAdded) return
-                val inApp = Random().nextInt() % 5
-                if (inApp == 4) {
-                    //setAnnounce(elements.size)
-                }
-                val stat = q.getInt(5) == 1
-                val done = q.getInt(5) == 2
-                val liked = q.getInt(7) == 1
-                val subjectName = q.getInt(3)
-                val s = db.rawQuery(
-                    "SELECT * FROM " + DbHelper.t_subjects + " WHERE id = " + subjectName,
-                    null
-                )
-                var colors = 0
-                var subject: String? = ""
-                if (s.moveToFirst()) {
-                    colors = s.getInt(2)
-                    subject = s.getString(1)
-                }
-                s.close()
+                val date = q.getLong(5)
+                val dates = Constants.getDateString(requireContext(), date)
+                val times = Constants.getTimeString(requireContext(), date)
+                val done = q.getInt(7) == 2
+                val stat = q.getInt(7) == 1
+                val liked = q.getInt(9) == 1
+                val colors = q.getInt(11)
+                val subject: String? = q.getString(10)
+
+
                 val id = q.getInt(0)
-                val title = q.getString(4)
-                val status: String = if(!done) daysLeft(today < date, date) else requireActivity().getString(R.string.done_string)
-                val statusColor: Int =  statusColor(if(!done) today >= date else true, date )
+                val title = q.getString(1)
+                val status: String = if (done) requireActivity().getString(R.string.done_string) else daysLeft(today < date, date)
+                val statusColor: Int = statusColor(today >= date && !done, date)
                 val eb = AwaitElement(id, title, status, dates, times, colors, statusColor, stat)
+                eb.projectName = q.getString(12)
                 eb.isDone = done
                 eb.subject = subject
                 eb.isLiked = liked
-                elements.add(Item(eb, 4))
+                elements.add(Item(eb, 0))
             }while (q.moveToNext())
         }
         q.close()
@@ -122,34 +128,7 @@ class TaskFragment : Fragment() {
         }
     }
 
-    private fun getDateString(time: Long) : String{
-        val c = Calendar.getInstance()
-        c.timeInMillis = time
-        val day = c[Calendar.DAY_OF_MONTH]
-        val month = c[Calendar.MONTH]
-        val year = c[Calendar.YEAR]
-        val dd = if (day < 10) "0$day" else "" + day
-        val dates = dd + " " + homeFragment.getMonthMinor(
-            requireActivity(),
-            month
-        ) + " " + year + " "
-        return dates
-    }
-    private fun getTimeString(time: Long) : String{
-        val c = Calendar.getInstance()
-        c.timeInMillis = time
-        val hourFormat = DateFormat.is24HourFormat(requireActivity())
-        var hour = c[Calendar.HOUR_OF_DAY]
-        if (!hourFormat) hour = if (c[Calendar.HOUR] == 0) 12 else c[Calendar.HOUR]
-        val minute = c[Calendar.MINUTE]
-        val mn = if (minute < 10) "0$minute" else "" + minute
-        var times = "$hour:$mn"
-        if (!hourFormat) {
-            times += if (c[Calendar.AM_PM] == Calendar.AM) " a. m." else " p. m."
-        }
 
-        return times
-    }
 
     private fun getElementById(id : Long) : AwaitElement?{
         val dbHelper = DbHelper(requireActivity())
@@ -158,15 +137,15 @@ class TaskFragment : Fragment() {
         val q = db.rawQuery("SELECT * FROM ${DbHelper.T_TASK} WHERE id = $id", null)
 
         if(q.moveToFirst()){
-            val title = q.getString(4)
+            val title = q.getString(1)
             val c = Calendar.getInstance()
             val today = c.timeInMillis
-            val date = q.getLong(2)
-            val dates = getDateString(date)
-            val times = getTimeString(date)
-            val subjectName = q.getInt(3)
+            val date = q.getLong(5)
+            val dates = Constants.getDateString(requireActivity(), date)
+            val times = Constants.getTimeString(requireActivity(), date)
+            val subjectName = q.getInt(6)
             val s = db.rawQuery(
-                "SELECT * FROM " + DbHelper.t_subjects + " WHERE id = " + subjectName,
+                "SELECT * FROM " + DbHelper.T_TAG + " WHERE id = " + subjectName,
                 null
             )
             var colors = 0
@@ -176,9 +155,9 @@ class TaskFragment : Fragment() {
                 subject = s.getString(1)
             }
 
-            val stat = q.getInt(5) == 1
-            val done = q.getInt(5) == 2
-            val liked = q.getInt(7) == 1
+            val stat = q.getInt(7) == 1
+            val done = q.getInt(7) == 2
+            val liked = q.getInt(9) == 1
             val statusColor: Int =  statusColor(if(!done) today >= date else true, date )
             val status: String = if(!done) daysLeft(today < date, date) else requireActivity().getString(R.string.done_string)
             val te = AwaitElement(id.toInt(), title, status, dates, times, colors, statusColor, stat)
@@ -192,6 +171,33 @@ class TaskFragment : Fragment() {
 
         q.close()
         return null
+    }
+
+    private fun setAd(pos : Int){
+        val finalPos = pos
+        val adLoader = AdLoader.Builder(requireActivity(), Constants.ID_PUB_AD)
+            .forNativeAd { nativeAd: NativeAd ->
+                val title = nativeAd.headline
+                val body = nativeAd.body
+                val advertiser = nativeAd.advertiser
+                val price = nativeAd.price
+                val images = nativeAd.mediaContent
+                val icon = nativeAd.icon
+                val element =
+                    AnnouncesElement(nativeAd, title, body, advertiser, images, icon)
+                element.action = nativeAd.callToAction
+                element.price = price
+                val s = if(finalPos >= elements.size) elements.size else finalPos
+                elements.add(s, Item(element, 12))
+                adapter.notifyItemInserted(s)
+            }.withNativeAdOptions(
+                NativeAdOptions.Builder()
+                    .setMediaAspectRatio(NativeAdOptions.NATIVE_MEDIA_ASPECT_RATIO_LANDSCAPE)
+                    .setRequestMultipleImages(false)
+                    .setAdChoicesPlacement(NativeAdOptions.ADCHOICES_TOP_LEFT)
+                    .build()
+            ).build()
+        adLoader.loadAd(AdRequest.Builder().build())
     }
 
     private fun initRecycler(){
@@ -232,7 +238,7 @@ class TaskFragment : Fragment() {
         val stat = if(check) 2 else 0
         values.put("status", stat)
         if(check)
-            values.put("completed_date", Calendar.getInstance().timeInMillis)
+            values.put("complete_date", Calendar.getInstance().timeInMillis)
         db.update(DbHelper.T_TASK, values, "id = ?", arrayOf("$id"))
     }
 

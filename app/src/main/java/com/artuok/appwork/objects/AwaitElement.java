@@ -13,6 +13,8 @@ public class AwaitElement {
     private boolean liked = false;
     private boolean mine = true;
 
+    private String projectName;
+
 
     public AwaitElement(int id, String title, String status, String date, String time, int taskColor, int statusColor, boolean mine) {
         this.id = id;
@@ -23,6 +25,14 @@ public class AwaitElement {
         this.taskColor = taskColor;
         this.statusColor = statusColor;
         this.mine = mine;
+    }
+
+    public String getProjectName() {
+        return projectName;
+    }
+
+    public void setProjectName(String projectName) {
+        this.projectName = projectName;
     }
 
     public boolean isMine() {

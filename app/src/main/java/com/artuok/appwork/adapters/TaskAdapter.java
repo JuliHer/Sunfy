@@ -69,8 +69,6 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             long timeIM = element.getMillisSeconds();
 
             if (element.isCheck()) {
-
-
                 title.setPaintFlags(title.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
                 TypedArray ta = mInflater.getContext().obtainStyledAttributes(R.styleable.AppCustomAttrs);
 
@@ -81,7 +79,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
                 ta.recycle();
             } else {
                 if (c.getTimeInMillis() < timeIM) {
-                    status.setColorFilter(mInflater.getContext().getColor(R.color.green_500));
+                    status.setColorFilter(element.getColor());
                 } else {
                     TypedArray ta = mInflater.getContext().obtainStyledAttributes(R.styleable.AppCustomAttrs);
 

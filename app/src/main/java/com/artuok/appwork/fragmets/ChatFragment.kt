@@ -18,7 +18,7 @@ import com.artuok.appwork.ChatActivity
 import com.artuok.appwork.R
 import com.artuok.appwork.adapters.ChatAdapter
 import com.artuok.appwork.db.DbChat
-import com.artuok.appwork.library.MessageControler
+import com.artuok.appwork.library.Message
 import com.artuok.appwork.objects.ChatElement
 import com.artuok.appwork.objects.Item
 import com.google.firebase.auth.FirebaseAuth
@@ -69,6 +69,7 @@ class ChatFragment : Fragment() {
     }
 
     private fun loadChats(){
+        if(!isAdded) return
         val chatData = DbChat(requireActivity())
         val db = chatData.readableDatabase
 
@@ -89,7 +90,7 @@ class ChatFragment : Fragment() {
                 if(type == 1){
                     status = -1
                 }
-                val msg = MessageControler.Message.Builder(message)
+                val msg = Message.Builder(message)
                     .setStatus(status)
                     .setTimestamp(timestamp)
                     .build()
@@ -107,11 +108,11 @@ class ChatFragment : Fragment() {
         chats.close()
     }
 
-    private fun getChatById(chat : Int, db : SQLiteDatabase, msg : MessageControler.Message) : ChatElement?{
+    private fun getChatById(chat : Int, db : SQLiteDatabase, msg : Message) : ChatElement?{
         val chats = db.rawQuery("SELECT * FROM ${DbChat.T_CHATS} WHERE id = '$chat'", null)
         if(chats.moveToFirst()){
             val name = chats.getString(1)
-            val chatId = chats.getString(4)
+            val chatId = chats.getString(3)
             val publicKey = chats.getString(6)
             val pictureName = chats.getString(5)
             val picture = getPicture(pictureName)

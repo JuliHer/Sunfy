@@ -60,7 +60,7 @@
             android:value="ca-app-pub-3940256099942544/2247696110"/>
         -->
         <activity
-            android:name=".CreateGroupActivity"
+            android:name=".ProjectKanbanActivity"
             android:exported="false">
             <meta-data
                 android:name="android.app.lib_name"
@@ -93,7 +93,7 @@
                 android:value="" />
         </activity>
         <activity
-            android:name=".CreateTaskActivity"
+            android:name=".ProjectActivity"
             android:exported="false"
             android:launchMode="singleTask"
             android:parentActivityName=".MainActivity">
@@ -109,7 +109,7 @@
                 android:value="" />
         </activity>
         <activity
-            android:name=".CreateActivity"
+            android:name=".AchievementsActivity"
             android:exported="false">
             <meta-data
                 android:name="android.app.lib_name"
@@ -128,9 +128,10 @@
             android:visibleToInstantApps="true">
             <intent-filter>
                 <action android:name="android.intent.action.ALARM" />
-                <action android:name="com.artuok.appwork.services.DISMISS" />
+                <action android:name="com.artuok.appwork.services.ACTIVITY_DISMISS"/>
             </intent-filter>
         </activity>
+
         <activity
             android:name=".InActivity"
             android:exported="true"
@@ -177,9 +178,10 @@
             android:foregroundServiceType="phoneCall"
             android:icon="@drawable/ic_stat_name"
             android:stopWithTask="false" />
-        <service
-            android:name=".widgets.RemoteTodayTaskWidget"
-            android:permission="android.permission.BIND_REMOTEVIEWS" />
+        <service android:name=".widgets.RemoteTodayTaskWidget"
+            android:exported="true"
+
+        android:permission="android.permission.BIND_REMOTEVIEWS" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

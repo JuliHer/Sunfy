@@ -1,9 +1,8 @@
 package com.artuok.appwork.objects;
 
+import com.google.android.gms.ads.MediaContent;
 import com.google.android.gms.ads.nativead.NativeAd;
 import com.google.android.gms.ads.nativead.NativeAd.Image;
-
-import java.util.List;
 
 public class AnnouncesElement {
     private String title;
@@ -11,17 +10,17 @@ public class AnnouncesElement {
     private String announser;
     private String action;
     private String price;
-    private List<Image> images;
+    private MediaContent content;
     private Image icon;
     private NativeAd nativeAd;
     private int position;
 
-    public AnnouncesElement(NativeAd nativeAd, String title, String body, String announser, List<Image> images, Image icon) {
+    public AnnouncesElement(NativeAd nativeAd, String title, String body, String announser, MediaContent content, Image icon) {
         this.nativeAd = nativeAd;
         this.title = title;
         this.body = body;
         this.announser = announser;
-        this.images = images;
+        this.content = content;
         this.icon = icon;
     }
 
@@ -61,8 +60,8 @@ public class AnnouncesElement {
         return announser;
     }
 
-    public List<Image> getImages() {
-        return images;
+    public MediaContent getContent() {
+        return content;
     }
 
     public Image getIcon() {

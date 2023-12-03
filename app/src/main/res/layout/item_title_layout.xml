@@ -15,10 +15,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingVertical="5dp"
-            android:paddingHorizontal="10dp"
-            android:background="@drawable/background_corner_rounded"
-            android:backgroundTint="?maskSkeleton">
+            android:paddingVertical="10dp"
+            android:paddingHorizontal="10dp">
 
             <TextView
                 android:id="@+id/text"
@@ -26,8 +24,9 @@
                 android:layout_height="wrap_content"
                 android:text="@string/december"
                 android:textSize="18sp"
-                android:textAlignment="center"
                 android:textAllCaps="true"
+                android:textAlignment="center"
+                android:textColor="?subTextColor"
                 android:textFontWeight="600" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>

@@ -82,12 +82,15 @@ class SocialFragment : Fragment() {
                     if (s.toString().isNotEmpty()) {
                         emptyLayout.visibility = View.GONE
                         resultsLayout.visibility = View.VISIBLE
+                        val searchTerm = s.toString().trim()
+                        performSearch(searchTerm)
                     } else {
                         emptyLayout.visibility = View.VISIBLE
                         resultsLayout.visibility = View.GONE
+                        adapter.clearResults()
+                        adapter.notifyDataSetChanged()
                     }
-                    val searchTerm = s.toString().trim()
-                    performSearch(searchTerm)
+
                 }
 
                 override fun afterTextChanged(s: Editable?) {
@@ -213,6 +216,7 @@ class SocialFragment : Fragment() {
             image.getFile(file).addOnCompleteListener {
                 if (it.isSuccessful) {
                     val bitmap = BitmapFactory.decodeFile(file.path)
+
                     adapter.changeImage(n, bitmap)
                     adapter.notifyItemChanged(n)
                 }

@@ -1,45 +1,37 @@
 package com.artuok.appwork.fragmets;
 
-import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.media.MediaPlayer;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.viewpager.widget.ViewPager;
 import androidx.viewpager2.widget.CompositePageTransformer;
 import androidx.viewpager2.widget.MarginPageTransformer;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.artuok.appwork.MainActivity;
 import com.artuok.appwork.R;
-import com.artuok.appwork.adapters.AwaitingAdapter;
 import com.artuok.appwork.adapters.KanbanAdapter;
 import com.artuok.appwork.db.DbHelper;
 import com.artuok.appwork.dialogs.AnnouncementDialog;
-import com.artuok.appwork.kanban.CompletedFragment;
-import com.artuok.appwork.kanban.InProcessFragment;
-import com.artuok.appwork.kanban.PendingFragment;
+import com.artuok.appwork.kanban.KanbanFragment;
 import com.artuok.appwork.kanban.TaskFragment;
-import com.artuok.appwork.objects.Item;
-import com.thekhaeng.pushdownanim.PushDownAnim;
-
-import org.checkerframework.checker.units.qual.C;
+import com.artuok.appwork.library.Constants;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.LoadAdError;
+import com.google.android.gms.ads.interstitial.InterstitialAd;
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -53,12 +45,13 @@ public class TasksFragment extends Fragment {
     String mainTitle;
     String kanbanTitle;
     List<Fragment> fragmentList = new ArrayList<>();
-
-    PendingFragment pendingFragment = new PendingFragment();
-    InProcessFragment inProcessFragment = new InProcessFragment();
-    CompletedFragment completedFragment = new CompletedFragment();
-
+    private InterstitialAd mInterstitialAd;
     TaskFragment taskFragment = new TaskFragment();
+    KanbanFragment pendingFragment = new KanbanFragment();
+    KanbanFragment inProcessFragment = new KanbanFragment();
+    KanbanFragment completedFragment = new KanbanFragment();
+
+    LinearLayout dotsView;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -70,15 +63,147 @@ public class TasksFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        View root = inflater.inflate(R.layout.fragment_tasks, container, false);
+        AdRequest adRequest = new AdRequest.Builder().build();
 
-        initializateViewPager(root);
+        InterstitialAd.load(requireActivity(), "ca-app-pub-5838551368289900/3738961693", adRequest,
+                new InterstitialAdLoadCallback() {
+                    @Override
+                    public void onAdLoaded(@NonNull InterstitialAd interstitialAd) {
+                        // The mInterstitialAd reference will be null until
+                        // an ad is loaded.
+                        mInterstitialAd = interstitialAd;
+
+                    }
+
+                    @Override
+                    public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
+                        // Handle the error
+                        mInterstitialAd = null;
+                    }
+                });
+        initKanban();
+        View root = inflater.inflate(R.layout.fragment_tasks, container, false);
+        initViewPager(root);
+        initTable();
+
         return root;
     }
 
-    private void initializateViewPager(View root){
+    private void initKanban(){
+        pendingFragment.initProject(0);
+        pendingFragment.setTitle(requireContext().getString(R.string.pending_activities));
+        inProcessFragment.initProject(1);
+        inProcessFragment.setTitle(requireContext().getString(R.string.in_process_activities));
+        completedFragment.initProject(2);
+        completedFragment.setTitle(requireContext().getString(R.string.completed_tasks));
+    }
+
+    private void initTable(){
+        KanbanAdapter viewPagerAdapter = new KanbanAdapter(requireActivity(), fragmentList);
+        new AverageAsync(new AverageAsync.ListenerOnEvent() {
+            @Override
+            public void onPreExecute() {
+
+            }
+
+            @Override
+            public void onExecute(boolean b) {
+                taskFragment.setOnTaskModify(i -> {
+                    notifyGlobalChanged(i);
+                    inProcessFragment.restart(i);
+                    pendingFragment.restart(i);
+                    completedFragment.restart(i);
+                });
+                pendingFragment.setOnTaskModifyListener(i -> {
+                    NotifyChanged();
+                    notifyGlobalChanged(i);
+                    completedFragment.restart(i);
+                    inProcessFragment.restart(i);
+                    taskFragment.reinitializate();
+                });
+                inProcessFragment.setOnTaskModifyListener(i -> {
+                    NotifyChanged();
+                    notifyGlobalChanged(i);
+                    DbHelper dbHelper = new DbHelper(requireActivity());
+                    SQLiteDatabase db = dbHelper.getReadableDatabase();
+                    Cursor pendingTasks = db.rawQuery("SELECT * FROM " + DbHelper.T_TASK + " WHERE status < '2'", null);
+                    if (pendingTasks.getCount() < 1) {
+                        showCongratulations();
+                    }
+                    pendingTasks.close();
+                    mInterstitialAd.show(requireActivity());
+                    pendingFragment.restart(i);
+                    completedFragment.restart(i);
+                    taskFragment.reinitializate();
+                });
+                completedFragment.setOnTaskModifyListener(i -> {
+                    NotifyChanged();
+                    notifyGlobalChanged(i);
+
+                    inProcessFragment.restart(i);
+                    pendingFragment.restart(i);
+                    taskFragment.reinitializate();
+                });
+                fragmentList.clear();
+                fragmentList.add(taskFragment);
+                fragmentList.add(pendingFragment);
+                fragmentList.add(inProcessFragment);
+                fragmentList.add(completedFragment);
+            }
+
+            @Override
+            public void onPostExecute(boolean b) {
+                viewPager.setAdapter(viewPagerAdapter);
+                viewPagerAdapter.notifyItemRangeInserted(0, fragmentList.size());
+                taskFragment.reinitializate();
+                pendingFragment.reInit();
+                inProcessFragment.reInit();
+                completedFragment.reInit();
+                initDots(viewPagerAdapter.getItemCount());
+            }
+        }).exec(true);
+    }
+
+    private void initDots(int numPages){
+        if(!isAdded())
+            return;
+        ImageView[] images = new ImageView[numPages];
+        for (int i = 0; i < numPages; i++) {
+            images[i] = new ImageView(requireActivity());
+            if(i == 0){
+                images[i].setImageResource(R.drawable.dot_selected);
+            }else{
+                images[i].setImageResource(R.drawable.dot_unselected);
+            }
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+            params.setMargins(8, 0, 8, 0);
+            dotsView.addView(images[i], params);
+        }
+    }
+
+    private void onIndicatorChange(int position){
+
+
+        for (int i = 0; i < dotsView.getChildCount(); i++) {
+            ImageView image = (ImageView) dotsView.getChildAt(i);
+            if(i == position){
+                image.setImageResource(R.drawable.dot_selected);
+            }else{
+                image.setImageResource(R.drawable.dot_unselected);
+            }
+
+            image.requestLayout();
+        }
+
+    }
+
+    private void initViewPager(View root){
         pageTitle = root.findViewById(R.id.page_title);
         pageTitle.setText(mainTitle);
+        dotsView = root.findViewById(R.id.dotsLayout);
         viewPager = root.findViewById(R.id.viewpager);
         viewPager.setClipToPadding(false);
         viewPager.setClipChildren(false);
@@ -86,7 +211,7 @@ public class TasksFragment extends Fragment {
         viewPager.getChildAt(0).setOverScrollMode(RecyclerView.OVER_SCROLL_NEVER);
 
         CompositePageTransformer compositePageTransformer = new CompositePageTransformer();
-        compositePageTransformer.addTransformer(new MarginPageTransformer(25));
+        compositePageTransformer.addTransformer(new MarginPageTransformer(40));
         viewPager.setPageTransformer(compositePageTransformer);
 
         viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
@@ -97,87 +222,9 @@ public class TasksFragment extends Fragment {
                 }else{
                     pageTitle.setText(kanbanTitle);
                 }
+                onIndicatorChange(position);
             }
         });
-
-        pendingFragment.setOnSwipeListener(()->{
-
-        });
-        inProcessFragment.setOnSwipeListener(()->{
-
-        });
-        completedFragment.setOnSwipeListener(()->{
-
-        });
-
-        pendingFragment.setOnTaskModifyListener(i -> {
-            NotifyChanged();
-            notifyGlobalChanged(i);
-            completedFragment.restart();
-            inProcessFragment.restart();
-            taskFragment.reinitializate();
-        });
-        inProcessFragment.setOnTaskModifyListener(i -> {
-            NotifyChanged();
-            notifyGlobalChanged(i);
-            DbHelper dbHelper = new DbHelper(requireActivity());
-            SQLiteDatabase db = dbHelper.getReadableDatabase();
-            Cursor pendingTasks = db.rawQuery("SELECT * FROM " + DbHelper.T_TASK + " WHERE status < '2'", null);
-            if (pendingTasks.getCount() < 1) {
-                showCongratulations();
-            }
-            pendingTasks.close();
-            pendingFragment.restart();
-            completedFragment.restart();
-            taskFragment.reinitializate();
-        });
-        completedFragment.setOnTaskModifyListener(i -> {
-            NotifyChanged();
-            notifyGlobalChanged(i);
-
-            inProcessFragment.restart();
-            pendingFragment.restart();
-            taskFragment.reinitializate();
-        });
-
-        taskFragment.setOnTaskModify(i -> {
-            notifyGlobalChanged(i);
-
-            inProcessFragment.restart();
-            pendingFragment.restart();
-            completedFragment.restart();
-        });
-        fragmentList.clear();
-        fragmentList.add(taskFragment);
-        fragmentList.add(pendingFragment);
-        fragmentList.add(inProcessFragment);
-        fragmentList.add(completedFragment);
-
-        KanbanAdapter viewPagerAdapter = new KanbanAdapter(requireActivity(), fragmentList);
-        viewPager.setAdapter(viewPagerAdapter);
-        viewPager.setCurrentItem(0);
-        viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
-            @Override
-            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-                super.onPageScrolled(position, positionOffset, positionOffsetPixels);
-            }
-
-            @Override
-            public void onPageSelected(int position) {
-                super.onPageSelected(position);
-            }
-
-            @Override
-            public void onPageScrollStateChanged(int state) {
-                super.onPageScrollStateChanged(state);
-            }
-        });
-        viewPagerAdapter.notifyDataSetChanged();
-
-        pendingFragment.reinitializate();
-        inProcessFragment.reinitializate();
-        completedFragment.reinitializate();
-        taskFragment.reinitializate();
     }
 
 
@@ -203,10 +250,10 @@ public class TasksFragment extends Fragment {
     }
 
     public void NotifyChanged() {
-        pendingFragment.reinitializate();
-        inProcessFragment.reinitializate();
-        completedFragment.reinitializate();
-        taskFragment.reinitializate();
+//        pendingFragment.reinitializate();
+//        inProcessFragment.reinitializate();
+//        completedFragment.reinitializate();
+//        taskFragment.reinitializate();
     }
 
     public void notifyGlobalChanged(int id){
@@ -233,7 +280,7 @@ public class TasksFragment extends Fragment {
 
         int pos = -1;
         if (i.moveToFirst()) {
-            long date = i.getLong(2);
+            long date = i.getLong(5);
 
 
             Calendar c = Calendar.getInstance();

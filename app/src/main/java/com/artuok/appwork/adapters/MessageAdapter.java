@@ -1,9 +1,6 @@
 package com.artuok.appwork.adapters;
 
 import android.content.Context;
-import android.content.res.TypedArray;
-import android.graphics.Color;
-import android.media.Image;
 import android.text.format.DateFormat;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -14,12 +11,11 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.artuok.appwork.R;
-import com.artuok.appwork.fragmets.homeFragment;
-import com.artuok.appwork.objects.EventMessageElement;
+import com.artuok.appwork.fragmets.HomeFragment;
+import com.artuok.appwork.library.Constants;
 import com.artuok.appwork.objects.Item;
 import com.artuok.appwork.objects.MessageElement;
 import com.artuok.appwork.objects.TextElement;
@@ -292,6 +288,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         }
     }
 
+
     class MessageTaskViewHolder extends RecyclerView.ViewHolder{
 
         TextView text, texty, time, timey, date, datey, task, tasky;
@@ -406,7 +403,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             int minute = c.get(Calendar.MINUTE);
 
             String dd = day < 10 ? "0" + day : String.valueOf(day);
-            String datetime = dd + " " + homeFragment.getMonthMinor(inflater.getContext(), month) + " " + year + " ";
+            String datetime = dd + " " + Constants.getMonthMinor(inflater.getContext(), month) + " " + year + " ";
             String mn = minute < 10 ? "0" + minute : String.valueOf(minute);
             datetime += hour + ":" + mn;
             datetime += c.get(Calendar.AM_PM) == Calendar.AM ? " a. m." : " p. m.";

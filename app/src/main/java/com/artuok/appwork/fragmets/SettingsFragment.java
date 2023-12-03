@@ -6,7 +6,6 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -19,7 +18,6 @@ import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -68,7 +66,7 @@ import io.michaelrocks.libphonenumber.android.PhoneNumberUtil;
 import io.michaelrocks.libphonenumber.android.Phonenumber;
 
 public class SettingsFragment extends Fragment {
-    Switch darkTheme, savermode;
+    Switch darkTheme;
     SharedPreferences sharedPreferences;
     LinearLayout session, conversation, userSession, notifications, backup, deleteAll, donate;
     TextView logint;
@@ -85,7 +83,6 @@ public class SettingsFragment extends Fragment {
         View root = inflater.inflate(R.layout.fragment_settings, container, false);
 
         darkTheme = root.findViewById(R.id.change_theme);
-        savermode = root.findViewById(R.id.saver_mode);
         sharedPreferences = requireActivity().getSharedPreferences("settings", Context.MODE_PRIVATE);
 
         restartLaunchers();
@@ -138,7 +135,7 @@ public class SettingsFragment extends Fragment {
                             dialog.setPositive((view13, which) -> {
                                 DbHelper dbHelper = new DbHelper(requireActivity());
                                 SQLiteDatabase db = dbHelper.getWritableDatabase();
-                                db.delete(DbHelper.t_subjects, null, null);
+                                db.delete(DbHelper.T_TAG, null, null);
                                 db.delete(DbHelper.t_event, null, null);
                                 db.delete(DbHelper.t_alarm, null, null);
                                 db.delete(DbHelper.T_PHOTOS, null, null);
@@ -179,10 +176,7 @@ public class SettingsFragment extends Fragment {
                     dialog.setTextDialog(requireActivity().getString(R.string.sure_log_out_text));
                     dialog.setDrawable(R.drawable.power);
                     dialog.setPositive((view12, which) -> {
-                        setLogged(requireActivity(), false);
-
-                        FirebaseAuth auth = FirebaseAuth.getInstance();
-                        auth.signOut();
+                        Logout(requireActivity());
                         notifyChatChanged();
                     });
                     dialog.setNegative((view1, which) -> dialog.dismiss());
@@ -216,11 +210,16 @@ public class SettingsFragment extends Fragment {
         }
 
         darkThemeSetter();
-        saverModeSetter();
         setPhoto();
         return root;
     }
 
+    public static void Logout(Context context){
+        setLogged(context, false);
+
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        auth.signOut();
+    }
 
     private static void setLogged(Context context, boolean lg){
         SharedPreferences preferences = context.getSharedPreferences("chat", Context.MODE_PRIVATE);
@@ -298,25 +297,6 @@ public class SettingsFragment extends Fragment {
                 file.delete();
             }
         }
-    }
-
-    public static boolean isSaverModeActive(Context context) {
-        SharedPreferences s = context.getSharedPreferences("settings", Context.MODE_PRIVATE);
-        return s.getBoolean("datasaver", true);
-    }
-
-    public static boolean isMobileData(Context context) {
-        boolean mobileDataEnable = false;
-        try {
-            ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-            Class<?> cmClass = Class.forName(cm.getClass().getName());
-            Method method = cmClass.getDeclaredMethod("getMobileDataEnabled");
-            method.setAccessible(true);
-            mobileDataEnable = (boolean) method.invoke(cm);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return mobileDataEnable;
     }
 
     public void selectPhoto() {
@@ -492,7 +472,7 @@ public class SettingsFragment extends Fragment {
 
 
     void notifyChatChanged(){
-        ((MainActivity)requireActivity()).notifyToChatChanged();
+
     }
 
     void deleteAllConversations() {
@@ -501,17 +481,6 @@ public class SettingsFragment extends Fragment {
         db.delete(DbChat.T_CHATS_MSG, "", null);
         db.delete(DbChat.T_CHATS_EVENT, "", null);
         db.delete(DbChat.T_CHATS, "", null);
-    }
-
-    void saverModeSetter(){
-        boolean a = sharedPreferences.getBoolean("datasaver", true);
-
-        savermode.setChecked(a);
-        savermode.setOnCheckedChangeListener((compoundButton, b) -> {
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putBoolean("datasaver", b);
-            editor.apply();
-        });
     }
 
     void darkThemeSetter() {

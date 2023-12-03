@@ -19,10 +19,8 @@ import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.os.Binder;
 import android.os.IBinder;
-import android.util.Log;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.Person;
@@ -34,14 +32,12 @@ import com.artuok.appwork.db.DbChat;
 import com.artuok.appwork.db.DbHelper;
 import com.artuok.appwork.fragmets.SettingsFragment;
 import com.artuok.appwork.library.Constants;
-import com.artuok.appwork.library.MessageControler;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+
+import org.checkerframework.checker.units.qual.C;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -53,6 +49,9 @@ import java.io.IOException;
 
 public class ServiceManager extends Service {
     private final Binder mBinder = new ServiceManagerBinder();
+    private static final String CSV_COLUMN_SEPARATOR = ",~~";
+    private static final String CSV_TABLE_SEPARATOR = "../../../..";
+    private static final String[] tablesToBackup = new String[]{DbHelper.T_PROJECTS, DbHelper.T_TAG, DbHelper.T_TASK, DbHelper.t_event};
 
     @Nullable
     @Override
@@ -89,7 +88,7 @@ public class ServiceManager extends Service {
                     destroy();
                     break;
                 case AlarmWorkManager.ACTION_SET_BACKUP:
-                    createCSV();
+                    createBackupCSV();
                     destroy();
                     break;
                 case AlarmWorkManager.ACTION_RESTORE_BACKUP:
@@ -150,69 +149,43 @@ public class ServiceManager extends Service {
                     return;
                 }
                 BufferedReader reader = new BufferedReader(new FileReader(backupFile));
-                String line;
-                DbHelper helper = new DbHelper(this);
-                SQLiteDatabase db = helper.getWritableDatabase();
-                db.execSQL("DROP TABLE " + DbHelper.t_subjects);
-                db.execSQL("DROP TABLE " + DbHelper.T_TASK);
-                DbHelper.createTables(db);
-                int i = 0;
-                boolean isTasks = false;
-                while ((line = reader.readLine()) != null) {
-                    if(line.equals("../../../..")){
-                        isTasks = true;
-                        i = 0;
-                    }
-                    if(isTasks){
-                        if (i > 1) {
-                            String[] taskData = line.split(",");
-                            int id = Integer.parseInt(taskData[0]);
-                            long date = Long.parseLong(taskData[1]);
-                            long end_date = Long.parseLong(taskData[2]);
-                            int subject = Integer.parseInt(taskData[3]);
-                            String desc = taskData[4];
-                            int status = Integer.parseInt(taskData[5]);
-                            String user = taskData[6];
-                            int favorite = Integer.parseInt(taskData[7]);
-                            long completed_date = Long.parseLong(taskData[8]);
-                            ContentValues values = new ContentValues();
-                            values.put("id", id);
-                            values.put("date", date);
-                            values.put("end_date", end_date);
-                            values.put("subject", subject);
-                            values.put("description", desc);
-                            values.put("status", status);
-                            values.put("user", user);
-                            values.put("favorite", favorite);
-                            values.put("completed_date", completed_date);
-                            db.insert(DbHelper.T_TASK, null, values);
-                        }
-                    }else{
-                        if(i != 0){
-                            String[] subjectData = line.split(",");
-                            int id = Integer.parseInt(subjectData[0]);
-                            String name = subjectData[1];
-                            int color = Integer.parseInt(subjectData[2]);
-                            ContentValues values = new ContentValues();
-                            values.put("id", id);
-                            values.put("name", name);
-                            values.put("color", color);
-                            db.insert(DbHelper.t_subjects, null, values);
-                        }
-                    }
 
-
-                    i++;
-                }
-                db.close();
-                reader.close();
+                updateTables(reader, tablesToBackup);
                 Toast.makeText(this, getString(R.string.tasks_restored_successfully), Toast.LENGTH_SHORT).show();
             } catch (IOException e) {
-                e.printStackTrace();
-                Toast.makeText(this, "Task restoration failed.", Toast.LENGTH_SHORT).show();
+                throw new RuntimeException(e);
             }
-        else
-            Toast.makeText(this, "No backup found.", Toast.LENGTH_SHORT).show();
+    }
+
+    private void updateTables(BufferedReader reader, String... tables) throws IOException {
+        DbHelper helper = new DbHelper(this);
+        SQLiteDatabase db = helper.getWritableDatabase();
+        for (String table : tables) {
+            db.execSQL("DROP TABLE " + table);
+        }
+        DbHelper.createTables(db);
+        String line;
+        int i = 0;
+        int t = 0;
+        String[] columnsName = new String[0];
+        while ((line = reader.readLine()) != null){
+            if(line.equals(CSV_TABLE_SEPARATOR)){
+                i = 0;
+                t++;
+            }else {
+                if(i == 0){
+                    columnsName = line.split(CSV_COLUMN_SEPARATOR);
+                }else{
+                    String[] data = line.split(CSV_COLUMN_SEPARATOR);
+                    ContentValues values = new ContentValues();
+                    for (int j = 0; j < columnsName.length; j++) {
+                        values.put(columnsName[j], data[j]);
+                    }
+                    db.insert(tables[t], null, values);
+                }
+                i++;
+            }
+        }
     }
 
     private void uploadToFirestore(File file) throws FileNotFoundException {
@@ -268,21 +241,68 @@ public class ServiceManager extends Service {
         }
     }
 
-    private long checkSubject(String name) {
+    private void createBackupCSV(){
+        try{
+            File carpet = new File(getExternalFilesDir("Media"), "Sunfy Backup");
+            if (!carpet.exists())
+                if (!carpet.mkdirs())
+                    return;
+            File backupFile = new File(carpet, "sunfy_backup.csv");
+            if (!backupFile.exists())
+                if (!backupFile.createNewFile())
+                    return;
+
+            FileWriter writer = new FileWriter(backupFile);
+
+            writeTableBackup(writer, tablesToBackup);
+
+            uploadToFirestore(backupFile);
+            writer.flush();
+            writer.close();
+            Toast.makeText(this, getString(R.string.backup_created_successfully), Toast.LENGTH_SHORT).show();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private FileWriter writeTableBackup(FileWriter writer, String... tableName) throws IOException {
         DbHelper helper = new DbHelper(this);
         SQLiteDatabase db = helper.getReadableDatabase();
-        Cursor c = db.rawQuery("SELECT * FROM " + DbHelper.t_subjects + " WHERE name = '" + name + "'", null);
-        if (c.moveToFirst()) {
-            int w = c.getInt(0);
-            c.close();
-            return w;
-        } else {
-            SQLiteDatabase dbw = helper.getWritableDatabase();
-            ContentValues values = new ContentValues();
-            values.put("name", name);
-            values.put("color", 0XEA1E63);
-            return dbw.insert(DbHelper.t_subjects, null, values);
+        setNotification(0, 100, getString(R.string.creating_backup));
+        for (int j = 0; j < tableName.length; j++) {
+            Cursor table = db.rawQuery("SELECT * FROM " + tableName[j], null);
+            if(table.moveToFirst()){
+                int numColumns = table.getColumnCount();
+                for (int i = 0; i < numColumns; i++) {
+                    writer.append(table.getColumnName(i));
+                    if(i < numColumns-1)
+                        writer.append(CSV_COLUMN_SEPARATOR);
+                }
+                writer.write("\n");
+
+                do{
+                    for (int i = 0; i < numColumns; i++) {
+                        writer.append(table.getString(i));
+                        if(i < numColumns-1)
+                            writer.append(CSV_COLUMN_SEPARATOR);
+                    }
+                    writer.append("\n");
+                }while (table.moveToNext());
+            }
+
+            if(j < tableName.length-1){
+                writer.append("../../../..");
+                writer.append("\n");
+            }
+
+            setNotification(100/tableName.length*j, 100, getString(R.string.creating_backup));
+            table.close();
         }
+        NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        if (manager != null) {
+            manager.cancel(600000);
+        }
+        return writer;
     }
 
     private void createCSV(){
@@ -300,14 +320,14 @@ public class ServiceManager extends Service {
             DbHelper helper = new DbHelper(this);
             SQLiteDatabase db = helper.getReadableDatabase();
             Cursor tasks = db.rawQuery("SELECT * FROM " + DbHelper.T_TASK, null);
-            Cursor subjects = db.rawQuery("SELECT * FROM " + DbHelper.t_subjects, null);
+            Cursor subjects = db.rawQuery("SELECT * FROM " + DbHelper.T_TAG, null);
 
 
             FileWriter writer = new FileWriter(backupFile);
             if(tasks.moveToFirst() && subjects.moveToFirst()){
                 int numColumns = subjects.getColumnCount();
                 for (int i = 1; i < numColumns; i++) {
-                    writer.write(subjects.getColumnName(i) + ",");
+                    writer.write(subjects.getColumnName(i) + ",~~");
                 }
                 writer.write("\n");
 
@@ -317,28 +337,28 @@ public class ServiceManager extends Service {
                     int id = subjects.getInt(0);
                     String name = subjects.getString(1);
                     int color = subjects.getInt(2);
-                    String subjectData = id+","+name+","+color+"\n";
+                    String subjectData = id+",~~"+name+",~~"+color+"\n";
                     setNotification(i, max, getString(R.string.creating_backup));
                     writer.write(subjectData);
                 }while(subjects.moveToNext());
                 writer.write("../../../..\n");
-                numColumns = subjects.getColumnCount();
+                numColumns = tasks.getColumnCount();
                 for (int j = 1; j < numColumns; j++) {
-                    writer.write(subjects.getColumnName(j) + ",");
+                    writer.write(tasks.getColumnName(j) + ",~~");
                 }
                 writer.write("\n");
                 do {
                     int id = tasks.getInt(0);
-                    long date = tasks.getLong(1);
-                    long end_date = tasks.getLong(2);
-                    int subjectId = tasks.getInt(3);
+                    long date = tasks.getLong(2);
+                    long end_date = tasks.getLong(5);
+                    int subjectId = tasks.getInt(6);
 
-                    String desc = tasks.getString(4);
-                    int status = tasks.getInt(5);
-                    String user = tasks.getString(6);
-                    int favorite = tasks.getInt(7);
-                    long completed_date = tasks.getLong(8);
-                    String taskData = id + "," + date + "," + end_date + "," + subjectId + "," + desc + "," + status + "," + user + "," + favorite + "," + completed_date + "\n";
+                    String desc = tasks.getString(1);
+                    int status = tasks.getInt(7);
+                    String user = tasks.getString(8);
+                    int favorite = tasks.getInt(9);
+                    long completed_date = tasks.getLong(4);
+                    String taskData = id + ",~~" + date + ",~~" + end_date + ",~~" + subjectId + ",~~" + desc + ",~~" + status + ",~~" + user + ",~~" + favorite + ",~~" + completed_date + "\n";
                     setNotification(i, max, getString(R.string.creating_backup));
                     writer.write(taskData);
                 }while(tasks.moveToNext());
@@ -350,7 +370,7 @@ public class ServiceManager extends Service {
                 tasks.close();
                 subjects.close();
                 writer.close();
-                Toast.makeText(this, "Backup created successfully!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.backup_created_successfully), Toast.LENGTH_SHORT).show();
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -364,10 +384,6 @@ public class ServiceManager extends Service {
 
         if (!login)
             return;
-
-        MessageControler.restateUserChat(this, () -> {
-            notifyUnreadedMessages();
-        });
     }
 
     private void notifyUnreadedMessages() {

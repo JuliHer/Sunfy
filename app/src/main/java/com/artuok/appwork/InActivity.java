@@ -4,6 +4,7 @@ import static com.artuok.appwork.services.NotificationService.TimeToDoHomework;
 import static com.artuok.appwork.services.NotificationService.TomorrowEvent;
 import static com.artuok.appwork.services.NotificationService.TomorrowSubjects;
 
+import android.Manifest;
 import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -13,8 +14,10 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -22,19 +25,22 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.os.BuildCompat;
 import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
 import com.artuok.appwork.db.DbHelper;
 import com.artuok.appwork.fragmets.SettingsFragment;
-import com.artuok.appwork.library.MessageControler;
+import com.artuok.appwork.library.Constants;
 import com.artuok.appwork.services.AlarmWorkManager;
 import com.artuok.appwork.services.MessageWorkManager;
 import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.ads.RequestConfiguration;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.messaging.FirebaseMessaging;
 
 import java.util.ArrayList;
@@ -72,22 +78,43 @@ public class InActivity extends AppCompatActivity {
         setAlarm();
         activateAlarms();
         setAlarmSchedule();
-        setTokenInDatabase();
+        setMainProject();
         if(SettingsFragment.isLogged(this)){
-            MessageControler.restateUserChat(this, null);
-            WorkManager workManager = WorkManager.getInstance(this);
-            PeriodicWorkRequest periodicWorkRequest = new PeriodicWorkRequest.Builder(MessageWorkManager.class, PeriodicWorkRequest.MIN_PERIODIC_INTERVAL_MILLIS, TimeUnit.MILLISECONDS).build();
-            workManager.enqueueUniquePeriodicWork("messageWorker", ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE, periodicWorkRequest);
+            initMessagingDevice();
         }
         new Handler().postDelayed(() -> loadMain(), 500);
     }
 
-    void setTokenInDatabase(){
+    void initMessagingDevice(){
         FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
             if(task.isSuccessful()){
-                String token = task.getResult();
+
+                String device = Constants.getDeviceName();
+                String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                FirebaseDatabase.getInstance().getReference().child("user")
+                        .child(userId)
+                        .child("device")
+                        .child(device)
+                        .setValue(task.getResult());
             }
         });
+    }
+
+    void setMainProject(){
+        DbHelper dbHelper = new DbHelper(this);
+        SQLiteDatabase dbr = dbHelper.getReadableDatabase();
+        SQLiteDatabase dbw = dbHelper.getWritableDatabase();
+        String name = getString(R.string.personal);
+        Cursor query = dbr.rawQuery("SELECT * FROM "+DbHelper.T_PROJECTS+" WHERE name = ?", new String[]{name});
+        if(!query.moveToFirst()){
+            ContentValues values = new ContentValues();
+            values.put("id", 0);
+            values.put("name", name);
+            values.put("icon", R.drawable.ic_eagle_emblem);
+            values.put("description", "User project");
+            dbw.insert(DbHelper.T_PROJECTS, null, values);
+        }
+        query.close();
     }
 
     @Override
@@ -101,7 +128,8 @@ public class InActivity extends AppCompatActivity {
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
             if (extras.getInt("task", 0) == 1) {
-                intent = new Intent(this, CreateTaskActivity.class);
+                intent = new Intent(this, MainActivity.class);
+                intent.putExtra("task", "new task");
             }
         }
         startActivity(intent);
@@ -211,7 +239,11 @@ public class InActivity extends AppCompatActivity {
     }
 
     void setNotify(String name, long diff, long duration) {
-
+        if(Build.VERSION.SDK_INT > Build.VERSION_CODES.TIRAMISU){
+            if(checkSelfPermission(Manifest.permission.SCHEDULE_EXACT_ALARM) != PackageManager.PERMISSION_GRANTED){
+                return;
+            }
+        }
         long start = Calendar.getInstance().getTimeInMillis() + diff;
 
         Intent notify = new Intent(this, AlarmWorkManager.class)
@@ -299,6 +331,11 @@ public class InActivity extends AppCompatActivity {
                 break;
         }
 
+        if(Build.VERSION.SDK_INT > Build.VERSION_CODES.TIRAMISU){
+            if(checkSelfPermission(Manifest.permission.SCHEDULE_EXACT_ALARM) != PackageManager.PERMISSION_GRANTED){
+                return;
+            }
+        }
 
         PendingIntent pendingNotify = PendingIntent.getBroadcast(this, 0, notify, PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
 

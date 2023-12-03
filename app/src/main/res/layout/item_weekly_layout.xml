@@ -57,13 +57,6 @@
                         app:padding="15dp"
                         style="@style/AveragesLineChart" />
 
-                    <TextView
-                        android:id="@+id/tip"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:justificationMode="inter_word"
-                        android:text="Tip: Set priorities and focus on the most important tasks." />
-
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"

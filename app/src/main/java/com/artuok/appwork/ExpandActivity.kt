@@ -10,7 +10,6 @@ import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
-import android.text.format.DateFormat
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
@@ -29,8 +28,9 @@ import com.artuok.appwork.adapters.PublicationImageAdapter
 import com.artuok.appwork.db.DbChat
 import com.artuok.appwork.db.DbHelper
 import com.artuok.appwork.dialogs.PermissionDialog
-import com.artuok.appwork.fragmets.homeFragment
-import com.artuok.appwork.library.MessageControler
+import com.artuok.appwork.library.ChatControler
+import com.artuok.appwork.library.Constants
+import com.artuok.appwork.library.Message
 import com.artuok.appwork.library.TextViewLetterAnimator
 import com.artuok.appwork.objects.*
 import com.thekhaeng.pushdownanim.PushDownAnim
@@ -174,68 +174,44 @@ class ExpandActivity : AppCompatActivity() {
     private fun preparePendingTasks() {
         val helper = DbHelper(this)
         val db = helper.readableDatabase
-        val c = db.rawQuery(
-            "SELECT * FROM ${DbHelper.T_TASK} WHERE status < '2' AND id != '$id' ORDER BY end_date DESC",
-            null
+        val query = """
+            SELECT t.*, e.name AS name, e.color AS color
+            FROM ${DbHelper.T_TASK} AS t
+            JOIN ${DbHelper.T_TAG} AS e ON t.subject = e.id
+            JOIN ${DbHelper.T_PROJECTS} AS p ON e.proyect = p.id
+            WHERE t.id != ? AND t.status < ? ORDER BY t.complete_date DESC;
+        """.trimIndent()
+        val cursor = db.rawQuery(
+            query,
+            arrayOf("$id", "2")
         )
 
-        if (c.moveToFirst()) {
+
+        if (cursor.moveToFirst()) {
             do {
-                val cc = Calendar.getInstance()
-                val date: Long = c.getLong(2)
-                cc.timeInMillis = date
-                val day = cc[Calendar.DAY_OF_MONTH]
-                val month = cc[Calendar.MONTH]
-                val year = cc[Calendar.YEAR]
-                val hourFormat = DateFormat.is24HourFormat(this)
-                var hour = cc[Calendar.HOUR_OF_DAY]
-                if (!hourFormat) hour = if (cc[Calendar.HOUR] == 0) 12 else cc[Calendar.HOUR]
+                val c = Calendar.getInstance()
+                val today = c.timeInMillis
+                val date = cursor.getLong(5)
+                val dates = Constants.getDateString(this, date)
+                val times = Constants.getTimeString(this, date)
+                val done = cursor.getInt(7) == 2
+                val liked = cursor.getInt(9) == 1
+                val colors = cursor.getInt(11)
+                val subject: String? = cursor.getString(10)
 
-                val minute = cc[Calendar.MINUTE]
-
-                val dd = if (day < 10) "0$day" else "" + day
-                val dates = dd + " " + homeFragment.getMonthMinor(
-                    this,
-                    month
-                ) + " " + year + " "
-                val mn = if (minute < 10) "0$minute" else "" + minute
-                var times = "$hour:$mn"
-
-                if (!hourFormat) {
-                    times += if (cc[Calendar.AM_PM] == Calendar.AM) " a. m." else " p. m."
-                }
-
-                val done = c.getInt(5) == 1
-                val liked = c.getInt(7) == 1
-                val subjectName: Int = c.getInt(3)
-
-                val s = db.rawQuery(
-                    "SELECT * FROM " + DbHelper.t_subjects + " WHERE id = " + subjectName,
-                    null
-                )
-                var colors = 0
-                var subject: String? = ""
-                if (s.moveToFirst()) {
-                    colors = s.getInt(2)
-                    subject = s.getString(1)
-                }
-
-                s.close()
-
-                val id: Int = c.getInt(0)
-                val title: String = c.getString(4)
-                val status: String = daysLeft(true, date)
+                val id = cursor.getInt(0)
+                val title = cursor.getString(1)
+                val status: String = if (done) getString(R.string.done_string) else daysLeft(today < date, date)
                 val statusColor: Int = statusColor()
-
-                val eb = AwaitElement(id, title, status, dates, times, colors, statusColor, false)
+                val eb = AwaitElement(id, title, status, dates, times, colors, statusColor, true)
                 eb.isDone = done
                 eb.subject = subject
                 eb.isLiked = liked
                 suggests.add(Item(eb, 3))
-            } while (c.moveToNext())
+            } while (cursor.moveToNext())
         }
 
-        c.close()
+        cursor.close()
         loadPendingTasks()
     }
 
@@ -367,16 +343,16 @@ class ExpandActivity : AppCompatActivity() {
         var color = 0
         var dow = ""
         if (cursor.moveToFirst()) {
-            title = getSubjectNameById(cursor.getInt(3))
-            color = getSubjectColorById(cursor.getInt(3))
-            val t = cursor.getLong(2)
+            title = getSubjectNameById(cursor.getInt(6))
+            color = getSubjectColorById(cursor.getInt(6))
+            val t = cursor.getLong(5)
             endDate = t
             days = getDayLeft(t)
-            titleTask = cursor.getString(4)
+            titleTask = cursor.getString(1)
 
-            liked = cursor.getInt(7) == 1
-            setLike(cursor.getInt(7) == 1)
-            user = cursor.getString(6)
+            liked = cursor.getInt(9) == 1
+            setLike(cursor.getInt(9) == 1)
+            user = cursor.getString(8)
             dow = getDOW(t)
         }
 
@@ -422,7 +398,7 @@ class ExpandActivity : AppCompatActivity() {
 
         val d = c[Calendar.DAY_OF_WEEK]
 
-        val day = homeFragment.getDayOfWeek(this, d)
+        val day = Constants.getDayOfWeek(this, d)
 
         return day
     }
@@ -431,7 +407,7 @@ class ExpandActivity : AppCompatActivity() {
     private fun getSubjectNameById(id: Int): String {
         val dbHelper = DbHelper(this)
         val db = dbHelper.readableDatabase
-        val c = db.rawQuery("SELECT * FROM ${DbHelper.t_subjects} WHERE id = '$id'", null)
+        val c = db.rawQuery("SELECT * FROM ${DbHelper.T_TAG} WHERE id = '$id'", null)
 
         var name = ""
         if (c.moveToFirst()) {
@@ -445,7 +421,7 @@ class ExpandActivity : AppCompatActivity() {
     private fun getSubjectColorById(id: Int): Int {
         val dbHelper = DbHelper(this)
         val db = dbHelper.readableDatabase
-        val c = db.rawQuery("SELECT * FROM ${DbHelper.t_subjects} WHERE id = '$id'", null)
+        val c = db.rawQuery("SELECT * FROM ${DbHelper.T_TAG} WHERE id = '$id'", null)
 
         var color = 0
         if (c.moveToFirst()) {
@@ -462,23 +438,6 @@ class ExpandActivity : AppCompatActivity() {
             resources.displayMetrics
         ).toInt()
     }
-    fun dow(tim : Long){
-            val d : String
-            val c = Calendar.getInstance()
-            c.timeInMillis = tim
-            val day = c.get(Calendar.DAY_OF_MONTH)
-            val month = c.get(Calendar.MONTH)
-            val year = c.get(Calendar.YEAR)
-            val hour = if(c.get(Calendar.HOUR) == 0) 12 else c.get(Calendar.HOUR)
-            val minute = c.get(Calendar.MINUTE)
-
-            val dd = if (day < 10) "0$day" else "$day"
-            var datetime = "$dd " + homeFragment.getMonthMinor(this, month) + " $year "
-            val mn = if (minute < 10) "0$minute" else "" + minute
-            datetime += "$hour:$mn"
-            datetime += if (c.get(Calendar.AM_PM) == Calendar.AM) " a. m." else " p. m."
-            d = datetime
-        }
 
     private fun getDayLeft(tim: Long): String {
         val d : String
@@ -518,7 +477,7 @@ class ExpandActivity : AppCompatActivity() {
                 val minute = c.get(Calendar.MINUTE)
 
                 val dd = if (day < 10) "0$day" else "$day"
-                var datetime = "$dd " + homeFragment.getMonthMinor(this, month) + " $year "
+                var datetime = "$dd " + Constants.getMonthMinor(this, month) + " $year "
                 val mn = if (minute < 10) "0$minute" else "" + minute
                 datetime += "$hour:$mn"
                 datetime += if(c.get(Calendar.AM_PM) == Calendar.AM) " a. m." else " p. m."
@@ -532,7 +491,7 @@ class ExpandActivity : AppCompatActivity() {
             val minute = c.get(Calendar.MINUTE)
 
             val dd = if (day < 10) "0$day" else "$day"
-            var datetime = "$dd " + homeFragment.getMonthMinor(this, month) + " $year "
+            var datetime = "$dd " + Constants.getMonthMinor(this, month) + " $year "
             val mn = if (minute < 10) "0$minute" else "" + minute
             datetime += "$hour:$mn"
             datetime += if (c.get(Calendar.AM_PM) == Calendar.AM) " a. m." else " p. m."
@@ -590,10 +549,10 @@ class ExpandActivity : AppCompatActivity() {
 
     private fun sendMessage(chat : String, name: String){
         val task = getTaskById(id)
-        val message = MessageControler.Message.Builder(getString(R.string.task))
+        val message = Message.Builder(getString(R.string.task))
             .setTask(task)
             .build()
-        val msgController = MessageControler(this, chat, name, MessageControler.ChatType.CONTACT)
+        val msgController = ChatControler(this, chat, name, Message.ChatType.CONTACT)
         msgController.send(message)
     }
 
@@ -605,9 +564,9 @@ class ExpandActivity : AppCompatActivity() {
 
 
         if (cursor.moveToFirst()) {
-            val title = cursor.getString(4)
-            val deadline = cursor.getLong(2)
-            val user = cursor.getString(6)
+            val title = cursor.getString(1)
+            val deadline = cursor.getLong(5)
+            val user = cursor.getString(8)
             cursor.close()
             return EventMessageElement(deadline, title, user)
         }
@@ -631,7 +590,7 @@ class ExpandActivity : AppCompatActivity() {
                 val timestamp = chatsQ.getLong(3)
                 val status = chatsQ.getInt(5)
 
-                val msg = MessageControler.Message.Builder(message)
+                val msg = Message.Builder(message)
 
                     .setStatus(status)
                     .setTimestamp(timestamp)
@@ -650,7 +609,7 @@ class ExpandActivity : AppCompatActivity() {
         return chats
     }
 
-    private fun getChatById(db : SQLiteDatabase, chat : Int, msg : MessageControler.Message) : ChatElement?{
+    private fun getChatById(db : SQLiteDatabase, chat : Int, msg : Message) : ChatElement?{
         val chats = db.rawQuery("SELECT * FROM ${DbChat.T_CHATS} WHERE id = '$chat'", null)
         if(chats.moveToFirst()){
             val name = chats.getString(1)
